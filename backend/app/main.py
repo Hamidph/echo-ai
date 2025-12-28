@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import get_engine
 from backend.app.core.redis import check_redis_health, close_redis_connection
+from backend.app.routers import experiments_router
 
 
 @asynccontextmanager
@@ -128,8 +129,13 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
             },
         }
 
-    # API v1 routes will be registered in Phase 5
-    pass
+    # Register API v1 routers
+    # Innovation: The experiments router exposes the Probabilistic Visibility
+    # Analysis service via a RESTful API
+    app.include_router(
+        experiments_router,
+        prefix=settings.api_v1_prefix,
+    )
 
 
 # Create the application instance
