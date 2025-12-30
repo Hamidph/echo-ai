@@ -1,0 +1,37 @@
+# Dockerfile for Celery worker
+FROM python:3.11-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN pip install --no-cache-dir uv
+
+# Create non-root user
+RUN groupadd -r celeryuser && useradd -r -g celeryuser celeryuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files and install
+COPY pyproject.toml ./
+COPY uv.lock* ./
+RUN uv venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN uv sync --frozen
+
+# Copy application code
+COPY backend/ ./backend/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+
+# Change ownership
+RUN chown -R celeryuser:celeryuser /app
+
+# Switch to non-root user
+USER celeryuser
+
+# Run Celery worker
+CMD ["celery", "-A", "backend.app.worker", "worker", "--loglevel=info", "--concurrency=4"]

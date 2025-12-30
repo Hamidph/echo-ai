@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     # API Configuration
     api_v1_prefix: str = Field(default="/api/v1", description="API version 1 prefix")
 
+    # Security
+    secret_key: str = Field(
+        default="change-this-to-a-secret-key-in-production-use-openssl-rand-hex-32",
+        description="Secret key for JWT token signing (MUST be changed in production)",
+    )
+    sentry_dsn: str | None = Field(
+        default=None,
+        description="Sentry DSN for error tracking (production only)",
+    )
+
     # PostgreSQL Configuration
     postgres_user: str = Field(default="ai_visibility", description="PostgreSQL username")
     postgres_password: str = Field(

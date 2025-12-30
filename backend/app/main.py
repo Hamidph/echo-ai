@@ -12,13 +12,22 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+import sentry_sdk
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import get_engine
 from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
+from backend.app.routers.auth import router as auth_router
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 
 @asynccontextmanager
@@ -70,6 +79,14 @@ def create_application() -> FastAPI:
     """
     settings = get_settings()
 
+    # Initialize Sentry for error tracking (production only)
+    if settings.environment == "production" and hasattr(settings, 'sentry_dsn'):
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            environment=settings.environment,
+            traces_sample_rate=0.1,  # Sample 10% of transactions for performance monitoring
+        )
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -84,6 +101,10 @@ def create_application() -> FastAPI:
         openapi_url=f"{settings.api_v1_prefix}/openapi.json",
     )
 
+    # Add rate limiter to app state
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     # Configure CORS
     app.add_middleware(
         CORSMiddleware,
@@ -92,6 +113,9 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Initialize Prometheus metrics
+    Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
     # Register routers
     _register_routers(app, settings)
@@ -130,6 +154,12 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         }
 
     # Register API v1 routers
+    # Authentication router
+    app.include_router(
+        auth_router,
+        prefix=settings.api_v1_prefix,
+    )
+
     # Innovation: The experiments router exposes the Probabilistic Visibility
     # Analysis service via a RESTful API
     app.include_router(

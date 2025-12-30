@@ -1,0 +1,109 @@
+# Google Cloud Build configuration for CI/CD
+# This file defines the build steps for deploying to Cloud Run
+
+steps:
+  # Build the main API image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-api:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    id: 'build-api'
+
+  # Build the Celery worker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-worker:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-worker:latest'
+      - '-f'
+      - 'Dockerfile.worker'
+      - '.'
+    id: 'build-worker'
+
+  # Push the API image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA'
+    id: 'push-api'
+    waitFor: ['build-api']
+
+  # Push the worker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-worker:$COMMIT_SHA'
+    id: 'push-worker'
+    waitFor: ['build-worker']
+
+  # Deploy API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ai-visibility-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--min-instances'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--port'
+      - '8080'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production'
+      - '--set-cloudsql-instances'
+      - '$PROJECT_ID:us-central1:ai-visibility-db'
+    id: 'deploy-api'
+    waitFor: ['push-api']
+
+  # Run database migrations
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run jobs create ai-visibility-migrate \
+          --image gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA \
+          --region us-central1 \
+          --set-cloudsql-instances $PROJECT_ID:us-central1:ai-visibility-db \
+          --command alembic,upgrade,head \
+          --execute-now || \
+        gcloud run jobs update ai-visibility-migrate \
+          --image gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA \
+          --region us-central1 \
+          --execute-now
+    id: 'run-migrations'
+    waitFor: ['deploy-api']
+
+# Store images in Google Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/ai-visibility-api:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/ai-visibility-api:latest'
+  - 'gcr.io/$PROJECT_ID/ai-visibility-worker:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/ai-visibility-worker:latest'
+
+# Build timeout (20 minutes)
+timeout: '1200s'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
