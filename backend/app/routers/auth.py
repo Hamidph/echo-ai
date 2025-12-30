@@ -71,6 +71,18 @@ async def register(
     await db.commit()
     await db.refresh(new_user)
 
+    # Send verification email
+    from backend.app.services.email import send_verification_email
+    try:
+        await send_verification_email(
+            user_email=new_user.email,
+            user_name=new_user.full_name or new_user.email,
+            user_id=str(new_user.id),
+        )
+    except Exception as e:
+        # Log error but don't fail registration
+        print(f"Failed to send verification email: {e}")
+
     return new_user
 
 
@@ -204,3 +216,158 @@ async def revoke_api_key(
     api_key.is_active = False
     api_key.revoked_at = datetime.utcnow()
     await db.commit()
+
+
+@router.post("/verify-email/{token}", status_code=status.HTTP_200_OK)
+async def verify_email(
+    token: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """
+    Verify user email address using token from email.
+    """
+    from backend.app.core.security import decode_access_token
+
+    # Decode token
+    payload = decode_access_token(token)
+    if not payload or payload.get("type") != "email_verification":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token",
+        )
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token payload",
+        )
+
+    # Get user and mark as verified
+    result = await db.execute(select(User).where(User.id == UUID(user_id)))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if user.is_verified:
+        return {"message": "Email already verified"}
+
+    user.is_verified = True
+    await db.commit()
+
+    # Send welcome email
+    from backend.app.services.email import send_welcome_email
+    try:
+        await send_welcome_email(
+            user_email=user.email,
+            user_name=user.full_name or user.email,
+        )
+    except Exception as e:
+        print(f"Failed to send welcome email: {e}")
+
+    return {"message": "Email verified successfully"}
+
+
+@router.post("/resend-verification", status_code=status.HTTP_200_OK)
+async def resend_verification(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict[str, str]:
+    """
+    Resend verification email to current user.
+    """
+    if current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already verified",
+        )
+
+    from backend.app.services.email import send_verification_email
+    try:
+        await send_verification_email(
+            user_email=current_user.email,
+            user_name=current_user.full_name or current_user.email,
+            user_id=str(current_user.id),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send verification email: {str(e)}",
+        )
+
+    return {"message": "Verification email sent"}
+
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+async def forgot_password(
+    email: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """
+    Request password reset email.
+    """
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "If the email exists, a password reset link has been sent"}
+
+    from backend.app.services.email import send_password_reset_email
+    try:
+        await send_password_reset_email(
+            user_email=user.email,
+            user_name=user.full_name or user.email,
+            user_id=str(user.id),
+        )
+    except Exception as e:
+        print(f"Failed to send password reset email: {e}")
+
+    return {"message": "If the email exists, a password reset link has been sent"}
+
+
+@router.post("/reset-password/{token}", status_code=status.HTTP_200_OK)
+async def reset_password(
+    token: str,
+    new_password: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """
+    Reset password using token from email.
+    """
+    from backend.app.core.security import decode_access_token
+
+    # Decode token
+    payload = decode_access_token(token)
+    if not payload or payload.get("type") != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token payload",
+        )
+
+    # Get user and update password
+    result = await db.execute(select(User).where(User.id == UUID(user_id)))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    # Update password
+    user.hashed_password = get_password_hash(new_password)
+    await db.commit()
+
+    return {"message": "Password reset successfully"}

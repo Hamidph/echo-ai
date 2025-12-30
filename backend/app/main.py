@@ -25,6 +25,7 @@ from backend.app.core.database import get_engine
 from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
 from backend.app.routers.auth import router as auth_router
+from backend.app.routers.billing import router as billing_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -157,6 +158,12 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
     # Authentication router
     app.include_router(
         auth_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    # Billing router
+    app.include_router(
+        billing_router,
         prefix=settings.api_v1_prefix,
     )
 

@@ -55,6 +55,42 @@ class Settings(BaseSettings):
         description="Sentry DSN for error tracking (production only)",
     )
 
+    # Stripe Billing
+    stripe_api_key: str | None = Field(
+        default=None,
+        description="Stripe API key for payment processing",
+    )
+    stripe_webhook_secret: str | None = Field(
+        default=None,
+        description="Stripe webhook signing secret",
+    )
+
+    # Email Configuration
+    smtp_host: str = Field(
+        default="smtp.gmail.com",
+        description="SMTP server host",
+    )
+    smtp_port: int = Field(
+        default=587,
+        description="SMTP server port",
+    )
+    smtp_username: str | None = Field(
+        default=None,
+        description="SMTP username",
+    )
+    smtp_password: str | None = Field(
+        default=None,
+        description="SMTP password",
+    )
+    from_email: str = Field(
+        default="noreply@ai-visibility.com",
+        description="From email address",
+    )
+    frontend_url: str = Field(
+        default="http://localhost:3000",
+        description="Frontend URL for email links",
+    )
+
     # PostgreSQL Configuration
     postgres_user: str = Field(default="ai_visibility", description="PostgreSQL username")
     postgres_password: str = Field(
