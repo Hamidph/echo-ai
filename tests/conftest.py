@@ -14,13 +14,14 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from backend.app.core.database import Base, get_db
+from backend.app.core.database import Base, get_db_session as get_db
 from backend.app.core.security import create_access_token, get_password_hash
 from backend.app.main import app
 from backend.app.models.user import User, UserRole, PricingTier
 
-# Test database URL (use SQLite for testing)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL (use PostgreSQL for testing - matches production)
+# SQLite doesn't support JSONB columns used in our models
+TEST_DATABASE_URL = "postgresql+asyncpg://ai_visibility:ai_visibility_secret@localhost:5432/ai_visibility_test"
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -177,9 +177,9 @@ class APIKey(Base):
         comment="Hashed API key (bcrypt)",
     )
     prefix: Mapped[str] = mapped_column(
-        String(10),
+        String(20),
         nullable=False,
-        comment="First 8 characters of key for display (e.g., 'sk_live_')",
+        comment="Display prefix of key (e.g., 'sk_live_abc1...')",
     )
     name: Mapped[str] = mapped_column(
         String(255),

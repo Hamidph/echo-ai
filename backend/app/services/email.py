@@ -5,9 +5,10 @@ This module handles sending verification emails, password resets,
 and other transactional emails using SMTP.
 """
 
-import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+import aiosmtplib
 from jinja2 import Template
 
 from backend.app.core.config import get_settings

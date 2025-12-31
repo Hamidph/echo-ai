@@ -8,11 +8,11 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Security, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, APIKeyHeader
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.core.database import get_db
+from backend.app.core.database import get_db_session as get_db
 from backend.app.core.security import decode_access_token, verify_api_key
 from backend.app.models.user import APIKey, User
 

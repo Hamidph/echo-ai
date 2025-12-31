@@ -7,18 +7,16 @@ This module provides routes for Stripe integration including:
 - Webhook handling
 """
 
-import hmac
-import hashlib
 from typing import Annotated
 
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.config import get_settings
-from backend.app.core.database import get_db
+from backend.app.core.database import get_db_session as get_db
 from backend.app.core.deps import get_current_active_user
 from backend.app.models.user import PricingTier, User
 from backend.app.services.billing import (
@@ -95,7 +93,7 @@ async def create_checkout(
     except stripe.error.StripeError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Stripe error: {str(e)}",
+            detail=f"Stripe error: {e!s}",
         )
 
 
@@ -125,7 +123,7 @@ async def create_portal(
     except stripe.error.StripeError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Stripe error: {str(e)}",
+            detail=f"Stripe error: {e!s}",
         )
 
 

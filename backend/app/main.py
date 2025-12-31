@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import sentry_sdk
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter, _rate_limit_exceeded_handler

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.core.database import get_db
+from backend.app.core.database import get_db_session as get_db
 from backend.app.core.deps import get_current_active_user
 from backend.app.core.security import (
     create_access_token,
@@ -295,7 +295,7 @@ async def resend_verification(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send verification email: {str(e)}",
+            detail=f"Failed to send verification email: {e!s}",
         )
 
     return {"message": "Verification email sent"}
