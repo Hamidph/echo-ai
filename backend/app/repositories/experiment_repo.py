@@ -9,7 +9,7 @@ enabling testability and flexibility. Async operations ensure non-blocking
 database access for high-concurrency probabilistic workloads.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -141,7 +141,7 @@ class ExperimentRepository:
             .values(
                 status=status.value,
                 error_message=error_message,
-                updated_at=datetime.utcnow(),
+                updated_at=datetime.now(timezone.utc),
             )
         )
         await self.session.execute(stmt)

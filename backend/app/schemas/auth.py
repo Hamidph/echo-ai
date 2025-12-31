@@ -25,9 +25,14 @@ class UserLogin(BaseModel):
 
 
 class Token(BaseModel):
-    """Schema for JWT token response."""
+    """
+    Schema for JWT token response.
+
+    Includes both access token (short-lived, 15 min) and refresh token (long-lived, 7 days).
+    """
 
     access_token: str
+    refresh_token: str | None = Field(None, description="Refresh token for obtaining new access tokens")
     token_type: str = "bearer"
 
 

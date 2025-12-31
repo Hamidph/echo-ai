@@ -29,7 +29,7 @@ class ExperimentRequest(BaseModel):
 
     prompt: str = Field(
         min_length=10,
-        max_length=10000,
+        max_length=5000,
         description="The prompt to analyze (e.g., 'Best CRM for startups')",
         examples=["What are the best CRM tools for small businesses?"],
     )
@@ -41,8 +41,8 @@ class ExperimentRequest(BaseModel):
     )
     competitor_brands: list[str] | None = Field(
         default=None,
-        max_length=20,
-        description="Optional list of competitor brands for Share of Voice analysis",
+        max_items=10,
+        description="Optional list of competitor brands for Share of Voice analysis (max 10)",
         examples=[["HubSpot", "Pipedrive", "Zoho CRM"]],
     )
     provider: LLMProvider = Field(
@@ -74,7 +74,8 @@ class ExperimentRequest(BaseModel):
     )
     domain_whitelist: list[str] | None = Field(
         default=None,
-        description="Trusted domains for hallucination detection (Perplexity only)",
+        max_items=20,
+        description="Trusted domains for hallucination detection (Perplexity only, max 20)",
         examples=[["salesforce.com", "hubspot.com", "forbes.com"]],
     )
     system_prompt: str | None = Field(

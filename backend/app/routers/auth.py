@@ -4,11 +4,13 @@ Authentication and user management endpoints.
 This module provides routes for user registration, login, and API key management.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +18,8 @@ from backend.app.core.database import get_db_session as get_db
 from backend.app.core.deps import get_current_active_user
 from backend.app.core.security import (
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     generate_api_key,
     get_api_key_prefix,
     get_password_hash,
@@ -33,11 +37,14 @@ from backend.app.schemas.auth import (
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/hour")  # Prevent spam registrations
 async def register(
     user_data: UserRegister,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """
@@ -64,7 +71,7 @@ async def register(
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
         monthly_iteration_quota=100,  # Free tier quota
-        quota_reset_date=datetime.utcnow() + timedelta(days=30),
+        quota_reset_date=datetime.now(timezone.utc) + timedelta(days=30),
     )
 
     db.add(new_user)
@@ -87,14 +94,17 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("5/minute")  # Prevent brute force attacks
 async def login(
     login_data: UserLogin,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Login with email and password.
 
-    Returns a JWT access token for API authentication.
+    Returns both access token (15 min TTL) and refresh token (7 day TTL).
+    Use the refresh token to obtain new access tokens without re-authenticating.
     """
     # Find user by email
     result = await db.execute(select(User).where(User.email == login_data.email))
@@ -114,13 +124,65 @@ async def login(
         )
 
     # Update last login timestamp
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
 
-    # Create access token
+    # Create access token (short-lived) and refresh token (long-lived)
+    access_token = create_access_token(data={"user_id": str(user.id), "email": user.email})
+    refresh_token = create_refresh_token(data={"user_id": str(user.id)})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_access_token(
+    refresh_token: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """
+    Refresh an access token using a valid refresh token.
+
+    This endpoint allows clients to obtain a new access token without
+    re-authenticating, as long as the refresh token is still valid.
+    """
+    # Decode and validate refresh token
+    payload = decode_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token payload",
+        )
+
+    # Fetch user from database
+    result = await db.execute(select(User).where(User.id == UUID(user_id)))
+    user = result.scalar_one_or_none()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
+
+    # Create new access token
     access_token = create_access_token(data={"user_id": str(user.id), "email": user.email})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,  # Return same refresh token
+        "token_type": "bearer",
+    }
 
 
 @router.get("/me", response_model=UserResponse)

@@ -148,20 +148,46 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         """
         Check application health status.
 
+        Verifies connectivity to critical services: PostgreSQL and Redis.
+        Returns 200 if healthy, 503 if degraded.
+
         Returns:
             dict: Health status including database and Redis connectivity.
         """
+        from sqlalchemy import text
+        from backend.app.core.database import get_db_session
+
+        # Check Redis
         redis_healthy = await check_redis_health()
 
-        return {
-            "status": "healthy" if redis_healthy else "degraded",
+        # Check Database
+        db_healthy = False
+        db_error = None
+        try:
+            async with get_db_session() as session:
+                result = await session.execute(text("SELECT 1"))
+                db_healthy = result.scalar() == 1
+        except Exception as e:
+            db_error = str(e)
+
+        # Determine overall status
+        all_healthy = redis_healthy and db_healthy
+        status_code = "healthy" if all_healthy else "degraded"
+
+        response = {
+            "status": status_code,
             "version": settings.app_version,
             "environment": settings.environment,
             "services": {
                 "redis": "healthy" if redis_healthy else "unhealthy",
-                "database": "healthy",  # Will be enhanced with actual check
+                "database": "healthy" if db_healthy else "unhealthy",
             },
         }
+
+        if db_error:
+            response["services"]["database_error"] = db_error
+
+        return response
 
     # Register API v1 routers
     # Authentication router

@@ -3,10 +3,16 @@ Security utilities for authentication and authorization.
 
 This module provides JWT token generation/validation, password hashing,
 and API key management.
+
+Security best practices implemented:
+- Short-lived access tokens (15 minutes)
+- Refresh tokens for extended sessions (7 days)
+- Bcrypt password hashing with salt
+- Secure API key generation
 """
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import bcrypt
@@ -18,7 +24,8 @@ settings = get_settings()
 
 # JWT settings
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 15  # 15 minutes (short-lived for security)
+REFRESH_TOKEN_EXPIRE_DAYS = 7  # 7 days (for refresh tokens)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -66,13 +73,36 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
 
     # Use a secret key from settings (should be set in production)
+    secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict[str, Any]) -> str:
+    """
+    Create a JWT refresh token with longer expiration.
+
+    Refresh tokens are used to obtain new access tokens without re-authenticating.
+    They should be stored securely (httpOnly cookies) and have longer TTL.
+
+    Args:
+        data: Data to encode in the token (typically user_id).
+
+    Returns:
+        str: The encoded JWT refresh token.
+    """
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    to_encode.update({"exp": expire, "type": "refresh"})
+
     secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
     return encoded_jwt
@@ -91,6 +121,36 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
     try:
         secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
+
+        # Verify token type
+        token_type = payload.get("type")
+        if token_type != "access":
+            return None
+
+        return payload
+    except JWTError:
+        return None
+
+
+def decode_refresh_token(token: str) -> dict[str, Any] | None:
+    """
+    Decode and validate a JWT refresh token.
+
+    Args:
+        token: The JWT refresh token to decode.
+
+    Returns:
+        dict | None: The decoded token payload, or None if invalid.
+    """
+    try:
+        secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+        payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
+
+        # Verify token type
+        token_type = payload.get("type")
+        if token_type != "refresh":
+            return None
+
         return payload
     except JWTError:
         return None

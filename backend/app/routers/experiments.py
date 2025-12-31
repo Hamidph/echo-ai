@@ -10,12 +10,12 @@ request handling while Celery processes experiments in the background.
 """
 
 import logging
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from backend.app.core.database import DbSession
 from backend.app.core.deps import get_current_active_user
@@ -39,6 +39,7 @@ from backend.app.worker import execute_experiment_task
 router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(
@@ -60,10 +61,14 @@ logger = logging.getLogger(__name__)
     **Innovation**: This endpoint initiates a Monte Carlo simulation for
     brand visibility analysis, enabling statistically significant insights
     that single-shot queries cannot provide.
+
+    **Rate Limit**: 10 requests per minute per user
     """,
 )
+@limiter.limit("10/minute")
 async def create_experiment(
     request: ExperimentRequest,
+    req: Request,
     session: DbSession,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> ExperimentResponse:

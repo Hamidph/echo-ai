@@ -99,7 +99,7 @@ async def get_current_user_from_api_key(
     for key_record in api_keys:
         if verify_api_key(api_key, key_record.key):
             # Update last used timestamp
-            key_record.last_used_at = datetime.utcnow()
+            key_record.last_used_at = datetime.now(timezone.utc)
             await db.commit()
 
             # Fetch the user
@@ -198,4 +198,4 @@ async def get_current_admin_user(
 
 
 # Add missing import
-from datetime import datetime  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
