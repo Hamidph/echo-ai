@@ -155,7 +155,7 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
             dict: Health status including database and Redis connectivity.
         """
         from sqlalchemy import text
-        from backend.app.core.database import get_db_session
+        from backend.app.core.database import get_session_factory
 
         # Check Redis
         redis_healthy = await check_redis_health()
@@ -164,7 +164,8 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         db_healthy = False
         db_error = None
         try:
-            async with get_db_session() as session:
+            session_factory = get_session_factory()
+            async with session_factory() as session:
                 result = await session.execute(text("SELECT 1"))
                 db_healthy = result.scalar() == 1
         except Exception as e:
