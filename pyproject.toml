@@ -2,7 +2,6 @@
 name = "ai-visibility"
 version = "0.1.0"
 description = "Probabilistic LLM Analytics Platform - Monte Carlo simulation for brand visibility analysis"
-readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "AI Visibility Team" }]
