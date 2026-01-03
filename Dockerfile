@@ -51,5 +51,5 @@ USER appuser
 EXPOSE 8080
 
 # Run application with dynamic port support
-# Railway sets PORT environment variable, defaults to 8080 for local
-CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Railway v2 runtime requires binding to IPv6 address :: for health checks
+CMD ["sh", "-c", "uvicorn backend.app.main:app --host :: --port ${PORT:-8080}"]
