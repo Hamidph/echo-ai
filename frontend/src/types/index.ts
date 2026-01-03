@@ -10,8 +10,8 @@ export interface User {
   is_verified: boolean;
   role: string;
   pricing_tier: string;
-  monthly_iteration_quota: number;
-  iterations_used_this_month: number;
+  monthly_prompt_quota: number;
+  prompts_used_this_month: number;
   created_at: string;
   last_login_at: string | null;
 }
@@ -44,7 +44,7 @@ export interface APIKey {
 }
 
 export interface UsageResponse {
-  iterations_used: number;
+  prompts_used: number;
   monthly_quota: number;
   remaining: number;
   percentage_used: number;

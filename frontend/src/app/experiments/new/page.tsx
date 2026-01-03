@@ -82,12 +82,12 @@ export default function NewExperimentPage() {
       prompt,
       target_brand: targetBrand,
       competitor_brands: competitorBrands.split(",").map((b) => b.trim()).filter(Boolean),
-      llm_provider: provider,
+      provider: provider,
       iterations,
     });
   };
 
-  const remainingQuota = usage?.remaining || 0;
+  const remainingQuota = usage?.remaining ?? 100; // Default to 100 if usage not loaded yet
   const canProceed = step === 1 ? (prompt && targetBrand) : step === 2 ? provider : iterations > 0;
 
   return (
@@ -233,15 +233,15 @@ export default function NewExperimentPage() {
             </div>
           )}
 
-          {/* Step 3: Iterations */}
+          {/* Step 3: Configuration */}
           {step === 3 && (
             <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
-              <h2 className="text-lg font-semibold text-white mb-6">Number of Iterations</h2>
-              
+              <h2 className="text-lg font-semibold text-white mb-6">Experiment Configuration</h2>
+
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400">Iterations</span>
+                    <span className="text-gray-400">Iterations per Experiment</span>
                     <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
                       {iterations}
                     </span>
@@ -262,23 +262,26 @@ export default function NewExperimentPage() {
                     <span>75</span>
                     <span>100</span>
                   </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Each experiment runs {iterations} iterations (API calls) for statistical significance
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                  <span className="text-sm text-gray-400">Remaining quota</span>
-                  <span className={`text-sm font-medium ${remainingQuota >= iterations ? "text-emerald-400" : "text-rose-400"}`}>
-                    {usageLoading ? "..." : remainingQuota} iterations
+                  <span className="text-sm text-gray-400">Remaining prompts</span>
+                  <span className={`text-sm font-medium ${remainingQuota >= 1 ? "text-emerald-400" : "text-rose-400"}`}>
+                    {usageLoading ? "..." : remainingQuota} prompts
                   </span>
                 </div>
 
-                {remainingQuota < iterations && (
+                {remainingQuota < 1 && (
                   <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-lg">
                     <svg className="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div className="flex-1">
-                      <p className="text-sm text-rose-400">Not enough iterations</p>
-                      <p className="text-xs text-gray-500">Upgrade your plan or reduce iterations</p>
+                      <p className="text-sm text-rose-400">No prompts remaining</p>
+                      <p className="text-xs text-gray-500">Upgrade your plan to run more experiments</p>
                     </div>
                     <Link href="/billing" className="text-sm text-cyan-400 hover:text-cyan-300">
                       Upgrade
@@ -338,7 +341,7 @@ export default function NewExperimentPage() {
             ) : (
               <button
                 type="submit"
-                disabled={!canProceed || createExperimentMutation.isPending || remainingQuota < iterations}
+                disabled={!canProceed || createExperimentMutation.isPending || remainingQuota < 1}
                 className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {createExperimentMutation.isPending ? (

@@ -4,31 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
-import { experimentsApi, billingApi } from "@/lib/api";
+import { experimentsApi } from "@/lib/api";
 import { useState } from "react";
-
-// Mock data for visualization
-const mockTrendData = [35, 42, 38, 55, 48, 62, 58, 72, 68, 75, 72, 78];
-const mockCompetitors = [
-  { name: "Your Brand", visibility: 72, sentiment: 94, position: 2, color: "cyan" },
-  { name: "Competitor A", visibility: 65, sentiment: 78, position: 3, color: "gray" },
-  { name: "Competitor B", visibility: 58, sentiment: 82, position: 4, color: "gray" },
-  { name: "Competitor C", visibility: 45, sentiment: 71, position: 6, color: "gray" },
-];
+import { InfoTooltip } from "@/components/ui/Tooltip";
+import Card from "@/components/ui/Card";
+import Badge, { StatusBadge } from "@/components/ui/Badge";
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const [activeMetric, setActiveMetric] = useState<"visibility" | "sentiment" | "position">("visibility");
 
   const { data: experiments, isLoading: experimentsLoading } = useQuery({
     queryKey: ["experiments"],
-    queryFn: () => experimentsApi.list(5, 0),
-    enabled: !!user,
-  });
-
-  const { data: usage, isLoading: usageLoading } = useQuery({
-    queryKey: ["usage"],
-    queryFn: billingApi.getUsage,
+    queryFn: () => experimentsApi.list(100, 0),
     enabled: !!user,
   });
 
@@ -50,6 +37,24 @@ export default function DashboardPage() {
     return "Good evening";
   };
 
+  const completedExperiments = experiments?.experiments?.filter((e: any) => e.status === "completed") || [];
+  const runningExperiments = experiments?.experiments?.filter((e: any) => e.status === "running") || [];
+  const totalExperiments = experiments?.total || 0;
+
+  // Calculate real metrics from experiments
+  const calculateMetrics = () => {
+    if (completedExperiments.length === 0) {
+      return null;
+    }
+
+    // TODO: Calculate real visibility, sentiment, position from experiment results
+    // For now, return null to show empty state
+    return null;
+  };
+
+  const metrics = calculateMetrics();
+  const hasExperiments = totalExperiments > 0;
+
   return (
     <div className="min-h-screen bg-[#030712]">
       <Navbar />
@@ -59,15 +64,17 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-1">
-              {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"}
+              {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"}!
             </h1>
-            <p className="text-gray-500">
-              Your brand visibility is trending up <span className="text-emerald-400">+12.4%</span> this month
+            <p className="text-gray-400">
+              {hasExperiments
+                ? `You have ${totalExperiments} experiment${totalExperiments === 1 ? '' : 's'}`
+                : "Get started by running your first experiment"}
             </p>
           </div>
           <Link
             href="/experiments/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/50"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -76,280 +83,179 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Main Metrics */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {/* Visibility */}
-          <button
-            onClick={() => setActiveMetric("visibility")}
-            className={`relative bg-[#0a0f1a] border rounded-xl p-6 text-left transition-all ${
-              activeMetric === "visibility" ? "border-cyan-500/50 bg-cyan-500/5" : "border-white/10 hover:border-white/20"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">+12%</span>
-            </div>
-            <p className="text-sm text-gray-500 mb-1">Visibility</p>
-            <p className="text-3xl font-bold text-white">72%</p>
-          </button>
-
-          {/* Sentiment */}
-          <button
-            onClick={() => setActiveMetric("sentiment")}
-            className={`relative bg-[#0a0f1a] border rounded-xl p-6 text-left transition-all ${
-              activeMetric === "sentiment" ? "border-violet-500/50 bg-violet-500/5" : "border-white/10 hover:border-white/20"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">+5%</span>
-            </div>
-            <p className="text-sm text-gray-500 mb-1">Sentiment</p>
-            <p className="text-3xl font-bold text-white">94</p>
-          </button>
-
-          {/* Position */}
-          <button
-            onClick={() => setActiveMetric("position")}
-            className={`relative bg-[#0a0f1a] border rounded-xl p-6 text-left transition-all ${
-              activeMetric === "position" ? "border-fuchsia-500/50 bg-fuchsia-500/5" : "border-white/10 hover:border-white/20"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-lg bg-fuchsia-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">↑2</span>
-            </div>
-            <p className="text-sm text-gray-500 mb-1">Position</p>
-            <p className="text-3xl font-bold text-white">#2</p>
-          </button>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Chart & Competitors */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Trend Chart */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Visibility Trend</h3>
-                  <p className="text-sm text-gray-500">Last 12 months</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="text-xs text-gray-500 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">7D</button>
-                  <button className="text-xs text-gray-500 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">30D</button>
-                  <button className="text-xs text-white bg-white/10 px-3 py-1.5 rounded-lg">12M</button>
-                </div>
-              </div>
-              
-              {/* Simple bar chart visualization */}
-              <div className="flex items-end gap-2 h-40">
-                {mockTrendData.map((value, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div 
-                      className="w-full bg-gradient-to-t from-cyan-500/50 to-cyan-500 rounded-t-sm transition-all hover:from-cyan-400/50 hover:to-cyan-400"
-                      style={{ height: `${value}%` }}
-                    />
-                    <span className="text-[10px] text-gray-600">
-                      {["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"][i]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Competitor Comparison */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Competitor Comparison</h3>
-                  <p className="text-sm text-gray-500">All AI Models</p>
-                </div>
-                <button className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Add competitor
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {mockCompetitors.map((comp, i) => (
-                  <div key={comp.name} className="flex items-center gap-4">
-                    <div className="w-32 truncate">
-                      <span className={`text-sm ${i === 0 ? "text-white font-medium" : "text-gray-400"}`}>
-                        {comp.name}
-                      </span>
-                    </div>
-                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all ${
-                          i === 0 ? "bg-gradient-to-r from-cyan-500 to-violet-500" : "bg-white/20"
-                        }`}
-                        style={{ width: `${comp.visibility}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className={i === 0 ? "text-cyan-400 font-medium" : "text-gray-500"}>
-                        {comp.visibility}%
-                      </span>
-                      <span className="text-gray-600 w-8">#{comp.position}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Quick Actions & Recent */}
-          <div className="space-y-6">
+        {hasExperiments ? (
+          <>
             {/* Usage Stats */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Usage</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Analyses Run</span>
-                  <span className="text-white font-medium">
-                    {experimentsLoading ? "..." : experiments?.total || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Iterations Used</span>
-                  <span className="text-white font-medium">
-                    {usageLoading ? "..." : usage?.iterations_used || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Remaining</span>
-                  <span className="text-emerald-400 font-medium">
-                    {usageLoading ? "..." : usage?.remaining || 0}
-                  </span>
-                </div>
-                <div className="pt-4 border-t border-white/5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-500">Plan</span>
-                    <span className="text-white font-medium capitalize">
-                      {usageLoading ? "..." : usage?.pricing_tier || "Free"}
-                    </span>
-                  </div>
-                  <Link 
-                    href="/billing" 
-                    className="block w-full text-center text-sm text-cyan-400 hover:text-cyan-300 py-2 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/5 transition-all"
-                  >
-                    Upgrade Plan
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Link
-                  href="/experiments/new"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <Card className="border-cyan-500/20">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-white">New Analysis</p>
-                    <p className="text-xs text-gray-500">Run visibility check</p>
-                  </div>
-                  <svg className="w-4 h-4 text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                  <InfoTooltip content="Total number of experiments you've run" />
+                </div>
+                <p className="text-sm text-gray-400 mb-1">Total Experiments</p>
+                <p className="text-3xl font-bold text-cyan-400">{totalExperiments}</p>
+              </Card>
 
+              <Card className="border-violet-500/20">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <InfoTooltip content="Experiments that have finished running" />
+                </div>
+                <p className="text-sm text-gray-400 mb-1">Completed</p>
+                <p className="text-3xl font-bold text-violet-400">{completedExperiments.length}</p>
+              </Card>
+
+              <Card className="border-amber-500/20">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <InfoTooltip content="Experiments currently being processed" />
+                </div>
+                <p className="text-sm text-gray-400 mb-1">Running</p>
+                <p className="text-3xl font-bold text-amber-400">{runningExperiments.length}</p>
+              </Card>
+            </div>
+
+            {/* Recent Experiments */}
+            <Card>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Recent Experiments</h2>
                 <Link
                   href="/experiments"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 transition"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-white">View History</p>
-                    <p className="text-xs text-gray-500">Browse all analyses</p>
-                  </div>
-                  <svg className="w-4 h-4 text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  View all →
                 </Link>
               </div>
-            </div>
 
-            {/* Recent Analyses */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Recent</h3>
-                <Link href="/experiments" className="text-xs text-cyan-400 hover:text-cyan-300">
-                  View all
-                </Link>
-              </div>
-              
-              {experimentsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                </div>
-              ) : experiments?.experiments?.length > 0 ? (
-                <div className="space-y-3">
-                  {experiments.experiments.slice(0, 3).map((exp: {
-                    experiment_id: string;
-                    prompt: string;
-                    target_brand: string;
-                    status: string;
-                    created_at: string;
-                  }) => (
-                    <Link
-                      key={exp.experiment_id}
-                      href={`/experiments/${exp.experiment_id}`}
-                      className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                    >
-                      <p className="text-sm text-white truncate mb-1">{exp.prompt}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{exp.target_brand}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          exp.status === "completed" ? "bg-emerald-500/10 text-emerald-400" :
-                          exp.status === "running" ? "bg-cyan-500/10 text-cyan-400" :
-                          exp.status === "failed" ? "bg-rose-500/10 text-rose-400" :
-                          "bg-amber-500/10 text-amber-400"
-                        }`}>
-                          {exp.status}
-                        </span>
+              <div className="space-y-3">
+                {experiments?.experiments?.slice(0, 5).map((exp: any) => (
+                  <Link
+                    key={exp.experiment_id}
+                    href={`/experiments/${exp.experiment_id}`}
+                    className="block p-4 bg-white/60 rounded-xl border border-stone-200 hover:border-blue-200 hover:bg-white shadow-sm hover:shadow-md transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-900 font-medium truncate group-hover:text-blue-600 transition">
+                          {exp.prompt || "Untitled Experiment"}
+                        </p>
+                        <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
+                          <span>Target: {exp.target_brand}</span>
+                          <span>•</span>
+                          <span>{exp.provider || "openai"}</span>
+                          <span>•</span>
+                          <span>{new Date(exp.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-gray-500 mb-4">No analyses yet</p>
+                      <StatusBadge status={exp.status} />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {experiments?.experiments?.length === 0 && (
+                <div className="text-center py-12">
+                  <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-gray-400 mb-4">No experiments yet</p>
                   <Link
                     href="/experiments/new"
-                    className="text-sm text-cyan-400 hover:text-cyan-300"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all"
                   >
-                    Create your first →
+                    Create Your First Experiment
                   </Link>
                 </div>
               )}
+            </Card>
+
+            {/* Quota Information */}
+            <div className="mt-8">
+              <Card className="border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-1">Testing Mode Enabled</h3>
+                    <p className="text-sm text-gray-300">
+                      Unlimited prompts available for testing. Each experiment uses 1 prompt credit and runs 10 iterations (max 10 AI API calls) using gpt-4o.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </>
+        ) : (
+          /* Empty State - No Experiments */
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 flex items-center justify-center mb-6">
+              <svg className="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Welcome to Echo AI</h2>
+            <p className="text-gray-400 text-center max-w-md mb-8">
+              Start analyzing your brand's visibility across AI platforms. Run your first experiment to see how AI search engines respond to prompts about your brand.
+            </p>
+            <Link
+              href="/experiments/new"
+              className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/50"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Experiment
+            </Link>
+
+            {/* Quick Guide */}
+            <div className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl">
+              <Card className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">1️⃣</span>
+                </div>
+                <h3 className="text-white font-semibold mb-2">Enter Your Prompt</h3>
+                <p className="text-sm text-gray-400">
+                  Write a question users might ask AI assistants about your industry
+                </p>
+              </Card>
+
+              <Card className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">2️⃣</span>
+                </div>
+                <h3 className="text-white font-semibold mb-2">Choose AI Provider</h3>
+                <p className="text-sm text-gray-400">
+                  Select ChatGPT, Perplexity, or Claude to test against
+                </p>
+              </Card>
+
+              <Card className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">3️⃣</span>
+                </div>
+                <h3 className="text-white font-semibold mb-2">Get Insights</h3>
+                <p className="text-sm text-gray-400">
+                  See visibility, position, and competitor analysis
+                </p>
+              </Card>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

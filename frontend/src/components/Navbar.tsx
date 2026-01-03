@@ -3,119 +3,89 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const navLinks = [
+    { name: "Features", href: "#features" },
+    { name: "Pricing", href: "#pricing" },
+    { name: "Methodology", href: "#demo" },
+  ];
+
   return (
-    <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5">
+    <nav className="fixed w-full z-50 top-0 start-0 border-b border-stone-200/60 bg-[#FDFCF8]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">ECHO</span>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-11 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px] tracking-wide shadow-md">
+              ECHO
             </div>
-            <span className="font-display font-bold text-xl text-white">Echo AI</span>
+            <span className="self-center text-xl font-heading font-bold whitespace-nowrap text-slate-900">
+              Echo AI
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            {isAuthenticated ? (
-              <>
-                <Link href="/dashboard" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  Dashboard
-                </Link>
-                <Link href="/experiments" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  Analyses
-                </Link>
-                <Link href="/experiments/new" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  New Analysis
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="#features" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  Features
-                </Link>
-                <Link href="#pricing" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  Pricing
-                </Link>
-              </>
-            )}
+          <div className="hidden md:flex items-center gap-6">
+            {!isAuthenticated && navLinks.map(link => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
 
-          {/* Right Side */}
+          {/* Right Side / Auth */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              <div className="relative" ref={menuRef}>
+              <div className="relative" ref={userMenuRef}>
                 <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-all shadow-sm"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {user?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
-                    </span>
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center text-xs font-bold text-blue-700">
+                    {user?.full_name?.charAt(0) || "U"}
                   </div>
-                  <svg className={`w-4 h-4 text-gray-400 transition-transform ${menuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">
+                    {user?.full_name || "User"}
+                  </span>
+                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
 
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#0a0f1a] border border-white/10 rounded-xl shadow-xl py-2 animate-fade-in">
-                    <div className="px-4 py-2 border-b border-white/5">
-                      <p className="text-sm font-medium text-white truncate">{user?.full_name || "User"}</p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                    </div>
-                    <Link href="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Settings
-                    </Link>
-                    <Link href="/billing" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                      Billing
-                    </Link>
-                    <div className="border-t border-white/5 mt-2 pt-2">
-                      <button
-                        onClick={logout}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign out
-                      </button>
-                    </div>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-stone-100 rounded-xl shadow-xl py-2 animate-fade-in ring-1 ring-black/5">
+                    <Link href="/dashboard" className="block px-4 py-2 text-sm text-slate-700 hover:bg-stone-50">Dashboard</Link>
+                    <Link href="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-stone-50">Settings</Link>
+                    <div className="border-t border-stone-100 my-1"></div>
+                    <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-stone-50">Sign out</button>
                   </div>
                 )}
               </div>
             ) : (
               <>
-                <Link href="/login" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  Sign in
-                </Link>
-                <Link href="/register" className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all">
-                  Start Free Trial
+                <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 px-4">Sign in</Link>
+                <Link href="/register" className="text-sm font-bold text-white bg-slate-900 px-4 py-2 rounded-lg hover:bg-slate-800 transition-all shadow-md">
+                  Get Started
                 </Link>
               </>
             )}
@@ -123,61 +93,42 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
+            className="md:hidden p-2 text-slate-500"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-400 hover:text-white"
           >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/5 animate-fade-in">
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-stone-200 py-4 px-4 space-y-2">
+          {!isAuthenticated && navLinks.map(link => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="block py-2 text-base font-medium text-slate-600"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+          <div className="border-t border-stone-100 my-2 pt-2">
             {isAuthenticated ? (
-              <div className="space-y-1">
-                <Link href="/dashboard" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  Dashboard
-                </Link>
-                <Link href="/experiments" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  Analyses
-                </Link>
-                <Link href="/experiments/new" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  New Analysis
-                </Link>
-                <Link href="/settings" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  Settings
-                </Link>
-                <Link href="/billing" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  Billing
-                </Link>
-                <button
-                  onClick={logout}
-                  className="block w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  Sign out
-                </button>
-              </div>
+              <>
+                <Link href="/dashboard" className="block py-2 font-medium text-slate-900">Dashboard</Link>
+                <button onClick={logout} className="block py-2 w-full text-left text-slate-500">Sign out</button>
+              </>
             ) : (
-              <div className="space-y-1">
-                <Link href="/login" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  Sign in
-                </Link>
-                <Link href="/register" className="block px-4 py-2.5 text-sm text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg">
-                  Start Free Trial
-                </Link>
-              </div>
+              <>
+                <Link href="/login" className="block py-2 font-medium text-slate-900">Sign in</Link>
+                <Link href="/register" className="block py-2 font-bold text-blue-600">Get Started</Link>
+              </>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }

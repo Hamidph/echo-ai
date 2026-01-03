@@ -158,7 +158,7 @@ export default function RegisterPage() {
         {/* Benefits */}
         <div className="mt-6 space-y-3">
           {[
-            '100 free iterations to start',
+            '100 free prompts to start',
             'No credit card required',
             'Full access to all features',
           ].map((benefit, i) => (

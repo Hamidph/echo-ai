@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +12,11 @@ export default function ExperimentDetailPage() {
   const params = useParams();
   const experimentId = params.id as string;
   const { user, isLoading: authLoading } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: experiment, isLoading, refetch } = useQuery({
     queryKey: ["experiment", experimentId],
@@ -50,7 +56,16 @@ export default function ExperimentDetailPage() {
 
   // Get metrics from the first batch run if available
   const batchRun = experiment.batch_runs?.[0];
-  const metrics = batchRun?.metrics || {};
+  const rawMetrics = batchRun?.metrics || {};
+
+  // Map backend metrics structure to frontend expected format
+  const metrics = {
+    visibility_score: (rawMetrics.target_visibility?.visibility_rate || 0) * 100,
+    share_of_voice: (rawMetrics.share_of_voice?.[0]?.share || 0) * 100,
+    consistency_score: (rawMetrics.consistency?.consistency_score || 0) * 100,
+    has_hallucinations: rawMetrics.hallucination_rate > 0,
+    total_responses: rawMetrics.total_responses || 0,
+  };
 
   return (
     <div className="min-h-screen bg-[#030712]">
@@ -329,13 +344,17 @@ export default function ExperimentDetailPage() {
         {/* Actions */}
         <div className="flex items-center justify-between mt-8 pt-8 border-t border-white/5">
           <div className="text-sm text-gray-500">
-            Created {new Date(experiment.created_at).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })}
+            {mounted ? (
+              <>Created {new Date(experiment.created_at).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}</>
+            ) : (
+              <span>&nbsp;</span>
+            )}
           </div>
           <Link
             href="/experiments/new"

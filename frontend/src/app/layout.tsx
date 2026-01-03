@@ -1,34 +1,22 @@
 import type { Metadata } from "next";
-import { Outfit, Syne } from "next/font/google";
+import { Inter, Manrope } from "next/font/google"; // Modern, geometric combo
 import "./globals.css";
 import { Providers } from "./providers";
 
-const outfit = Outfit({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-inter",
 });
 
-const syne = Syne({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-syne",
+  variable: "--font-manrope",
 });
 
 export const metadata: Metadata = {
   title: "Echo AI | AI Search Analytics for Marketing Teams",
   description:
-    "Track, analyze, and improve your brand performance on AI search platforms through key metrics like Visibility, Position, and Sentiment.",
-  keywords: [
-    "AI",
-    "LLM",
-    "Brand Visibility",
-    "Analytics",
-    "SEO",
-    "AI Optimization",
-    "Brand Intelligence",
-    "ChatGPT",
-    "Perplexity",
-    "Marketing",
-  ],
+    "Track, analyze, and improve your brand visibility on ChatGPT, Perplexity, and Claude.",
 };
 
 export default function RootLayout({
@@ -37,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${syne.variable}`}>
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+      <body className="font-sans antialiased text-slate-900 bg-[#FDFCF8]">
         <Providers>{children}</Providers>
       </body>
     </html>
