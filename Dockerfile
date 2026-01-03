@@ -52,4 +52,4 @@ EXPOSE 8080
 
 # Run application with dynamic port support
 # Railway sets PORT environment variable, defaults to 8080 for local
-CMD sh -c "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
