@@ -50,6 +50,6 @@ USER appuser
 # Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Run application with Hypercorn (supports dual-stack IPv4+IPv6 binding)
-# Railway docs recommend Hypercorn over Uvicorn for dual-stack support
-CMD ["sh", "-c", "hypercorn backend.app.main:app --bind [::]:${PORT:-8080}"]
+# Run application with Hypercorn (Railway's official recommendation for FastAPI)
+# Use shell to expand PORT variable, default to 8080
+CMD sh -c "hypercorn backend.app.main:app --bind 0.0.0.0:${PORT:-8080}"
