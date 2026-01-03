@@ -50,6 +50,6 @@ USER appuser
 # Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Run application with Hypercorn (Railway's official recommendation for FastAPI)
-# Use shell to expand PORT variable, default to 8080
-CMD sh -c "hypercorn backend.app.main:app --bind 0.0.0.0:${PORT:-8080}"
+# Run application with Hypercorn using full path
+# Ensures hypercorn is found even if PATH inheritance has issues
+CMD ["/opt/venv/bin/hypercorn", "backend.app.main:app", "--bind", "0.0.0.0:8080"]
