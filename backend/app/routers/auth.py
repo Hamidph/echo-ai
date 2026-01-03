@@ -70,7 +70,7 @@ async def register(
         full_name=user_data.full_name,
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
-        monthly_iteration_quota=100,  # Free tier quota
+        monthly_prompt_quota=100,  # Free tier quota (100 prompts/month, each runs 10 iterations)
         quota_reset_date=datetime.now(timezone.utc) + timedelta(days=30),
     )
 
@@ -88,7 +88,7 @@ async def register(
         )
     except Exception as e:
         # Log error but don't fail registration
-        print(f"Failed to send verification email: {e}")
+        logger.error(f"Failed to send verification email to {new_user.email}: {e}", exc_info=True)
 
     return new_user
 
@@ -329,7 +329,7 @@ async def verify_email(
             user_name=user.full_name or user.email,
         )
     except Exception as e:
-        print(f"Failed to send welcome email: {e}")
+        logger.error(f"Failed to send welcome email to {user.email}: {e}", exc_info=True)
 
     return {"message": "Email verified successfully"}
 
@@ -387,7 +387,7 @@ async def forgot_password(
             user_id=str(user.id),
         )
     except Exception as e:
-        print(f"Failed to send password reset email: {e}")
+        logger.error(f"Failed to send password reset email to {user.email}: {e}", exc_info=True)
 
     return {"message": "If the email exists, a password reset link has been sent"}
 

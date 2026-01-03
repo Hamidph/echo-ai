@@ -165,8 +165,8 @@ async def upgrade_user_tier(
         db: Database session.
     """
     user.pricing_tier = new_tier.value
-    user.monthly_iteration_quota = TIER_QUOTAS[new_tier]
-    user.iterations_used_this_month = 0
+    user.monthly_prompt_quota = TIER_QUOTAS[new_tier]
+    user.prompts_used_this_month = 0
 
     await db.commit()
     await db.refresh(user)
@@ -186,7 +186,7 @@ async def downgrade_user_tier(
         db: Database session.
     """
     user.pricing_tier = new_tier.value
-    user.monthly_iteration_quota = TIER_QUOTAS[new_tier]
+    user.monthly_prompt_quota = TIER_QUOTAS[new_tier]
     # Don't reset usage to prevent abuse
 
     await db.commit()
@@ -203,17 +203,17 @@ async def check_usage_quota(user: User) -> bool:
     Returns:
         bool: True if user has quota remaining, False otherwise.
     """
-    return user.iterations_used_this_month < user.monthly_iteration_quota
+    return user.prompts_used_this_month < user.monthly_prompt_quota
 
 
-async def increment_usage(user: User, iterations: int, db: AsyncSession) -> None:
+async def increment_usage(user: User, prompts: int, db: AsyncSession) -> None:
     """
     Increment user's usage counter.
 
     Args:
         user: User to increment usage for.
-        iterations: Number of iterations to add.
+        prompts: Number of prompts to add (each prompt = 1 experiment with 10 iterations).
         db: Database session.
     """
-    user.iterations_used_this_month += iterations
+    user.prompts_used_this_month += prompts
     await db.commit()

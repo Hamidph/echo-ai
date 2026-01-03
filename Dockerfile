@@ -46,12 +46,9 @@ RUN chown -R appuser:appuser /app
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
-
-# Run application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Run application with dynamic port support
+# Railway sets PORT environment variable, defaults to 8080 for local
+CMD sh -c "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"

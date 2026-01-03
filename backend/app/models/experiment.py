@@ -145,13 +145,13 @@ class Experiment(Base):
     user: Mapped["User"] = relationship(
         "User",
         back_populates="experiments",
-        lazy="joined",
+        lazy="select",  # Load on demand to prevent unnecessary joins
     )
     batch_runs: Mapped[list["BatchRun"]] = relationship(
         "BatchRun",
         back_populates="experiment",
         cascade="all, delete-orphan",
-        lazy="selectin",
+        lazy="selectin",  # Keep selectin for batch_runs as they're frequently accessed together
     )
 
     # Indexes for common queries
@@ -417,4 +417,5 @@ class Iteration(Base):
     __table_args__ = (
         Index("ix_iterations_batch_success", "batch_run_id", "is_success"),
         Index("ix_iterations_batch_index", "batch_run_id", "iteration_index"),
+        Index("ix_iterations_status", "status"),  # For filtering by status
     )

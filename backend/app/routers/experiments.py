@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from backend.app.core.config import get_settings
 from backend.app.core.database import DbSession
 from backend.app.core.deps import get_current_active_user
 from backend.app.models.user import User
@@ -67,8 +68,8 @@ limiter = Limiter(key_func=get_remote_address)
 )
 @limiter.limit("10/minute")
 async def create_experiment(
-    request: ExperimentRequest,
-    req: Request,
+    experiment_request: ExperimentRequest,
+    request: Request,
     session: DbSession,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> ExperimentResponse:
@@ -76,7 +77,7 @@ async def create_experiment(
     Create a new visibility experiment.
 
     Args:
-        request: Experiment configuration.
+        experiment_request: Experiment configuration.
         session: Database session.
         current_user: Authenticated user creating the experiment.
 
@@ -84,36 +85,64 @@ async def create_experiment(
         ExperimentResponse with experiment ID and job ID.
     """
     logger.info(
-        f"User {current_user.email} creating experiment for brand '{request.target_brand}'"
+        f"User {current_user.email} creating experiment for brand '{experiment_request.target_brand}'"
     )
+
+    # Validate iterations against max allowed BEFORE quota check
+    settings = get_settings()
+    iterations_requested = experiment_request.iterations
+    if iterations_requested > settings.max_iterations:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Iterations ({iterations_requested}) exceeds maximum allowed ({settings.max_iterations})",
+        )
+
+    # Check quota (skip if testing mode is enabled)
+    # IMPORTANT: Quota is based on number of prompts (iterations), not experiments
+    if not settings.testing_mode and not settings.unlimited_prompts:
+        prompts_needed = iterations_requested
+        if current_user.prompts_used_this_month + prompts_needed > current_user.monthly_prompt_quota:
+            remaining = current_user.monthly_prompt_quota - current_user.prompts_used_this_month
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient quota. Need {prompts_needed} prompts, have {remaining} remaining. Used: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota}",
+            )
+
+        # Increment usage counter by number of iterations
+        current_user.prompts_used_this_month += prompts_needed
+        await session.commit()
+        await session.refresh(current_user)
+        logger.info(f"User {current_user.email} quota: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota} (used {prompts_needed} prompts)")
+    else:
+        logger.info(f"Testing mode enabled - skipping quota check for user {current_user.email}")
 
     # Build configuration dictionary
     config: dict[str, Any] = {
-        "iterations": request.iterations,
-        "temperature": request.temperature,
-        "max_concurrency": request.max_concurrency,
+        "iterations": experiment_request.iterations,
+        "temperature": experiment_request.temperature,
+        "max_concurrency": experiment_request.max_concurrency,
     }
-    if request.model:
-        config["model"] = request.model
-    if request.system_prompt:
-        config["system_prompt"] = request.system_prompt
+    if experiment_request.model:
+        config["model"] = experiment_request.model
+    if experiment_request.system_prompt:
+        config["system_prompt"] = experiment_request.system_prompt
 
     # Create experiment in database
     exp_repo = ExperimentRepository(session)
     experiment = await exp_repo.create_experiment(
         user_id=current_user.id,
-        prompt=request.prompt,
-        target_brand=request.target_brand,
+        prompt=experiment_request.prompt,
+        target_brand=experiment_request.target_brand,
         config=config,
-        competitor_brands=request.competitor_brands,
-        domain_whitelist=request.domain_whitelist,
+        competitor_brands=experiment_request.competitor_brands,
+        domain_whitelist=experiment_request.domain_whitelist,
     )
 
     # Trigger Celery task
     task = execute_experiment_task.delay(
         experiment_id=str(experiment.id),
-        provider=request.provider.value,
-        model=request.model,
+        provider=experiment_request.provider.value,
+        model=experiment_request.model,
     )
 
     logger.info(f"Experiment {experiment.id} created, task {task.id} queued")
@@ -122,7 +151,7 @@ async def create_experiment(
         experiment_id=experiment.id,
         job_id=task.id,
         status="pending",
-        message=f"Experiment queued for execution with {request.iterations} iterations",
+        message=f"Experiment queued for execution with {experiment_request.iterations} iterations",
     )
 
 
@@ -213,6 +242,7 @@ async def get_experiment(
 async def get_experiment_detail(
     experiment_id: UUID,
     session: DbSession,
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> ExperimentDetailResponse:
     """
     Get detailed experiment results with iterations.
@@ -220,21 +250,27 @@ async def get_experiment_detail(
     Args:
         experiment_id: The experiment UUID.
         session: Database session.
+        current_user: Authenticated user requesting the experiment.
 
     Returns:
         ExperimentDetailResponse with iteration details.
 
     Raises:
-        HTTPException: If experiment not found.
+        HTTPException: If experiment not found or access denied.
     """
     exp_repo = ExperimentRepository(session)
-    experiment = await exp_repo.get_experiment_with_results(experiment_id)
+
+    # Verify ownership before fetching results
+    experiment = await exp_repo.get_experiment_by_user(experiment_id, current_user.id)
 
     if not experiment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment {experiment_id} not found",
+            detail="Experiment not found or access denied",
         )
+
+    # Now load full results with iterations
+    experiment = await exp_repo.get_experiment_with_results(experiment_id)
 
     # Build batch run results
     batch_runs = []
@@ -302,6 +338,7 @@ async def get_experiment_detail(
 async def get_visibility_report(
     experiment_id: UUID,
     session: DbSession,
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> VisibilityReport:
     """
     Get visibility report.
@@ -309,21 +346,27 @@ async def get_visibility_report(
     Args:
         experiment_id: The experiment UUID.
         session: Database session.
+        current_user: Authenticated user requesting the report.
 
     Returns:
         VisibilityReport with key metrics.
 
     Raises:
-        HTTPException: If experiment not found or not complete.
+        HTTPException: If experiment not found, access denied, or not complete.
     """
     exp_repo = ExperimentRepository(session)
-    experiment = await exp_repo.get_experiment_with_results(experiment_id)
+
+    # Verify ownership before fetching results
+    experiment = await exp_repo.get_experiment_by_user(experiment_id, current_user.id)
 
     if not experiment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment {experiment_id} not found",
+            detail="Experiment not found or access denied",
         )
+
+    # Load full results
+    experiment = await exp_repo.get_experiment_with_results(experiment_id)
 
     if experiment.status != ExperimentStatus.COMPLETED.value:
         raise HTTPException(
@@ -383,6 +426,7 @@ async def get_visibility_report(
 )
 async def list_experiments(
     session: DbSession,
+    current_user: Annotated[User, Depends(get_current_active_user)],
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     status_filter: str | None = Query(
@@ -396,6 +440,7 @@ async def list_experiments(
 
     Args:
         session: Database session.
+        current_user: Authenticated user.
         limit: Maximum results per page.
         offset: Number of results to skip.
         status_filter: Optional status filter.
@@ -417,6 +462,7 @@ async def list_experiments(
             )
 
     experiments = await exp_repo.list_experiments(
+        user_id=current_user.id,
         limit=limit,
         offset=offset,
         status=status_enum,

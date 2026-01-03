@@ -87,7 +87,8 @@ class RunnerBuilder:
         """
         self.settings = settings or get_settings()
         self._progress_callback = progress_callback
-        self._semaphore: asyncio.Semaphore | None = None
+        # Initialize with default to prevent race conditions in concurrent tasks
+        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(10)
 
     async def run_batch(
         self,
@@ -255,8 +256,6 @@ class RunnerBuilder:
         Returns:
             IterationResult: Result of this single iteration.
         """
-        assert self._semaphore is not None, "Semaphore must be initialized"
-
         start_time = perf_counter()
         retry_count = 0
 

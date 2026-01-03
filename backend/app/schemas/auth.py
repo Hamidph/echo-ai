@@ -54,8 +54,8 @@ class UserResponse(BaseModel):
     is_verified: bool
     role: str
     pricing_tier: str
-    monthly_iteration_quota: int
-    iterations_used_this_month: int
+    monthly_prompt_quota: int
+    prompts_used_this_month: int
     created_at: datetime
     last_login_at: datetime | None
 

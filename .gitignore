@@ -102,7 +102,7 @@ Thumbs.db
 
 # uv
 .python-version
-uv.lock
+# Note: uv.lock should be committed for reproducible builds
 
 # Docker
 docker-compose.override.yml

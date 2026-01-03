@@ -88,17 +88,17 @@ class User(Base):
         default=PricingTier.FREE.value,
         comment="Current pricing tier",
     )
-    monthly_iteration_quota: Mapped[int] = mapped_column(
+    monthly_prompt_quota: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         default=100,
-        comment="Monthly iteration quota based on pricing tier",
+        comment="Monthly prompt quota based on pricing tier (each prompt runs 10 iterations)",
     )
-    iterations_used_this_month: Mapped[int] = mapped_column(
+    prompts_used_this_month: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         default=0,
-        comment="Iterations used in current billing period",
+        comment="Prompts (experiments) used in current billing period",
     )
     quota_reset_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

@@ -15,6 +15,7 @@ single-shot tools cannot provide:
 These metrics create a new category of data: "Generative Risk Analytics".
 """
 
+import logging
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -214,6 +215,17 @@ class AnalysisBuilder:
         total_responses = len(responses)
 
         if total_responses == 0:
+            # Log why there are no successful responses
+            logger = logging.getLogger(__name__)
+            failed_count = sum(
+                1 for i in batch_result.iterations if i.status != IterationStatus.SUCCESS
+            )
+            logger.warning(
+                f"Batch {batch_result.batch_id} has zero successful responses. "
+                f"Total iterations: {len(batch_result.iterations)}, "
+                f"Failed: {failed_count}. "
+                f"Cannot compute visibility metrics."
+            )
             # Return empty results if no successful responses
             return self._empty_result(batch_result)
 
@@ -222,6 +234,9 @@ class AnalysisBuilder:
         for brand in target_brands:
             visibility = self._compute_visibility(responses, brand)
             all_visibility.append(visibility)
+
+        # Compute first mention rates correctly across all brands
+        self._compute_first_mention_rates(responses, all_visibility, target_brands)
 
         # Separate target and competitor visibility
         target_visibility = all_visibility[0] if all_visibility else None
@@ -290,7 +305,6 @@ class AnalysisBuilder:
 
         total_mentions = 0
         responses_with_mention = 0
-        first_mentions = 0
         positions: list[int] = []
 
         for response in responses:
@@ -304,17 +318,11 @@ class AnalysisBuilder:
                 first_pos = matches[0].start()
                 positions.append(first_pos)
 
-                # Check if this brand appears first among all brands
-                # (simplified: just check if it's in first 100 chars)
-                if first_pos < 100:
-                    first_mentions += 1
-
         total_responses = len(responses)
         visibility_rate = responses_with_mention / total_responses if total_responses > 0 else 0.0
         avg_mentions = (
             total_mentions / responses_with_mention if responses_with_mention > 0 else 0.0
         )
-        first_mention_rate = first_mentions / total_responses if total_responses > 0 else 0.0
         avg_position = sum(positions) / len(positions) if positions else None
 
         return VisibilityMetrics(
@@ -322,9 +330,70 @@ class AnalysisBuilder:
             mention_count=total_mentions,
             visibility_rate=visibility_rate,
             avg_mentions_per_response=avg_mentions,
-            first_mention_rate=first_mention_rate,
+            first_mention_rate=0.0,  # Computed separately in _compute_first_mention_rates
             avg_position=avg_position,
         )
+
+    def _compute_first_mention_rates(
+        self,
+        responses: list[str],
+        visibility_metrics: list[VisibilityMetrics],
+        target_brands: list[str],
+    ) -> None:
+        """
+        Compute first mention rates correctly by comparing all brands.
+
+        This method mutates the visibility_metrics in place to set the
+        first_mention_rate field correctly.
+
+        Args:
+            responses: List of LLM response texts.
+            visibility_metrics: List of visibility metrics to update.
+            target_brands: List of brands being analyzed.
+        """
+        # Create brand-to-metrics mapping for quick lookup
+        brand_to_metrics = {vm.brand: vm for vm in visibility_metrics}
+
+        # Initialize first mention counters
+        first_mention_counts = {brand: 0 for brand in target_brands}
+
+        # For each response, find which brand appears first
+        for response in responses:
+            first_brand = None
+            first_pos = float('inf')
+
+            # Check all brands to find which appears first
+            for brand in target_brands:
+                pattern = re.compile(
+                    self._word_boundary_pattern.format(re.escape(brand)),
+                    re.IGNORECASE,
+                )
+                match = pattern.search(response)
+                if match and match.start() < first_pos:
+                    first_pos = match.start()
+                    first_brand = brand
+
+            # Increment counter for the brand that appeared first
+            if first_brand is not None:
+                first_mention_counts[first_brand] += 1
+
+        # Update visibility metrics with correct first mention rates
+        total_responses = len(responses)
+        for brand, count in first_mention_counts.items():
+            if brand in brand_to_metrics:
+                brand_to_metrics[brand] = VisibilityMetrics(
+                    brand=brand_to_metrics[brand].brand,
+                    mention_count=brand_to_metrics[brand].mention_count,
+                    visibility_rate=brand_to_metrics[brand].visibility_rate,
+                    avg_mentions_per_response=brand_to_metrics[brand].avg_mentions_per_response,
+                    first_mention_rate=count / total_responses if total_responses > 0 else 0.0,
+                    avg_position=brand_to_metrics[brand].avg_position,
+                )
+
+                # Update in the original list
+                for i, vm in enumerate(visibility_metrics):
+                    if vm.brand == brand:
+                        visibility_metrics[i] = brand_to_metrics[brand]
 
     def _compute_share_of_voice(
         self,
@@ -391,11 +460,27 @@ class AnalysisBuilder:
             )
 
         # Compute pairwise similarities
+        # For large response sets, sample comparisons to avoid O(N²) explosion
         similarities: list[float] = []
+        max_comparisons = 1000  # Limit comparisons for performance
 
-        for i in range(len(responses)):
-            for j in range(i + 1, len(responses)):
-                # Use rapidfuzz for fast fuzzy matching
+        # Calculate total possible comparisons
+        total_pairs = (len(responses) * (len(responses) - 1)) // 2
+
+        if total_pairs <= max_comparisons:
+            # Use full pairwise for small sets
+            for i in range(len(responses)):
+                for j in range(i + 1, len(responses)):
+                    similarity = fuzz.ratio(responses[i], responses[j])
+                    similarities.append(similarity)
+        else:
+            # Sample pairs for large sets to avoid timeout
+            import random
+
+            pairs = [(i, j) for i in range(len(responses)) for j in range(i + 1, len(responses))]
+            sampled_pairs = random.sample(pairs, max_comparisons)
+
+            for i, j in sampled_pairs:
                 similarity = fuzz.ratio(responses[i], responses[j])
                 similarities.append(similarity)
 
@@ -404,9 +489,13 @@ class AnalysisBuilder:
         min_similarity = min(similarities)
         max_similarity = max(similarities)
 
-        # Compute standard deviation
-        variance = sum((s - avg_similarity) ** 2 for s in similarities) / len(similarities)
-        std_deviation = variance**0.5
+        # Compute standard deviation (sample std, not population)
+        # Use Bessel's correction (N-1) for unbiased estimator
+        if len(similarities) > 1:
+            variance = sum((s - avg_similarity) ** 2 for s in similarities) / (len(similarities) - 1)
+            std_deviation = variance**0.5
+        else:
+            std_deviation = 0.0
 
         # Normalize to 0-1 score (higher = more consistent)
         # A score of 100 similarity = 1.0, score of 0 = 0.0
@@ -474,8 +563,15 @@ class AnalysisBuilder:
                 # Extract domain from URL
                 domain = self._extract_domain(url)
 
-                # Check if domain is in whitelist
-                if any(w in domain.lower() for w in whitelist_normalized):
+                # Check if domain is in whitelist (exact match or subdomain)
+                is_valid = False
+                for whitelisted_domain in whitelist_normalized:
+                    # Check if domain exactly matches or is a subdomain
+                    if domain == whitelisted_domain or domain.endswith('.' + whitelisted_domain):
+                        is_valid = True
+                        break
+
+                if is_valid:
                     valid_citations += 1
                 else:
                     flagged_urls.append(url)

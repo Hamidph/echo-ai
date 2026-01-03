@@ -8,10 +8,11 @@ Innovation: Configuration supports probabilistic engine parameters like
 default iteration counts and confidence interval thresholds.
 """
 
+import os
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, computed_field
+from pydantic import Field, PostgresDsn, RedisDsn, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,13 +48,36 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = Field(
-        default="change-this-to-a-secret-key-in-production-use-openssl-rand-hex-32",
-        description="Secret key for JWT token signing (MUST be changed in production)",
+        default="dev-secret-key-DO-NOT-USE-IN-PRODUCTION",
+        description="Secret key for JWT token signing (MUST be set in production via SECRET_KEY env var)",
     )
     sentry_dsn: str | None = Field(
         default=None,
         description="Sentry DSN for error tracking (production only)",
     )
+
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v: str, info: Any) -> str:
+        """
+        Validate that secret key is not the default in production.
+
+        Raises:
+            ValueError: If using default secret key in production environment.
+        """
+        environment = info.data.get("environment", "development")
+        if environment == "production":
+            if v == "dev-secret-key-DO-NOT-USE-IN-PRODUCTION":
+                raise ValueError(
+                    "SECRET_KEY must be set in production environment. "
+                    "Generate a secure key with: openssl rand -hex 32"
+                )
+            if len(v) < 32:
+                raise ValueError(
+                    "SECRET_KEY must be at least 32 characters long in production. "
+                    "Generate a secure key with: openssl rand -hex 32"
+                )
+        return v
 
     # Stripe Billing
     stripe_api_key: str | None = Field(
@@ -104,7 +128,21 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def database_url(self) -> PostgresDsn:
-        """Construct PostgreSQL connection URL from components."""
+        """
+        Construct PostgreSQL connection URL from components or use Railway's DATABASE_URL.
+        
+        Railway provides DATABASE_URL as a single environment variable.
+        For local development, constructs URL from individual components.
+        """
+        # Check if Railway/external DATABASE_URL is provided
+        database_url_env = os.getenv("DATABASE_URL")
+        if database_url_env:
+            # Railway uses postgresql:// but SQLAlchemy async needs postgresql+asyncpg://
+            if database_url_env.startswith("postgresql://"):
+                database_url_env = database_url_env.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return PostgresDsn(database_url_env)
+        
+        # Fallback to component-based construction for local development
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=self.postgres_user,
@@ -136,7 +174,18 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def redis_url(self) -> RedisDsn:
-        """Construct Redis connection URL from components."""
+        """
+        Construct Redis connection URL from components or use Railway's REDIS_URL.
+        
+        Railway provides REDIS_URL as a single environment variable.
+        For local development, constructs URL from individual components.
+        """
+        # Check if Railway/external REDIS_URL is provided
+        redis_url_env = os.getenv("REDIS_URL")
+        if redis_url_env:
+            return RedisDsn(redis_url_env)
+        
+        # Fallback to component-based construction for local development
         return RedisDsn.build(
             scheme="redis",
             password=self.redis_password,
@@ -166,8 +215,22 @@ class Settings(BaseSettings):
         description="Confidence level for statistical intervals",
     )
 
+    # Testing Mode Configuration
+    testing_mode: bool = Field(
+        default=False,
+        description="Enable testing mode with unlimited prompts",
+    )
+    unlimited_prompts: bool = Field(
+        default=False,
+        description="Disable prompt quota limits (for testing only)",
+    )
+
     # LLM Provider API Keys (loaded from environment)
     openai_api_key: str | None = Field(default=None, description="OpenAI API key")
+    openai_default_model: str = Field(
+        default="gpt-4o",
+        description="Default OpenAI model to use (gpt-4o matches ChatGPT UI)",
+    )
     anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
     perplexity_api_key: str | None = Field(default=None, description="Perplexity API key")
 

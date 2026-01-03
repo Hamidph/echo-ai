@@ -55,7 +55,7 @@ class PortalSessionResponse(BaseModel):
 class UsageResponse(BaseModel):
     """Schema for usage information."""
 
-    iterations_used: int
+    prompts_used: int
     monthly_quota: int
     remaining: int
     percentage_used: float
@@ -134,16 +134,16 @@ async def get_usage(
     """
     Get current usage statistics for the user.
     """
-    remaining = current_user.monthly_iteration_quota - current_user.iterations_used_this_month
+    remaining = current_user.monthly_prompt_quota - current_user.prompts_used_this_month
     percentage_used = (
-        (current_user.iterations_used_this_month / current_user.monthly_iteration_quota) * 100
-        if current_user.monthly_iteration_quota > 0
+        (current_user.prompts_used_this_month / current_user.monthly_prompt_quota) * 100
+        if current_user.monthly_prompt_quota > 0
         else 0
     )
 
     return UsageResponse(
-        iterations_used=current_user.iterations_used_this_month,
-        monthly_quota=current_user.monthly_iteration_quota,
+        prompts_used=current_user.prompts_used_this_month,
+        monthly_quota=current_user.monthly_prompt_quota,
         remaining=remaining,
         percentage_used=round(percentage_used, 2),
         pricing_tier=current_user.pricing_tier,
@@ -242,7 +242,7 @@ async def stripe_webhook(
             user = result.scalar_one_or_none()
 
             if user:
-                user.iterations_used_this_month = 0
+                user.prompts_used_this_month = 0
                 await db.commit()
 
     elif event_type == "invoice.payment_failed":

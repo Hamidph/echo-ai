@@ -8,6 +8,7 @@ Innovation: The platform uses async context managers for resource lifecycle,
 ensuring clean startup/shutdown of database and Redis connections.
 """
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -26,6 +27,9 @@ from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.billing import router as billing_router
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -57,18 +61,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     redis_healthy = await check_redis_health()
     if not redis_healthy:
         # Log warning but don't fail - Redis might not be needed for all operations
-        print("Warning: Redis connection not available")
+        logger.warning("Redis connection not available - some features may be limited")
 
-    print(f"Starting {settings.app_name} v{settings.app_version}")
-    print(f"Environment: {settings.environment}")
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    logger.info(f"Environment: {settings.environment}")
 
     yield
 
     # Shutdown: Cleanup resources
-    print("Shutting down application...")
+    logger.info("Shutting down application...")
     await close_redis_connection()
     await engine.dispose()
-    print("Cleanup complete")
+    logger.info("Cleanup complete")
 
 
 def create_application() -> FastAPI:
@@ -113,7 +117,6 @@ def create_application() -> FastAPI:
         if settings.environment == "development"
         else [
             settings.frontend_url,
-            "https://echo-ai.vercel.app",  # Add your production frontend URL
         ]
     )
     app.add_middleware(
