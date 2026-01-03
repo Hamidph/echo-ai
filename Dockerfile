@@ -8,9 +8,10 @@ WORKDIR /app
 # Install uv for fast dependency management
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files
+# Copy dependency files (including README.md required by pyproject.toml)
 COPY pyproject.toml ./
 COPY uv.lock* ./
+COPY README.md ./
 
 # Install dependencies to a virtual environment
 RUN uv venv /opt/venv
