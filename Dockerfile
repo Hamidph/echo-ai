@@ -50,6 +50,6 @@ USER appuser
 # Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Run application with dynamic port support
-# Railway v2 runtime requires binding to IPv6 address :: for health checks
-CMD ["sh", "-c", "uvicorn backend.app.main:app --host :: --port ${PORT:-8080}"]
+# Run application with Hypercorn (supports dual-stack IPv4+IPv6 binding)
+# Railway docs recommend Hypercorn over Uvicorn for dual-stack support
+CMD ["sh", "-c", "hypercorn backend.app.main:app --bind [::]:${PORT:-8080}"]
