@@ -34,8 +34,8 @@ railway init
 
 ### 3. Add Services
 ```bash
-railway add --plugin postgresql
-railway add --plugin redis
+railway add --database postgres
+railway add --database redis
 ```
 
 ### 4. Set Environment Variables
@@ -45,20 +45,20 @@ export JWT_SECRET=$(openssl rand -base64 32)
 export SECRET_KEY=$(openssl rand -base64 32)
 
 # Set variables
-railway variables set APP_NAME="Echo AI"
-railway variables set APP_VERSION="1.0.0"
-railway variables set ENVIRONMENT="production"
-railway variables set JWT_SECRET="$JWT_SECRET"
-railway variables set SECRET_KEY="$SECRET_KEY"
-railway variables set FRONTEND_URL="https://your-frontend.vercel.app"
-railway variables set CELERY_BROKER_URL="\${{REDIS_URL}}"
-railway variables set CELERY_RESULT_BACKEND="\${{REDIS_URL}}"
-railway variables set MAX_WORKERS="4"
-railway variables set LOG_LEVEL="INFO"
+railway variables --set "APP_NAME=Echo AI"
+railway variables --set "APP_VERSION=1.0.0"
+railway variables --set "ENVIRONMENT=production"
+railway variables --set "JWT_SECRET=$JWT_SECRET"
+railway variables --set "SECRET_KEY=$SECRET_KEY"
+railway variables --set "FRONTEND_URL=https://your-frontend.vercel.app"
+railway variables --set "CELERY_BROKER_URL=\${{REDIS_URL}}"
+railway variables --set "CELERY_RESULT_BACKEND=\${{REDIS_URL}}"
+railway variables --set "MAX_WORKERS=4"
+railway variables --set "LOG_LEVEL=INFO"
 
 # Stripe (update later with real keys)
-railway variables set STRIPE_SECRET_KEY="sk_test_placeholder"
-railway variables set STRIPE_WEBHOOK_SECRET="whsec_placeholder"
+railway variables --set "STRIPE_SECRET_KEY=sk_test_placeholder"
+railway variables --set "STRIPE_WEBHOOK_SECRET=whsec_placeholder"
 ```
 
 ### 5. Deploy
@@ -167,7 +167,7 @@ vercel --prod
 ### 3. Update Backend CORS
 ```bash
 # After getting Vercel URL
-railway variables set FRONTEND_URL="https://your-app.vercel.app"
+railway variables --set "FRONTEND_URL=https://your-app.vercel.app"
 ```
 
 ---
@@ -251,7 +251,7 @@ railway restart
 
 ### Update Environment Variable
 ```bash
-railway variables set VARIABLE_NAME="new-value"
+railway variables --set "VARIABLE_NAME=new-value"
 ```
 
 ### Redeploy Latest Code

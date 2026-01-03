@@ -54,14 +54,14 @@ echo ""
 # Step 4: Add PostgreSQL database
 echo -e "${YELLOW}[4/7]${NC} Setting up PostgreSQL database..."
 echo -e "${BLUE}Adding PostgreSQL to your project...${NC}"
-railway add --plugin postgresql || echo -e "${YELLOW}PostgreSQL might already exist${NC}"
+railway add --database postgres || echo -e "${YELLOW}PostgreSQL might already exist${NC}"
 echo -e "${GREEN}✓ PostgreSQL configured!${NC}"
 echo ""
 
 # Step 5: Add Redis
 echo -e "${YELLOW}[5/7]${NC} Setting up Redis cache..."
 echo -e "${BLUE}Adding Redis to your project...${NC}"
-railway add --plugin redis || echo -e "${YELLOW}Redis might already exist${NC}"
+railway add --database redis || echo -e "${YELLOW}Redis might already exist${NC}"
 echo -e "${GREEN}✓ Redis configured!${NC}"
 echo ""
 
@@ -70,35 +70,35 @@ echo -e "${YELLOW}[6/7]${NC} Configuring environment variables..."
 echo -e "${BLUE}Setting up essential environment variables...${NC}"
 
 # Core Settings
-railway variables set APP_NAME="Echo AI"
-railway variables set APP_VERSION="1.0.0"
-railway variables set ENVIRONMENT="production"
+railway variables --set "APP_NAME=Echo AI"
+railway variables --set "APP_VERSION=1.0.0"
+railway variables --set "ENVIRONMENT=production"
 
 # Security
 echo -e "${YELLOW}⚠️  Generating secure JWT secret...${NC}"
 JWT_SECRET=$(openssl rand -base64 32)
-railway variables set JWT_SECRET="$JWT_SECRET"
+railway variables --set "JWT_SECRET=$JWT_SECRET"
 
 echo -e "${YELLOW}⚠️  Generating secure secret key...${NC}"
 SECRET_KEY=$(openssl rand -base64 32)
-railway variables set SECRET_KEY="$SECRET_KEY"
+railway variables --set "SECRET_KEY=$SECRET_KEY"
 
 # CORS (you'll need to update this after frontend deployment)
 echo -e "${YELLOW}Enter your frontend URL (e.g., https://echo-ai.vercel.app):${NC}"
 read -p "Frontend URL: " FRONTEND_URL
-railway variables set FRONTEND_URL="$FRONTEND_URL"
+railway variables --set "FRONTEND_URL=$FRONTEND_URL"
 
 # Worker Settings
-railway variables set CELERY_BROKER_URL="\${{REDIS_URL}}"
-railway variables set CELERY_RESULT_BACKEND="\${{REDIS_URL}}"
-railway variables set MAX_WORKERS="4"
+railway variables --set "CELERY_BROKER_URL=\${{REDIS_URL}}"
+railway variables --set "CELERY_RESULT_BACKEND=\${{REDIS_URL}}"
+railway variables --set "MAX_WORKERS=4"
 
 # Redis Settings
-railway variables set REDIS_MAX_CONNECTIONS="10"
-railway variables set REDIS_SOCKET_KEEPALIVE="true"
+railway variables --set "REDIS_MAX_CONNECTIONS=10"
+railway variables --set "REDIS_SOCKET_KEEPALIVE=true"
 
 # Logging
-railway variables set LOG_LEVEL="INFO"
+railway variables --set "LOG_LEVEL=INFO"
 
 # Email (optional - you mentioned you have a working email)
 echo -e "${YELLOW}Do you want to configure email settings now? (y/n)${NC}"
@@ -111,17 +111,17 @@ if [ "$configure_email" = "y" ]; then
     echo ""
     read -p "From Email: " FROM_EMAIL
     
-    railway variables set SMTP_HOST="$SMTP_HOST"
-    railway variables set SMTP_PORT="$SMTP_PORT"
-    railway variables set SMTP_USERNAME="$SMTP_USERNAME"
-    railway variables set SMTP_PASSWORD="$SMTP_PASSWORD"
-    railway variables set FROM_EMAIL="$FROM_EMAIL"
+    railway variables --set "SMTP_HOST=$SMTP_HOST"
+    railway variables --set "SMTP_PORT=$SMTP_PORT"
+    railway variables --set "SMTP_USERNAME=$SMTP_USERNAME"
+    railway variables --set "SMTP_PASSWORD=$SMTP_PASSWORD"
+    railway variables --set "FROM_EMAIL=$FROM_EMAIL"
 fi
 
 # Stripe (you mentioned you'll add this later)
 echo -e "${YELLOW}Stripe configuration (you can update these later):${NC}"
-railway variables set STRIPE_SECRET_KEY="sk_test_placeholder"
-railway variables set STRIPE_WEBHOOK_SECRET="whsec_placeholder"
+railway variables --set "STRIPE_SECRET_KEY=sk_test_placeholder"
+railway variables --set "STRIPE_WEBHOOK_SECRET=whsec_placeholder"
 
 echo -e "${GREEN}✓ Environment variables configured!${NC}"
 echo ""
@@ -164,7 +164,7 @@ echo -e "   - Deploy: ${GREEN}cd frontend && vercel --prod${NC}"
 echo ""
 echo -e "6. ${BLUE}Update CORS:${NC}"
 echo -e "   - After frontend deployment, update FRONTEND_URL:"
-echo -e "     ${GREEN}railway variables set FRONTEND_URL=<your-vercel-url>${NC}"
+echo -e "     ${GREEN}railway variables --set FRONTEND_URL=<your-vercel-url>${NC}"
 echo ""
 echo -e "${GREEN}✨ Your Echo AI platform is now live!${NC}"
 echo ""
