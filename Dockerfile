@@ -17,6 +17,7 @@ COPY frontend/ .
 # but the current api.ts implementation relies on this env var)
 ENV NEXT_PUBLIC_API_URL=https://echo-ai-production.up.railway.app
 RUN npm run build
+RUN ls -la out || echo "Frontend out dir missing in builder"
 
 # Stage 2: Backend Builder
 FROM python:3.11-slim as backend_builder
@@ -63,6 +64,7 @@ COPY alembic.ini ./
 
 # Copy built frontend assets
 COPY --from=frontend_builder /app/frontend/out /app/static
+RUN ls -la /app/static || echo "Static dir missing or empty"
 
 # Change ownership
 RUN chown -R appuser:appuser /app
