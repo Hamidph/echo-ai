@@ -120,7 +120,7 @@ export default function ExperimentsPage() {
                 }) => (
                   <Link
                     key={exp.experiment_id}
-                    href={`/experiments/${exp.experiment_id}`}
+                    href={`/experiments/detail?id=${exp.experiment_id}`}
                     className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-white/5 transition-colors group"
                   >
                     <div className="col-span-5">
@@ -176,9 +176,8 @@ export default function ExperimentsPage() {
                         <button
                           key={i}
                           onClick={() => setPage(i)}
-                          className={`w-8 h-8 text-sm rounded-md transition-colors ${
-                            page === i ? "bg-cyan-500 text-white" : "text-gray-500 hover:text-white hover:bg-white/5"
-                          }`}
+                          className={`w-8 h-8 text-sm rounded-md transition-colors ${page === i ? "bg-cyan-500 text-white" : "text-gray-500 hover:text-white hover:bg-white/5"
+                            }`}
                         >
                           {i + 1}
                         </button>
@@ -219,6 +218,6 @@ export default function ExperimentsPage() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }

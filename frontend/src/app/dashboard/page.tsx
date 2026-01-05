@@ -153,7 +153,7 @@ export default function DashboardPage() {
                     {experiments?.experiments?.map((exp: any) => (
                       <Link
                         key={exp.experiment_id}
-                        href={`/experiments/${exp.experiment_id}`}
+                        href={`/experiments/detail?id=${exp.experiment_id}`}
                         className="block p-4 bg-white/5 rounded-xl border border-white/5 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group"
                       >
                         <div className="flex items-start justify-between gap-4">

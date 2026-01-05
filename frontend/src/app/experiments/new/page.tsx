@@ -65,7 +65,7 @@ export default function NewExperimentPage() {
     mutationFn: experimentsApi.create,
     onSuccess: (data) => {
       toast.success("Analysis started successfully!");
-      router.push(`/experiments/${(data as any).experiment_id}`);
+      router.push(`/experiments/detail?id=${(data as any).experiment_id}`);
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { detail?: string } } };
