@@ -55,4 +55,5 @@ EXPOSE 8080
 
 # Run application with Hypercorn using full path
 # Ensures hypercorn is found even if PATH inheritance has issues
-CMD ["/opt/venv/bin/hypercorn", "backend.app.main:app", "--bind", "0.0.0.0:8080"]
+# Run migrations and then start application
+CMD ["/bin/sh", "-c", "/opt/venv/bin/alembic upgrade head && /opt/venv/bin/hypercorn backend.app.main:app --bind 0.0.0.0:8080"]
