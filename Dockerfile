@@ -1,14 +1,32 @@
-# Multi-stage Dockerfile for production deployment
-# Stage 1: Builder - Install dependencies
-FROM python:3.11-slim as builder
+# Multi-stage Dockerfile for monolithic deployment
+# Stage 1: Frontend Builder
+FROM node:20-slim AS frontend_builder
+WORKDIR /app/frontend
 
-# Set working directory
+# Copy frontend dependency files
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend source
+COPY frontend/ .
+
+# Build frontend (static export)
+# We set the API URL to the production Railway URL
+# This enables the frontend to talk to the backend on the same domain
+# (Functionally, since we are serving static files, we could use relative paths,
+# but the current api.ts implementation relies on this env var)
+ENV NEXT_PUBLIC_API_URL=https://echo-ai-production.up.railway.app
+RUN npm run build
+
+# Stage 2: Backend Builder
+FROM python:3.11-slim as backend_builder
+
 WORKDIR /app
 
 # Install uv for fast dependency management
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files (including README.md required by pyproject.toml)
+# Copy dependency files
 COPY pyproject.toml ./
 COPY uv.lock* ./
 COPY README.md ./
@@ -21,22 +39,21 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV UV_LINK_MODE=copy
 RUN uv sync --frozen
 
-# Stage 2: Runtime - Minimal production image
+# Stage 3: Runtime
 FROM python:3.11-slim
 
-# Install runtime dependencies only
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
+# Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# Set working directory
 WORKDIR /app
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
+# Copy virtual environment
+COPY --from=backend_builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
@@ -44,16 +61,16 @@ COPY backend/ ./backend/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 
-# Change ownership to non-root user
+# Copy built frontend assets
+COPY --from=frontend_builder /app/frontend/out /app/static
+
+# Change ownership
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
-# Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Run application with Hypercorn using full path
-# Ensures hypercorn is found even if PATH inheritance has issues
-# Run migrations and then start application
+# Run migrations and start application
 CMD ["/bin/sh", "-c", "/opt/venv/bin/alembic upgrade head && /opt/venv/bin/hypercorn backend.app.main:app --bind 0.0.0.0:8080"]

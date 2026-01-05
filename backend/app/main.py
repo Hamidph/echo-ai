@@ -130,6 +130,20 @@ def create_application() -> FastAPI:
     # Register routers
     _register_routers(app, settings)
 
+    # Innovation: Serve React Frontend Static Files (Production/Docker)
+    # This allows the backend to serve the frontend, creating a single deployable unit.
+    import os
+    from fastapi.staticfiles import StaticFiles
+
+    static_dir = "/app/static"
+    if os.path.exists(static_dir):
+        # Mount specific Next.js assets
+        app.mount("/_next", StaticFiles(directory=os.path.join(static_dir, "_next")), name="next-static")
+        
+        # Mount root content with html=True to handle page defaults
+        # explicitly placed after API routes to avoid conflicts
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
     return app
 
 
