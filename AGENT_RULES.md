@@ -13,11 +13,17 @@ This document defines the rules for all AI agents (Claude, Cursor, Gemini, etc.)
 - **Method**: The application is deployed as a single Railway service (Monolithic Deployment). 
     - Frontend is statically exported and served by the Backend (`FastAPI`).
     - There is NO separate Vercel deployment.
+- **Local == Production**: Every change made locally MUST be committed to GitHub and deployed to Railway immediately. The production environment is the source of truth.
 - **Script**: Always refer to `complete_deployment.sh` as the executable source of truth for deployment commands.
 
 ## 3. Code Quality
 - **Redundancy**: detailed audit of code redundancy is required. Do not duplicate logic between `frontend/lib` and `backend/core` if not necessary (though language separation exists).
 - **Configuration**: `NEXT_PUBLIC_API_URL` should be used for build-time configuration in `Dockerfile`. Runtime configuration is handled via relative paths (`/api/v1`) since the frontend is served from the same origin.
 
-## 4. Workflows
 - Check `.agent/workflows` before inventing new procedures.
+
+## 5. Troubleshooting & Verification
+- **Health Check**: `curl https://<your-app>.up.railway.app/health`
+- **Logs**: `railway logs`
+- **Shell Access**: `railway run /bin/bash`
+- **Manual Deploy**: `railway up` (only if `complete_deployment.sh` is overkill)

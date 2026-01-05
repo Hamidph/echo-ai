@@ -92,6 +92,7 @@ async def register(
         )
     except Exception as e:
         # Log error but don't fail registration
+        logger = logging.getLogger(__name__)
         logger.error(f"Failed to send verification email to {new_user.email}: {e}", exc_info=True)
 
     return new_user
