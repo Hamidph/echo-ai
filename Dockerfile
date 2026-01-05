@@ -15,7 +15,8 @@ COPY frontend/ .
 # This enables the frontend to talk to the backend on the same domain
 # (Functionally, since we are serving static files, we could use relative paths,
 # but the current api.ts implementation relies on this env var)
-ENV NEXT_PUBLIC_API_URL=https://echo-ai-production.up.railway.app
+# ENV NEXT_PUBLIC_API_URL=https://echo-ai-production.up.railway.app
+# We rely on build args or default behavior now
 RUN npm run build
 
 # Stage 2: Backend Builder

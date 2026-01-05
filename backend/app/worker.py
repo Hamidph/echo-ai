@@ -168,55 +168,61 @@ async def _execute_experiment_async(
     # Use a single atomic transaction for the entire operation
     try:
         async with session_factory() as session:
-            async with session.begin():
-                # Initialize repositories
-                exp_repo = ExperimentRepository(session)
-                batch_repo = BatchRunRepository(session)
-                iter_repo = IterationRepository(session)
+                # Phase 1: Start Experiment (Transaction 1)
+                async with session.begin():
+                    # Initialize repositories
+                    exp_repo = ExperimentRepository(session)
+                    batch_repo = BatchRunRepository(session)
+                    
+                    # Fetch experiment
+                    experiment = await exp_repo.get_experiment(UUID(experiment_id))
+                    if not experiment:
+                        raise ValueError(f"Experiment {experiment_id} not found")
 
-                # Fetch experiment
-                experiment = await exp_repo.get_experiment(UUID(experiment_id))
-                if not experiment:
-                    raise ValueError(f"Experiment {experiment_id} not found")
+                    # Update experiment status to running
+                    await exp_repo.update_experiment_status(
+                        UUID(experiment_id),
+                        ExperimentStatus.RUNNING,
+                    )
 
-                # Update experiment status to running
-                await exp_repo.update_experiment_status(
-                    UUID(experiment_id),
-                    ExperimentStatus.RUNNING,
-                )
+                    # Create batch run record
+                    batch_run = await batch_repo.create_batch_run(
+                        experiment_id=UUID(experiment_id),
+                        provider=provider,
+                        model=model or "default",
+                    )
 
-                # Create batch run record
-                batch_run = await batch_repo.create_batch_run(
-                    experiment_id=UUID(experiment_id),
-                    provider=provider,
-                    model=model or "default",
-                )
+                    # Update batch status to running
+                    await batch_repo.update_batch_status(
+                        batch_run.id,
+                        BatchRunStatus.RUNNING,
+                        started_at=datetime.utcnow(),
+                    )
+                    
+                    # Store needed data for next phases
+                    batch_run_id = batch_run.id
+                    user_id = experiment.user_id
+                    config_dict = experiment.config or {}
+                    iterations_count = config_dict.get("iterations", 10)
+                    prompt = experiment.prompt
+                    target_brand = experiment.target_brand
+                    competitor_brands = experiment.competitor_brands
+                    domain_whitelist = experiment.domain_whitelist
+                    
+                    # Parse provider enum
+                    provider_enum = LLMProvider(provider)
 
-                # Update batch status to running
-                await batch_repo.update_batch_status(
-                    batch_run.id,
-                    BatchRunStatus.RUNNING,
-                    started_at=datetime.utcnow(),
-                )
+                    # Build batch configuration
+                    batch_config = BatchConfig(
+                        iterations=iterations_count,
+                        max_concurrency=config_dict.get("max_concurrency", 10),
+                        temperature=config_dict.get("temperature", 0.7),
+                        max_tokens=config_dict.get("max_tokens"),
+                        model=model or config_dict.get("model"),
+                        system_prompt=config_dict.get("system_prompt"),
+                    )
 
-                # Flush to get batch_run.id for iterations
-                await session.flush()
-
-                # Parse provider enum
-                provider_enum = LLMProvider(provider)
-
-                # Build batch configuration from experiment config
-                config_dict = experiment.config or {}
-                batch_config = BatchConfig(
-                    iterations=config_dict.get("iterations", 10),
-                    max_concurrency=config_dict.get("max_concurrency", 10),
-                    temperature=config_dict.get("temperature", 0.7),
-                    max_tokens=config_dict.get("max_tokens"),
-                    model=model or config_dict.get("model"),
-                    system_prompt=config_dict.get("system_prompt"),
-                )
-
-                # Execute the batch run
+                # Phase 2: Execute Batch (No DB Lock)
                 logger.info(
                     f"Running batch for experiment {experiment_id}: "
                     f"{batch_config.iterations} iterations"
@@ -224,72 +230,80 @@ async def _execute_experiment_async(
 
                 runner = RunnerBuilder()
                 batch_result = await runner.run_batch(
-                    prompt=experiment.prompt,
+                    prompt=prompt,
                     provider=provider_enum,
                     config=batch_config,
                 )
 
-                # Store iteration results
-                iterations_data = []
-                for iteration in batch_result.iterations:
-                    iter_data: dict[str, Any] = {
-                        "batch_run_id": batch_run.id,
-                        "iteration_index": iteration.iteration_index,
-                        "is_success": iteration.status == IterationStatus.SUCCESS,
-                        "status": iteration.status.value,
-                        "latency_ms": iteration.latency_ms,
-                        "error_message": iteration.error_message,
-                    }
+                # Phase 3: Save Iterations (Transaction 2)
+                async with session.begin():
+                    # Re-init repositories for new transaction scope
+                    iter_repo = IterationRepository(session)
+                    
+                    iterations_data = []
+                    for iteration in batch_result.iterations:
+                        iter_data: dict[str, Any] = {
+                            "batch_run_id": batch_run_id,
+                            "iteration_index": iteration.iteration_index,
+                            "is_success": iteration.status == IterationStatus.SUCCESS,
+                            "status": iteration.status.value,
+                            "latency_ms": iteration.latency_ms,
+                            "error_message": iteration.error_message,
+                        }
 
-                    if iteration.response:
-                        iter_data["raw_response"] = iteration.response.content
-                        if iteration.response.usage:
-                            iter_data["prompt_tokens"] = iteration.response.usage.prompt_tokens
-                            iter_data["completion_tokens"] = iteration.response.usage.completion_tokens
-                            iter_data["total_tokens"] = iteration.response.usage.total_tokens
+                        if iteration.response:
+                            iter_data["raw_response"] = iteration.response.content
+                            if iteration.response.usage:
+                                iter_data["prompt_tokens"] = iteration.response.usage.prompt_tokens
+                                iter_data["completion_tokens"] = iteration.response.usage.completion_tokens
+                                iter_data["total_tokens"] = iteration.response.usage.total_tokens
 
-                    iterations_data.append(iter_data)
+                        iterations_data.append(iter_data)
 
-                await iter_repo.bulk_create_iterations(iterations_data)
+                    await iter_repo.bulk_create_iterations(iterations_data)
 
-                # Run analysis
+                # Phase 4: Analyze (No DB Lock)
                 logger.info(f"Analyzing results for experiment {experiment_id}")
 
-                target_brands = [experiment.target_brand]
-                if experiment.competitor_brands:
-                    target_brands.extend(experiment.competitor_brands)
+                target_brands_list = [target_brand]
+                if competitor_brands:
+                    target_brands_list.extend(competitor_brands)
 
                 analyzer = AnalysisBuilder()
                 analysis_result = analyzer.analyze_batch(
                     batch_result=batch_result,
-                    target_brands=target_brands,
-                    domain_whitelist=experiment.domain_whitelist,
+                    target_brands=target_brands_list,
+                    domain_whitelist=domain_whitelist,
                 )
 
-                # Update batch run with metrics
-                await batch_repo.update_batch_status(
-                    batch_run.id,
-                    BatchRunStatus.COMPLETED,
-                    completed_at=datetime.utcnow(),
-                    duration_ms=batch_result.total_duration_ms,
-                )
+                # Phase 5: Save Metrics & Finish (Transaction 3)
+                async with session.begin():
+                    # Re-init repositories
+                    batch_repo = BatchRunRepository(session)
+                    exp_repo = ExperimentRepository(session)
+                    
+                    # Update batch run with metrics
+                    await batch_repo.update_batch_status(
+                        batch_run_id,
+                        BatchRunStatus.COMPLETED,
+                        completed_at=datetime.utcnow(),
+                        duration_ms=batch_result.total_duration_ms,
+                    )
 
-                await batch_repo.update_batch_metrics(
-                    batch_run.id,
-                    metrics=analysis_result.raw_metrics,
-                    total_iterations=batch_result.total_iterations,
-                    successful_iterations=batch_result.successful_iterations,
-                    failed_iterations=batch_result.failed_iterations,
-                    total_tokens=batch_result.total_tokens,
-                )
+                    await batch_repo.update_batch_metrics(
+                        batch_run_id,
+                        metrics=analysis_result.raw_metrics,
+                        total_iterations=batch_result.total_iterations,
+                        successful_iterations=batch_result.successful_iterations,
+                        failed_iterations=batch_result.failed_iterations,
+                        total_tokens=batch_result.total_tokens,
+                    )
 
-                # Update experiment status to completed
-                await exp_repo.update_experiment_status(
-                    UUID(experiment_id),
-                    ExperimentStatus.COMPLETED,
-                )
-
-                # Transaction commits automatically at end of `begin()` block
+                    # Update experiment status to completed
+                    await exp_repo.update_experiment_status(
+                        UUID(experiment_id),
+                        ExperimentStatus.COMPLETED,
+                    )
 
                 logger.info(
                     f"Experiment {experiment_id} completed: "
@@ -299,7 +313,7 @@ async def _execute_experiment_async(
                 result = {
                     "status": "completed",
                     "experiment_id": experiment_id,
-                    "batch_run_id": str(batch_run.id),
+                    "batch_run_id": str(batch_run_id),
                     "task_id": task_id,
                     "total_iterations": batch_result.total_iterations,
                     "successful_iterations": batch_result.successful_iterations,
@@ -312,21 +326,51 @@ async def _execute_experiment_async(
         return result
 
     except Exception as e:
-        # Rollback handled automatically by session.begin() context manager
         logger.exception(f"Error executing experiment {experiment_id}: {e}")
-
-        # Dispose engine before re-raising
+        
+        # Determine refund amount if variable is set (meaning we passed Phase 1)
+        refund_amount = None
+        user_id_to_refund = None
+        
+        # Check if we have local variables from the try block
+        if 'iterations_count' in locals():
+            refund_amount = locals()['iterations_count']
+        if 'user_id' in locals():
+            user_id_to_refund = locals()['user_id']
+            
+        # Dispose engine before starting new transaction loop via mark_failed
         await engine.dispose()
 
-        # Mark experiment as failed in a separate transaction
-        await _mark_experiment_failed(experiment_id, str(e))
+        # Mark experiment as failed and issue refund
+        await _mark_experiment_failed(
+            experiment_id=experiment_id, 
+            error_message=str(e),
+            refund_amount=refund_amount,
+            user_id=user_id_to_refund
+        )
         raise
+
+async def _refund_user_quota(session: Any, user_id: UUID, amount: int) -> None:
+    """Refunding user quota after system failure."""
+    from backend.app.repositories.user_repo import UserRepository
+    try:
+        user_repo = UserRepository(session)
+        user = await user_repo.get(user_id)
+        if user:
+            # decrement usage, ensuring we don't go below 0
+            new_usage = max(0, user.prompts_used_this_month - amount)
+            await user_repo.update(user_id, prompts_used_this_month=new_usage)
+            logger.info(f"Refunded {amount} quota to user {user_id}. New usage: {new_usage}")
+    except Exception as e:
+        logger.error(f"Failed to refund quota to user {user_id}: {e}")
 
 
 async def _mark_experiment_failed_internal(
     session: Any,
     experiment_id: str,
     error_message: str,
+    refund_amount: int | None = None,
+    user_id: UUID | None = None,
 ) -> None:
     """
     Mark an experiment as failed using an existing session.
@@ -335,6 +379,8 @@ async def _mark_experiment_failed_internal(
         session: Active database session.
         experiment_id: UUID of the experiment.
         error_message: Error description.
+        refund_amount: Optional amount of quota to refund.
+        user_id: User ID for refund.
     """
     from backend.app.models.experiment import ExperimentStatus
     from backend.app.repositories.experiment_repo import ExperimentRepository
@@ -347,17 +393,29 @@ async def _mark_experiment_failed_internal(
                 ExperimentStatus.FAILED,
                 error_message=error_message,
             )
+            
+            # Process refund if applicable
+            if refund_amount and user_id and refund_amount > 0:
+                await _refund_user_quota(session, user_id, refund_amount)
+                
     except Exception as e:
         logger.exception(f"Failed to mark experiment {experiment_id} as failed: {e}")
 
 
-async def _mark_experiment_failed(experiment_id: str, error_message: str) -> None:
+async def _mark_experiment_failed(
+    experiment_id: str, 
+    error_message: str,
+    refund_amount: int | None = None,
+    user_id: UUID | None = None,
+) -> None:
     """
     Mark an experiment as failed in the database (standalone function).
 
     Args:
         experiment_id: UUID of the experiment.
         error_message: Error description.
+        refund_amount: Optional quota refund.
+        user_id: User ID for refund.
     """
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -372,7 +430,13 @@ async def _mark_experiment_failed(experiment_id: str, error_message: str) -> Non
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     async with session_factory() as session:
-        await _mark_experiment_failed_internal(session, experiment_id, error_message)
+        await _mark_experiment_failed_internal(
+            session, 
+            experiment_id, 
+            error_message, 
+            refund_amount=refund_amount, 
+            user_id=user_id
+        )
 
     # Dispose engine to clean up connections
     await engine.dispose()

@@ -145,7 +145,7 @@ export const experimentsApi = {
      * Get detailed experiment results
      */
     async getDetails(experimentId: string) {
-        return apiFetch(`/experiments/${experimentId}/details`, {
+        return apiFetch(`/experiments/${experimentId}/detail`, {
             method: "GET",
         });
     },

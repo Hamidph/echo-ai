@@ -113,9 +113,9 @@ def create_application() -> FastAPI:
 
     # Configure CORS
     # In development, allow all origins. In production, use frontend_url from settings
+    # In development, allow all origins. In production, use frontend_url from settings
     allowed_origins = [str(settings.frontend_url), "http://localhost:3000", "http://127.0.0.1:3000"]
-    if settings.environment == "development":
-        allowed_origins.append("*")
+    # Removed wildcard '*' for development security
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -149,6 +149,11 @@ def create_application() -> FastAPI:
                 @app.get(f"/{root_file}", include_in_schema=False)
                 async def serve_root_file(file_path=os.path.join(static_dir, root_file)):
                     return FileResponse(file_path)
+
+        # Root route for SPA
+        @app.get("/", include_in_schema=False)
+        async def serve_root():
+            return FileResponse(os.path.join(static_dir, "index.html"))
 
         # Catch-all route for SPA (must be defined LAST)
         @app.get("/{full_path:path}", include_in_schema=False)
