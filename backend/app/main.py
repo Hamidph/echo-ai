@@ -134,15 +134,37 @@ def create_application() -> FastAPI:
     # This allows the backend to serve the frontend, creating a single deployable unit.
     import os
     from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
 
     static_dir = "/app/static"
     if os.path.exists(static_dir):
-        # Mount specific Next.js assets
-        app.mount("/_next", StaticFiles(directory=os.path.join(static_dir, "_next")), name="next-static")
+        # Mount specific static folders first to allow direct access
+        # _next folder contains the build hashes and static chunks
+        if os.path.exists(os.path.join(static_dir, "_next")):
+            app.mount("/_next", StaticFiles(directory=os.path.join(static_dir, "_next")), name="next-static")
         
-        # Mount root content with html=True to handle page defaults
-        # explicitly placed after API routes to avoid conflicts
-        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        # Serve favicon and other root files directly if they exist
+        for root_file in ["favicon.ico", "robots.txt", "manifest.json"]:
+            if os.path.exists(os.path.join(static_dir, root_file)):
+                @app.get(f"/{root_file}", include_in_schema=False)
+                async def serve_root_file(file_path=os.path.join(static_dir, root_file)):
+                    return FileResponse(file_path)
+
+        # Catch-all route for SPA (must be defined LAST)
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def serve_frontend(full_path: str):
+            # 1. Check if exact file exists
+            file_path = os.path.join(static_dir, full_path)
+            if os.path.isfile(file_path):
+                return FileResponse(file_path)
+            
+            # 2. Check if it's a directory with index.html (trailingSlash behavior)
+            index_path = os.path.join(static_dir, full_path, "index.html")
+            if os.path.isfile(index_path):
+                return FileResponse(index_path)
+                
+            # 3. Fallback to root index.html for SPA routing (client-side transitions)
+            return FileResponse(os.path.join(static_dir, "index.html"))
 
     return app
 
