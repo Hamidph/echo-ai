@@ -5,6 +5,7 @@ This module provides routes for user registration, login, and API key management
 """
 
 from datetime import datetime, timedelta, timezone
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -13,6 +14,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 from backend.app.core.database import get_db_session as get_db
 from backend.app.core.deps import get_current_active_user
