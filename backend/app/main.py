@@ -223,12 +223,13 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         prefix=settings.api_v1_prefix,
     )
 
-    # Redirect root to docs
-    from fastapi.responses import RedirectResponse
-
-    @app.get("/", include_in_schema=False)
-    async def root() -> RedirectResponse:
-        return RedirectResponse(url=f"{settings.api_v1_prefix}/docs")
+    # Redirect root to docs only if static files are not mounted
+    # (Here we disable it because we expect static files)
+    # from fastapi.responses import RedirectResponse
+    #
+    # @app.get("/", include_in_schema=False)
+    # async def root() -> RedirectResponse:
+    #     return RedirectResponse(url=f"{settings.api_v1_prefix}/docs")
 
     # Innovation: The experiments router exposes the Probabilistic Visibility
     # Analysis service via a RESTful API
