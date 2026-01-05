@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.drop_constraint(op.f('api_keys_key_key'), 'api_keys', type_='unique')
     op.drop_index(op.f('ix_api_keys_key'), table_name='api_keys')
     op.create_index(op.f('ix_api_keys_key'), 'api_keys', ['key'], unique=True)
-    op.add_column('experiments', sa.Column('is_recurring', sa.Boolean(), nullable=False, comment='Whether to run this experiment periodically'))
+    op.add_column('experiments', sa.Column('is_recurring', sa.Boolean(), nullable=False, server_default=sa.text('false'), comment='Whether to run this experiment periodically'))
     op.add_column('experiments', sa.Column('frequency', sa.String(length=20), nullable=True, comment='Frequency: daily, weekly, monthly'))
     op.add_column('experiments', sa.Column('next_run_at', sa.DateTime(timezone=True), nullable=True, comment='Next scheduled execution time'))
     op.add_column('experiments', sa.Column('last_run_at', sa.DateTime(timezone=True), nullable=True, comment='Last execution time'))
