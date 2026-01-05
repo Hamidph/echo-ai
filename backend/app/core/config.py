@@ -156,6 +156,15 @@ class Settings(BaseSettings):
     @property
     def database_url_sync(self) -> PostgresDsn:
         """Construct synchronous PostgreSQL connection URL for Alembic migrations."""
+        # Check if Railway/external DATABASE_URL is provided
+        database_url_env = os.getenv("DATABASE_URL")
+        if database_url_env:
+            # Railway uses postgresql:// but SQLAlchemy + psycopg2 needs postgresql+psycopg2://
+            # Note: The async driver uses postgresql+asyncpg://
+            if database_url_env.startswith("postgresql://"):
+                database_url_env = database_url_env.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return PostgresDsn(database_url_env)
+
         return PostgresDsn.build(
             scheme="postgresql+psycopg2",
             username=self.postgres_user,
@@ -182,6 +191,10 @@ class Settings(BaseSettings):
         """
         # Check if Railway/external REDIS_URL is provided
         redis_url_env = os.getenv("REDIS_URL")
+        # Fallback to CELERY_RESULT_BACKEND if REDIS_URL is not set (Railway default for Redis add-on)
+        if not redis_url_env:
+            redis_url_env = os.getenv("CELERY_RESULT_BACKEND")
+            
         if redis_url_env:
             return RedisDsn(redis_url_env)
         

@@ -18,12 +18,14 @@ export default function ExperimentDetailPage() {
     setMounted(true);
   }, []);
 
-  const { data: experiment, isLoading, refetch } = useQuery({
+  const { data: experimentData, isLoading, refetch } = useQuery({
     queryKey: ["experiment", experimentId],
     queryFn: () => experimentsApi.get(experimentId),
     enabled: !!user,
-    refetchInterval: (query) => (query.state.data?.status === "running" ? 3000 : false),
+    refetchInterval: (query) => ((query.state.data as any)?.status === "running" ? 3000 : false),
   });
+
+  const experiment = experimentData as any;
 
   if (authLoading || isLoading) {
     return (
@@ -80,7 +82,7 @@ export default function ExperimentDetailPage() {
             </svg>
             Back to analyses
           </Link>
-          
+
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-2 truncate">
@@ -94,12 +96,11 @@ export default function ExperimentDetailPage() {
                 <span>{experiment.config?.iterations || 10} iterations</span>
               </div>
             </div>
-            <span className={`px-3 py-1.5 text-sm font-medium rounded-full border ${
-              isCompleted ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+            <span className={`px-3 py-1.5 text-sm font-medium rounded-full border ${isCompleted ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
               isRunning ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 animate-pulse" :
-              isFailed ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
-              "bg-amber-500/10 text-amber-400 border-amber-500/20"
-            }`}>
+                isFailed ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
+                  "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              }`}>
               {experiment.status}
             </span>
           </div>
@@ -205,9 +206,8 @@ export default function ExperimentDetailPage() {
               {/* Hallucination Check */}
               <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    metrics.has_hallucinations ? "bg-rose-500/10" : "bg-emerald-500/10"
-                  }`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${metrics.has_hallucinations ? "bg-rose-500/10" : "bg-emerald-500/10"
+                    }`}>
                     {metrics.has_hallucinations ? (
                       <svg className="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -245,7 +245,7 @@ export default function ExperimentDetailPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {metrics.visibility_score < 50 && (
                     <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                       <svg className="w-5 h-5 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

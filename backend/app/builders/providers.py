@@ -415,11 +415,12 @@ class OpenAIProvider(BaseLLMProvider):
     MODEL_GPT4O = "gpt-4o"
     MODEL_GPT4O_MINI = "gpt-4o-mini"
     MODEL_GPT4_TURBO = "gpt-4-turbo"
+    MODEL_GPT5_1 = "gpt-5.1-chat-latest"
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = MODEL_GPT4O_MINI,
+        model: str = MODEL_GPT5_1,
         timeout: float = 30.0,
     ) -> None:
         """Initialize the OpenAI provider."""
@@ -540,11 +541,12 @@ class AnthropicProvider(BaseLLMProvider):
     MODEL_CLAUDE_4_SONNET = "claude-sonnet-4-20250514"
     MODEL_CLAUDE_35_SONNET = "claude-3-5-sonnet-20241022"
     MODEL_CLAUDE_35_HAIKU = "claude-3-5-haiku-20241022"
+    MODEL_CLAUDE_45_SONNET = "claude-4-5-sonnet-latest"
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = MODEL_CLAUDE_35_SONNET,
+        model: str = MODEL_CLAUDE_45_SONNET,
         timeout: float = 30.0,
     ) -> None:
         """Initialize the Anthropic provider."""
@@ -689,17 +691,17 @@ def get_provider(
     if provider == LLMProviderEnum.PERPLEXITY:
         return PerplexityProvider(
             api_key=api_key,
-            model=model or PerplexityProvider.MODEL_SONAR,
+            model=model or PerplexityProvider.MODEL_SONAR_PRO,
         )
     elif provider == LLMProviderEnum.OPENAI:
         return OpenAIProvider(
             api_key=api_key,
-            model=model or OpenAIProvider.MODEL_GPT4O_MINI,
+            model=model or OpenAIProvider.MODEL_GPT5_1,
         )
     elif provider == LLMProviderEnum.ANTHROPIC:
         return AnthropicProvider(
             api_key=api_key,
-            model=model or AnthropicProvider.MODEL_CLAUDE_35_SONNET,
+            model=model or AnthropicProvider.MODEL_CLAUDE_45_SONNET,
         )
     else:
         raise ValueError(f"Unknown provider: {provider}")

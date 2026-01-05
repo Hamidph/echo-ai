@@ -9,7 +9,7 @@ from alembic import context
 from backend.app.core.config import get_settings
 from backend.app.core.database import Base
 # Import all models to ensure they're registered with Base.metadata
-from backend.app.models import experiment  # noqa: F401
+from backend.app.models import experiment, user  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

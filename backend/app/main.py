@@ -27,6 +27,7 @@ from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.billing import router as billing_router
+from backend.app.routers.dashboard import router as dashboard_router
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -112,13 +113,9 @@ def create_application() -> FastAPI:
 
     # Configure CORS
     # In development, allow all origins. In production, use frontend_url from settings
-    allowed_origins = (
-        ["*"]
-        if settings.environment == "development"
-        else [
-            settings.frontend_url,
-        ]
-    )
+    allowed_origins = [str(settings.frontend_url), "http://localhost:3000", "http://127.0.0.1:3000"]
+    if settings.environment == "development":
+        allowed_origins.append("*")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -205,6 +202,19 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         billing_router,
         prefix=settings.api_v1_prefix,
     )
+
+    # Dashboard router
+    app.include_router(
+        dashboard_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    # Redirect root to docs
+    from fastapi.responses import RedirectResponse
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        return RedirectResponse(url=f"{settings.api_v1_prefix}/docs")
 
     # Innovation: The experiments router exposes the Probabilistic Visibility
     # Analysis service via a RESTful API

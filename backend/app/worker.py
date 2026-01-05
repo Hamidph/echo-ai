@@ -44,6 +44,14 @@ celery_app.conf.update(
     task_reject_on_worker_lost=True,
 )
 
+# Configure periodic tasks (Celery Beat)
+celery_app.conf.beat_schedule = {
+    "check-scheduled-experiments-every-hour": {
+        "task": "check_scheduled_experiments",
+        "schedule": 3600.0,  # Run every hour
+    },
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -379,3 +387,17 @@ def health_check_task() -> dict[str, str]:
         Dictionary with status.
     """
     return {"status": "healthy", "worker": "ai_visibility"}
+@celery_app.task(name="check_scheduled_experiments")  # type: ignore[untyped-decorator]
+def check_scheduled_experiments_task() -> dict[str, int]:
+    """
+    Periodic task to check and run scheduled experiments.
+    """
+    from backend.app.tasks.scheduler import check_scheduled_experiments
+    
+    logger.info("Checking for scheduled experiments...")
+    try:
+        result = run_async(check_scheduled_experiments())
+        return result
+    except Exception as e:
+        logger.exception(f"Scheduler task failed: {e}")
+        return {"triggered": 0, "error": str(e)}

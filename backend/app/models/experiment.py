@@ -40,7 +40,12 @@ class ExperimentStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-
+class ExperimentFrequency(str, Enum):
+    """Frequency of recurring experiments."""
+    
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
 
 class BatchRunStatus(str, Enum):
     """Status of a batch run within an experiment."""
@@ -127,7 +132,29 @@ class Experiment(Base):
         nullable=True,
         comment="Error message if experiment failed",
     )
-
+    # Scheduling
+    is_recurring: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        comment="Whether to run this experiment periodically",
+    )
+    frequency: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="Frequency: daily, weekly, monthly",
+    )
+    next_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        comment="Next scheduled execution time",
+    )
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Last execution time",
+    )
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

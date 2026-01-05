@@ -13,7 +13,7 @@ const providers = [
   {
     id: "openai",
     name: "OpenAI",
-    description: "GPT-4o and GPT-4 Turbo",
+    description: "GPT-5.1 & GPT-4o",
     icon: (
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
         <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08-4.778 2.758a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
@@ -23,7 +23,7 @@ const providers = [
   {
     id: "perplexity",
     name: "Perplexity",
-    description: "Search-augmented with citations",
+    description: "Sonar Pro (Search-augmented)",
     icon: (
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
         <path d="M12 0L1.5 6v12L12 24l10.5-6V6L12 0zm0 2.311l8.077 4.616v9.146L12 20.689l-8.077-4.616V6.927L12 2.311z" />
@@ -34,7 +34,7 @@ const providers = [
   {
     id: "anthropic",
     name: "Anthropic",
-    description: "Claude 3.5 Sonnet",
+    description: "Claude 4.5 Sonnet",
     icon: (
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
         <path d="M17.304 3.541l-5.304 16.918-5.304-16.918h-3.696l7.5 19.918h3l7.5-19.918h-3.696z" />
@@ -52,6 +52,8 @@ export default function NewExperimentPage() {
   const [competitorBrands, setCompetitorBrands] = useState("");
   const [provider, setProvider] = useState<string | null>(null);
   const [iterations, setIterations] = useState(10);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState("daily");
 
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ["usage"],
@@ -63,7 +65,7 @@ export default function NewExperimentPage() {
     mutationFn: experimentsApi.create,
     onSuccess: (data) => {
       toast.success("Analysis started successfully!");
-      router.push(`/experiments/${data.experiment_id}`);
+      router.push(`/experiments/${(data as any).experiment_id}`);
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { detail?: string } } };
@@ -84,6 +86,8 @@ export default function NewExperimentPage() {
       competitor_brands: competitorBrands.split(",").map((b) => b.trim()).filter(Boolean),
       provider: provider,
       iterations,
+      is_recurring: isRecurring,
+      frequency: isRecurring ? frequency : undefined,
     });
   };
 
@@ -117,13 +121,12 @@ export default function NewExperimentPage() {
             <div key={s} className="flex items-center gap-3">
               <button
                 onClick={() => s < step && setStep(s)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                  s === step
-                    ? "bg-gradient-to-r from-cyan-500 to-violet-500 text-white"
-                    : s < step
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${s === step
+                  ? "bg-gradient-to-r from-cyan-500 to-violet-500 text-white"
+                  : s < step
                     ? "bg-cyan-500/20 text-cyan-400"
                     : "bg-white/5 text-gray-500"
-                }`}
+                  }`}
               >
                 {s < step ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +148,7 @@ export default function NewExperimentPage() {
           {step === 1 && (
             <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
               <h2 className="text-lg font-semibold text-white mb-6">Query Configuration</h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -198,22 +201,20 @@ export default function NewExperimentPage() {
           {step === 2 && (
             <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
               <h2 className="text-lg font-semibold text-white mb-6">Select AI Provider</h2>
-              
+
               <div className="grid gap-4">
                 {providers.map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setProvider(p.id)}
-                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
-                      provider === p.id
-                        ? "bg-cyan-500/10 border-cyan-500/50"
-                        : "bg-white/5 border-white/10 hover:border-white/20"
-                    }`}
+                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${provider === p.id
+                      ? "bg-cyan-500/10 border-cyan-500/50"
+                      : "bg-white/5 border-white/10 hover:border-white/20"
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                      provider === p.id ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-gray-400"
-                    }`}>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${provider === p.id ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-gray-400"
+                      }`}>
                       {p.icon}
                     </div>
                     <div className="flex-1">
@@ -267,6 +268,43 @@ export default function NewExperimentPage() {
                   </p>
                 </div>
 
+                <div>
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                    <div>
+                      <h3 className="text-white font-medium">Recurring Experiment</h3>
+                      <p className="text-sm text-gray-500">Run this analysis periodically</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsRecurring(!isRecurring)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isRecurring ? "bg-cyan-500" : "bg-white/10"
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isRecurring ? "translate-x-6" : "translate-x-1"
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {isRecurring && (
+                    <div className="mt-4 animate-fade-in">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Frequency
+                      </label>
+                      <select
+                        value={frequency}
+                        onChange={(e) => setFrequency(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 appearance-none"
+                      >
+                        <option value="daily" className="bg-[#0a0f1a]">Daily</option>
+                        <option value="weekly" className="bg-[#0a0f1a]">Weekly</option>
+                        <option value="monthly" className="bg-[#0a0f1a]">Monthly</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <span className="text-sm text-gray-400">Remaining prompts</span>
                   <span className={`text-sm font-medium ${remainingQuota >= 1 ? "text-emerald-400" : "text-rose-400"}`}>
@@ -309,6 +347,12 @@ export default function NewExperimentPage() {
                       <span className="text-gray-500">Iterations</span>
                       <span className="text-white">{iterations}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Schedule</span>
+                      <span className="text-white capitalize">
+                        {isRecurring ? frequency : "One-time"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -328,7 +372,7 @@ export default function NewExperimentPage() {
             ) : (
               <div />
             )}
-            
+
             {step < 3 ? (
               <button
                 type="button"

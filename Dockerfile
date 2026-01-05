@@ -15,7 +15,10 @@ COPY README.md ./
 
 # Install dependencies to a virtual environment
 RUN uv venv /opt/venv
+ENV VIRTUAL_ENV=/opt/venv
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV UV_LINK_MODE=copy
 RUN uv sync --frozen
 
 # Stage 2: Runtime - Minimal production image

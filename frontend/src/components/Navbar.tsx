@@ -64,10 +64,10 @@ export function Navbar() {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 transition-all shadow-sm"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center text-xs font-bold text-blue-700">
-                    {user?.full_name?.charAt(0) || "U"}
+                    {(user as any)?.full_name?.charAt(0) || "U"}
                   </div>
                   <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">
-                    {user?.full_name || "User"}
+                    {(user as any)?.full_name || "User"}
                   </span>
                   <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
