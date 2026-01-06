@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,11 +43,14 @@ const providers = [
   },
 ];
 
-export default function NewExperimentPage() {
+function NewExperimentForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialPrompt = searchParams.get("prompt") || "";
+
   const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(initialPrompt);
   const [targetBrand, setTargetBrand] = useState("");
   const [competitorBrands, setCompetitorBrands] = useState("");
   const [provider, setProvider] = useState<string | null>(null);
@@ -422,5 +425,18 @@ export default function NewExperimentPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewExperimentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-cyan-500/20 rounded-full" />
+        <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
+      </div>
+    }>
+      <NewExperimentForm />
+    </Suspense>
   );
 }
