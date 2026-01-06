@@ -8,12 +8,16 @@ import { dashboardApi, experimentsApi } from "@/lib/api";
 import { InfoTooltip } from "@/components/ui/Tooltip";
 import Card from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/Badge";
-import { VisibilityTrendChart } from "@/components/dashboard/VisibilityTrendChart";
-import { ShareOfVoiceChart } from "@/components/dashboard/ShareOfVoiceChart";
 import { RecommendedPrompts } from "@/components/dashboard/RecommendedPrompts";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+const VisibilityTrendChart = dynamic(() => import("@/components/dashboard/VisibilityTrendChart").then(mod => mod.VisibilityTrendChart), { ssr: false });
+const ShareOfVoiceChart = dynamic(() => import("@/components/dashboard/ShareOfVoiceChart").then(mod => mod.ShareOfVoiceChart), { ssr: false });
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const [greeting, setGreeting] = useState("Welcome");
 
   // Fetch Dashboard Stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -29,6 +33,14 @@ export default function DashboardPage() {
     enabled: !!user,
   });
 
+  // Fix hydration mismatch for time-based greeting
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 18) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
+
   if (authLoading || statsLoading) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center">
@@ -39,13 +51,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
 
   const hasExperiments = (stats?.total_experiments || 0) > 0;
 
@@ -58,7 +63,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-1">
-              {getGreeting()}, {(user as any)?.full_name?.split(" ")[0] || "there"}!
+              {greeting}, {(user as any)?.full_name?.split(" ")[0] || "there"}!
             </h1>
             <p className="text-gray-400">
               {hasExperiments

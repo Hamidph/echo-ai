@@ -59,6 +59,11 @@ class ProviderError(Exception):
         self.status_code = status_code
 
 
+class ProviderServerError(ProviderError):
+    """Raised when the provider returns a 5xx error (retryable)."""
+    pass
+
+
 class BaseLLMProvider(ABC):
     """
     Abstract base class for LLM provider implementations.
@@ -162,7 +167,7 @@ class BaseLLMProvider(ABC):
         ...
 
     @retry(
-        retry=retry_if_exception_type(RateLimitError),
+        retry=retry_if_exception_type((RateLimitError, ProviderServerError)),
         wait=wait_exponential(multiplier=1, min=1, max=60),
         stop=stop_after_attempt(5),
         reraise=True,
@@ -330,6 +335,12 @@ class PerplexityProvider(BaseLLMProvider):
             if response.status_code in (401, 403):
                 raise ProviderAuthError(f"Perplexity authentication failed: {response.text}")
 
+            if response.status_code >= 500:
+                raise ProviderServerError(
+                    f"Perplexity server error: {response.text}",
+                    status_code=response.status_code,
+                )
+
             if response.status_code != 200:
                 raise ProviderError(
                     f"Perplexity API error: {response.text}",
@@ -406,22 +417,20 @@ class PerplexityProvider(BaseLLMProvider):
 
 class OpenAIProvider(BaseLLMProvider):
     """
-    OpenAI API provider implementation.
-
-    Placeholder for Phase 2 completion - implements the interface
-    but will be fully implemented when OpenAI integration is needed.
+    OpenAI API provider implementation using the new Responses API.
+    
+    Innovation: Uses the /v1/responses endpoint for stateful, advanced model interactions,
+    mirroring the capabilities of the ChatGPT web interface.
     """
 
     MODEL_GPT4O = "gpt-4o"
-    MODEL_GPT4O_MINI = "gpt-4o-mini"
-    MODEL_GPT4_TURBO = "gpt-4-turbo"
-    MODEL_GPT5_1 = "gpt-5.1-chat-latest"
-
+    MODEL_GPT4O = "gpt-4o"
+    
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = MODEL_GPT5_1,
-        timeout: float = 30.0,
+        model: str = MODEL_GPT4O,
+        timeout: float = 60.0,
     ) -> None:
         """Initialize the OpenAI provider."""
         settings = get_settings()
@@ -455,21 +464,60 @@ class OpenAIProvider(BaseLLMProvider):
         }
 
     async def _make_request(self, request: LLMRequest) -> dict[str, Any]:
-        """Make a chat completion request to OpenAI."""
+        """
+        Make a request to the OpenAI Responses API.
+        POST /v1/responses
+        """
         client = await self.get_client()
+
+        # Transform messages for the Responses API
+        # The 'input' field takes an array of message objects or strings
+        input_items = []
+        for m in request.messages:
+            if m.role == MessageRole.SYSTEM:
+                # Responses API handles instructions separately or as developer messages
+                # For simplicity/compatibility, we'll map system to developer role if supported,
+                # or just prepend as a message. Docs say 'instructions' field is for system/developer message.
+                pass 
+            else:
+                input_items.append({
+                    "role": m.role.value,
+                    "content": m.content,
+                    "type": "message" # Explicitly typed as message
+                })
+
+        # Extract system prompt if present
+        instructions = None
+        for m in request.messages:
+            if m.role == MessageRole.SYSTEM:
+                instructions = m.content
+                break
 
         payload: dict[str, Any] = {
             "model": request.model or self.default_model,
-            "messages": [{"role": m.role.value, "content": m.content} for m in request.messages],
-            "temperature": request.temperature,
-            "top_p": request.top_p,
+            "input": input_items,
+            "stream": False, 
         }
 
+        if instructions:
+            payload["instructions"] = instructions
+        
+        # Temperature/Top_P handling
+        # Note: gpt-4.5-preview and reasoning models might have restrictions, 
+        # but the logic for excluding params is handled in generic ways or by the API ignoring them.
+        # We'll include them if set, relying on the API or previous logic to filter if needed.
+        # However, for Responses API, 'temperature' is a top-level param.
+        if request.temperature is not None:
+             payload["temperature"] = request.temperature
+        
+        if request.top_p is not None:
+            payload["top_p"] = request.top_p
+
         if request.max_tokens:
-            payload["max_tokens"] = request.max_tokens
+            payload["max_output_tokens"] = request.max_tokens # Responses API uses max_output_tokens
 
         try:
-            response = await client.post("/chat/completions", json=payload)
+            response = await client.post("/responses", json=payload)
 
             if response.status_code == 429:
                 retry_after = response.headers.get("Retry-After")
@@ -480,6 +528,12 @@ class OpenAIProvider(BaseLLMProvider):
 
             if response.status_code in (401, 403):
                 raise ProviderAuthError(f"OpenAI authentication failed: {response.text}")
+
+            if response.status_code >= 500:
+                raise ProviderServerError(
+                    f"OpenAI server error: {response.text}",
+                    status_code=response.status_code,
+                )
 
             if response.status_code != 200:
                 raise ProviderError(
@@ -500,20 +554,35 @@ class OpenAIProvider(BaseLLMProvider):
         raw_response: dict[str, Any],
         latency_ms: float,
     ) -> LLMResponse:
-        """Parse OpenAI's response into unified schema."""
-        choices = raw_response.get("choices", [])
-        if not choices:
-            raise ProviderError("No choices in OpenAI response")
+        """Parse OpenAI Responses API response into unified schema."""
+        # Responses API returns 'output' array containing messages
+        output_items = raw_response.get("output", [])
+        if not output_items:
+            raise ProviderError("No output items in OpenAI response")
 
-        choice = choices[0]
-        message = choice.get("message", {})
+        # Find the assistant message in the output
+        content = ""
+        finish_reason = None
+        
+        for item in output_items:
+            if item.get("type") == "message" and item.get("role") == "assistant":
+                # Message content is a list of blocks
+                message_content = item.get("content", [])
+                for block in message_content:
+                    if block.get("type") == "output_text":
+                        content += block.get("text", "")
+                
+                finish_reason = item.get("status") # 'completed', etc.
+                if item.get("id"):
+                    # Use the message ID if available, or fall back to response ID
+                    pass
 
         usage_data = raw_response.get("usage")
         usage = None
         if usage_data:
             usage = UsageInfo(
-                prompt_tokens=usage_data.get("prompt_tokens", 0),
-                completion_tokens=usage_data.get("completion_tokens", 0),
+                prompt_tokens=usage_data.get("input_tokens", 0),
+                completion_tokens=usage_data.get("output_tokens", 0),
                 total_tokens=usage_data.get("total_tokens", 0),
             )
 
@@ -521,8 +590,8 @@ class OpenAIProvider(BaseLLMProvider):
             id=raw_response.get("id", ""),
             provider=self.provider_name,
             model=raw_response.get("model", self.default_model),
-            content=message.get("content", ""),
-            finish_reason=choice.get("finish_reason"),
+            content=content,
+            finish_reason=finish_reason,
             usage=usage,
             created_at=datetime.utcnow(),
             latency_ms=latency_ms,
@@ -618,6 +687,12 @@ class AnthropicProvider(BaseLLMProvider):
             if response.status_code in (401, 403):
                 raise ProviderAuthError(f"Anthropic authentication failed: {response.text}")
 
+            if response.status_code >= 500:
+                raise ProviderServerError(
+                    f"Anthropic server error: {response.text}",
+                    status_code=response.status_code,
+                )
+
             if response.status_code != 200:
                 raise ProviderError(
                     f"Anthropic API error: {response.text}",
@@ -696,7 +771,7 @@ def get_provider(
     elif provider == LLMProviderEnum.OPENAI:
         return OpenAIProvider(
             api_key=api_key,
-            model=model or OpenAIProvider.MODEL_GPT5_1,
+            model=model or OpenAIProvider.MODEL_GPT4O,
         )
     elif provider == LLMProviderEnum.ANTHROPIC:
         return AnthropicProvider(

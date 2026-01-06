@@ -156,14 +156,19 @@ async def _execute_experiment_async(
     from backend.app.schemas.runner import BatchConfig, IterationStatus
 
     # Create a fresh engine for this task to avoid event loop conflicts
+    # Use smaller pool size to prevent connection exhaustion
     engine = create_async_engine(
         str(settings.database_url),
         echo=settings.debug,
         pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10,
+        pool_size=2,
+        max_overflow=3,
     )
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    # Variables for refund logic
+    iterations_count = None
+    user_id = None
 
     # Use a single atomic transaction for the entire operation
     try:
@@ -178,12 +183,18 @@ async def _execute_experiment_async(
                     experiment = await exp_repo.get_experiment(UUID(experiment_id))
                     if not experiment:
                         raise ValueError(f"Experiment {experiment_id} not found")
+                    
+                    # Capture refund details early
+                    user_id = experiment.user_id
+                    config_dict = experiment.config or {}
+                    iterations_count = config_dict.get("iterations", 10)
 
                     # Update experiment status to running
                     await exp_repo.update_experiment_status(
                         UUID(experiment_id),
                         ExperimentStatus.RUNNING,
                     )
+
 
                     # Create batch run record
                     batch_run = await batch_repo.create_batch_run(
@@ -201,9 +212,8 @@ async def _execute_experiment_async(
                     
                     # Store needed data for next phases
                     batch_run_id = batch_run.id
-                    user_id = experiment.user_id
-                    config_dict = experiment.config or {}
-                    iterations_count = config_dict.get("iterations", 10)
+                    # user_id & iterations_count already captured
+                    
                     prompt = experiment.prompt
                     target_brand = experiment.target_brand
                     competitor_brands = experiment.competitor_brands
@@ -223,6 +233,7 @@ async def _execute_experiment_async(
                     )
 
                 # Phase 2: Execute Batch (No DB Lock)
+                # Transaction 1 committed. Connection returned to pool (briefly).
                 logger.info(
                     f"Running batch for experiment {experiment_id}: "
                     f"{batch_config.iterations} iterations"
@@ -321,34 +332,22 @@ async def _execute_experiment_async(
                     "metrics": analysis_result.raw_metrics,
                 }
 
-        # Dispose engine to clean up connections
-        await engine.dispose()
-        return result
-
     except Exception as e:
         logger.exception(f"Error executing experiment {experiment_id}: {e}")
         
-        # Determine refund amount if variable is set (meaning we passed Phase 1)
-        refund_amount = None
-        user_id_to_refund = None
-        
-        # Check if we have local variables from the try block
-        if 'iterations_count' in locals():
-            refund_amount = locals()['iterations_count']
-        if 'user_id' in locals():
-            user_id_to_refund = locals()['user_id']
-            
-        # Dispose engine before starting new transaction loop via mark_failed
-        await engine.dispose()
-
         # Mark experiment as failed and issue refund
-        await _mark_experiment_failed(
+        # Use captured variables (initialized to None if failure happened before capture)
+        run_async(_mark_experiment_failed(
             experiment_id=experiment_id, 
             error_message=str(e),
-            refund_amount=refund_amount,
-            user_id=user_id_to_refund
-        )
+            refund_amount=iterations_count,
+            user_id=user_id
+        ))
         raise
+
+    finally:
+        # Dispose engine to clean up connections
+        await engine.dispose()
 
 async def _refund_user_quota(session: Any, user_id: UUID, amount: int) -> None:
     """Refunding user quota after system failure."""

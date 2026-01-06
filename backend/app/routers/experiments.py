@@ -139,11 +139,30 @@ async def create_experiment(
     )
 
     # Trigger Celery task
-    task = execute_experiment_task.delay(
-        experiment_id=str(experiment.id),
-        provider=experiment_request.provider.value,
-        model=experiment_request.model,
-    )
+    try:
+        task = execute_experiment_task.delay(
+            experiment_id=str(experiment.id),
+            provider=experiment_request.provider.value,
+            model=experiment_request.model,
+        )
+    except Exception as e:
+        logger.error(f"Failed to queue experiment task: {e}")
+        # Refund quota
+        if not settings.testing_mode and not settings.unlimited_prompts:
+            current_user.prompts_used_this_month -= iterations_requested
+            await session.commit()
+            logger.info(f"Refunded {iterations_requested} prompts to user {current_user.email} due to queue failure")
+        
+        # Mark as failed
+        await exp_repo.update_experiment_status(
+             experiment.id,
+             ExperimentStatus.FAILED,
+             error_message="System overloaded, please try again later."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to queue experiment. Quota has been refunded.",
+        )
 
     logger.info(f"Experiment {experiment.id} created, task {task.id} queued")
 
@@ -189,13 +208,31 @@ async def get_experiment(
         HTTPException: If experiment not found.
     """
     exp_repo = ExperimentRepository(session)
-    experiment = await exp_repo.get_experiment_with_results(experiment_id)
+    # Verify ownership before fetching results
+    experiment = await exp_repo.get_experiment_by_user(experiment_id, current_user.id)
 
     if not experiment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment {experiment_id} not found",
+            detail="Experiment not found or access denied",
         )
+
+    # Now load full results (which might already be loaded by get_experiment_by_user if the repo method supported it, 
+    # but based on line 264 we need to verify first then load full if separate).
+    # actually wait, get_experiment_with_results loads relationships. 
+    # Let's check if we can just stick to get_experiment_by_user check then re-fetch or if we should modify the repo. 
+    # For minimally invasive fix that is secure:
+    # 1. Check ownership.
+    # 2. If valid, fetch with results.
+    
+    experiment_with_results = await exp_repo.get_experiment_with_results(experiment_id)
+    if not experiment_with_results:
+         # Should not happen if first check passed, but safe guard
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Experiment found but could not load results",
+        )
+    experiment = experiment_with_results
 
     # Build batch run results
     batch_runs = [

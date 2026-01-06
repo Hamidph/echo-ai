@@ -66,13 +66,22 @@ export default function Home() {
                     { label: "Market Rank", val: "#2", change: "+1", color: "emerald" },
                     { label: "Sentiment", val: "Positive", change: "98%", color: "purple" },
                     { label: "Total Citations", val: "1,240", change: "+54", color: "amber" },
-                  ].map((stat) => (
-                    <div key={stat.label} className="p-4 rounded-xl border border-stone-100 bg-stone-50/50">
-                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{stat.label}</div>
-                      <div className="text-2xl font-bold text-slate-900 mb-1">{stat.val}</div>
-                      <div className={`text-xs font-bold text-${stat.color}-600 bg-${stat.color}-50 inline-block px-1.5 py-0.5 rounded`}>{stat.change}</div>
-                    </div>
-                  ))}
+                  ].map((stat) => {
+                    const colorVariants = {
+                      blue: { text: "text-blue-600", bg: "bg-blue-50" },
+                      emerald: { text: "text-emerald-600", bg: "bg-emerald-50" },
+                      purple: { text: "text-purple-600", bg: "bg-purple-50" },
+                      amber: { text: "text-amber-600", bg: "bg-amber-50" },
+                    }[stat.color] || { text: "text-slate-600", bg: "bg-slate-50" };
+
+                    return (
+                      <div key={stat.label} className="p-4 rounded-xl border border-stone-100 bg-stone-50/50">
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{stat.label}</div>
+                        <div className="text-2xl font-bold text-slate-900 mb-1">{stat.val}</div>
+                        <div className={`text-xs font-bold ${colorVariants.text} ${colorVariants.bg} inline-block px-1.5 py-0.5 rounded`}>{stat.change}</div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">

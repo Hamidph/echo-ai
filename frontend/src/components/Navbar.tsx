@@ -93,8 +93,10 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-slate-500"
+            className="md:hidden p-2 text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
@@ -118,6 +120,7 @@ export function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link href="/dashboard" className="block py-2 font-medium text-slate-900">Dashboard</Link>
+                <Link href="/settings" className="block py-2 font-medium text-slate-900">Settings</Link>
                 <button onClick={logout} className="block py-2 w-full text-left text-slate-500">Sign out</button>
               </>
             ) : (

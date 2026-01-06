@@ -36,12 +36,16 @@ async def check_scheduled_experiments() -> dict[str, int]:
     try:
         async with session_factory() as session:
             async with session.begin():
-                # Find due experiments
-                stmt = select(Experiment).where(
-                    and_(
-                        Experiment.is_recurring == True,
-                        Experiment.status != ExperimentStatus.CANCELLED,
-                        Experiment.next_run_at <= now
+                # Find due experiments with their batch runs loaded
+                stmt = (
+                    select(Experiment)
+                    .options(selectinload(Experiment.batch_runs))
+                    .where(
+                        and_(
+                            Experiment.is_recurring == True,
+                            Experiment.status != ExperimentStatus.CANCELLED,
+                            Experiment.next_run_at <= now
+                        )
                     )
                 )
                 
@@ -52,29 +56,19 @@ async def check_scheduled_experiments() -> dict[str, int]:
                 
                 for exp in due_experiments:
                     # 1. Trigger Runs
-                    # We need to know which providers to run.
-                    # Usually an experiment has a batch run per provider.
-                    # We can re-use the config or infer from previous batch runs?
-                    # Simpler: The Experiment model doesn't explicitly store "providers list" 
-                    # other than in batch_runs.
-                    # Let's check the config or assume a default/previous run provider.
-                    # Robust way: Check existing batch runs to see which providers were used.
-                    
-                    # For MVP, let's assume valid providers are in config or we look at `batch_runs`
-                    # Since we can't easily async load relationships in this loop without careful handling,
-                    # let's assume the user wants to re-run the *same* providers as the initial setup.
-                    # Use a default fallback of "openai" if unknown.
-                    
-                    # Actually, we need to be careful. `execute_experiment_task` is a Celery task.
-                    # We can fire it off.
-                    
-                    # Hack: For now, re-run for "openai" as default, or store providers in config?
-                    # Better: Add `providers` to Experiment config schema in future.
-                    # Current: Check if `config` has `providers` key?
-                    
-                    providers = exp.config.get("providers", ["openai"])
-                    if isinstance(providers, str):
-                        providers = [providers]
+                    # Determine provider from previous batch runs
+                    providers = []
+                    if exp.batch_runs:
+                        # Use the most recent provider(s)
+                        # In MVP, usually one provider per experiment
+                        # We sort by created_at to get latest
+                        latest_run = sorted(exp.batch_runs, key=lambda x: x.created_at, reverse=True)[0]
+                        providers = [latest_run.provider]
+                    else:
+                        # Fallback to config or default
+                        providers = exp.config.get("providers", ["openai"])
+                        if isinstance(providers, str):
+                            providers = [providers]
                         
                     for provider in providers:
                          execute_experiment_task.delay(

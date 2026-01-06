@@ -60,6 +60,32 @@ def get_password_hash(password: str) -> str:
     return hashed.decode("utf-8")
 
 
+    return encoded_jwt
+
+
+def get_secret_key() -> str:
+    """
+    Get the secret key, enforcing security in production.
+    
+    Returns:
+        str: The secret key.
+        
+    Raises:
+        ValueError: If key is insecure in production.
+    """
+    key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+    
+    # Check for insecure default
+    if key == 'your-secret-key-change-in-production':
+        if not settings.testing_mode:
+            raise ValueError("FATAL: Insecure SECRET_KEY used in production mode! Set strictly in .env")
+        else:
+            # In testing, we allow it but warn
+            pass
+            
+    return key
+
+
 def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     """
     Create a JWT access token.
@@ -79,8 +105,7 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
 
     to_encode.update({"exp": expire, "type": "access"})
 
-    # Use a secret key from settings (should be set in production)
-    secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+    secret_key = get_secret_key()
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -103,7 +128,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
 
     to_encode.update({"exp": expire, "type": "refresh"})
 
-    secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+    secret_key = get_secret_key()
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -119,7 +144,7 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
         dict | None: The decoded token payload, or None if invalid.
     """
     try:
-        secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+        secret_key = get_secret_key()
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
 
         # Verify token type
@@ -143,7 +168,7 @@ def decode_refresh_token(token: str) -> dict[str, Any] | None:
         dict | None: The decoded token payload, or None if invalid.
     """
     try:
-        secret_key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
+        secret_key = get_secret_key()
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
 
         # Verify token type

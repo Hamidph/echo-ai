@@ -65,6 +65,10 @@ COPY alembic.ini ./
 # Copy built frontend assets
 COPY --from=frontend_builder /app/frontend/out /app/static
 
+# Copy startup script
+COPY start.sh ./
+RUN chmod +x ./start.sh
+
 # Change ownership
 RUN chown -R appuser:appuser /app
 
@@ -73,5 +77,6 @@ USER appuser
 
 EXPOSE 8080
 
-# Run migrations and start application
-CMD ["/bin/sh", "-c", "/opt/venv/bin/alembic upgrade head && /opt/venv/bin/hypercorn backend.app.main:app --bind 0.0.0.0:8080"]
+# Run startup script (migrations + server + worker)
+CMD ["./start.sh"]
+

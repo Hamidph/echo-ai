@@ -171,6 +171,27 @@ def create_application() -> FastAPI:
             # 3. Fallback to root index.html for SPA routing (client-side transitions)
             return FileResponse(os.path.join(static_dir, "index.html"))
 
+    # Debug endpoint for Celery (Internal only, but exposed for now)
+    @app.get("/api/v1/debug/celery", include_in_schema=False)
+    async def debug_celery():
+        from backend.app.worker import celery_app
+        try:
+            # Check active workers
+            i = celery_app.control.inspect()
+            active = i.active()
+            registered = i.registered()
+            stats = i.stats()
+            
+            return {
+                "status": "connected",
+                "broker": str(celery_app.connection().as_uri()),
+                "active_workers": list(active.keys()) if active else [],
+                "registered_tasks": list(registered.values())[0] if registered else [],
+                "stats": stats
+            }
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
     return app
 
 

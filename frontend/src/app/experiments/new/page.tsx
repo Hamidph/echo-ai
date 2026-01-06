@@ -91,6 +91,18 @@ export default function NewExperimentPage() {
     });
   };
 
+  // Navigation debouncing to prevent accidental double-clicks submitting the next step
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const handleNextStep = () => {
+    if (step < 3) {
+      setIsNavigating(true);
+      setStep(step + 1);
+      // Prevent interactions with the next step's primary button for a brief moment
+      setTimeout(() => setIsNavigating(false), 500);
+    }
+  };
+
   const remainingQuota = usage?.remaining ?? 100; // Default to 100 if usage not loaded yet
   const canProceed = step === 1 ? (prompt && targetBrand) : step === 2 ? provider : iterations > 0;
 
@@ -143,7 +155,7 @@ export default function NewExperimentPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()}>
           {/* Step 1: Query Configuration */}
           {step === 1 && (
             <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
@@ -375,17 +387,20 @@ export default function NewExperimentPage() {
 
             {step < 3 ? (
               <button
+                key={`step-btn-${step}`}
                 type="button"
-                onClick={() => setStep(step + 1)}
-                disabled={!canProceed}
+                onClick={handleNextStep}
+                disabled={!canProceed || isNavigating}
                 className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 Continue
               </button>
             ) : (
               <button
-                type="submit"
-                disabled={!canProceed || createExperimentMutation.isPending || remainingQuota < 1}
+                key="submit-btn"
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canProceed || createExperimentMutation.isPending || remainingQuota < 1 || isNavigating}
                 className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {createExperimentMutation.isPending ? (

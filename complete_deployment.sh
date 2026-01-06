@@ -76,3 +76,4 @@ echo -e "${GREEN}curl \$(railway domain)/health${NC}"
 echo ""
 
 
+
