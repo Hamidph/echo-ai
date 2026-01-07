@@ -1,6 +1,22 @@
 # Multi-stage Dockerfile for production deployment
-# Stage 1: Builder - Install dependencies
-FROM python:3.11-slim as builder
+
+# Stage 1: Frontend Builder
+FROM node:18-alpine as frontend-builder
+WORKDIR /app/frontend
+
+# Copy frontend source
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+
+COPY frontend/ .
+
+# Build frontend (static export)
+# NEXT_PUBLIC_API_URL is set to relative path for monolithic deployment
+ENV NEXT_PUBLIC_API_URL=/api/v1
+RUN npm run build
+
+# Stage 2: Backend Builder
+FROM python:3.11-slim as backend-builder
 
 # Set working directory
 WORKDIR /app
@@ -18,7 +34,7 @@ RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN uv sync --frozen
 
-# Stage 2: Runtime - Minimal production image
+# Stage 3: Runtime - Minimal production image
 FROM python:3.11-slim
 
 # Install runtime dependencies only
@@ -32,8 +48,8 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Set working directory
 WORKDIR /app
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
+# Copy virtual environment from backend-builder
+COPY --from=backend-builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
@@ -41,7 +57,10 @@ COPY backend/ ./backend/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 COPY start.sh ./
-COPY frontend/out/ ./frontend/out/
+
+# Copy compiled frontend from frontend-builder
+# Note: copying to the location expected by main.py
+COPY --from=frontend-builder /app/frontend/out/ ./frontend/out/
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
@@ -53,7 +72,7 @@ USER appuser
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
 
 # Run application
