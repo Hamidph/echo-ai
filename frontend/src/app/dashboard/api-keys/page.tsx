@@ -243,7 +243,7 @@ export default function APIKeysPage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Using API Keys</h2>
         <div className="space-y-4 text-sm text-gray-700">
           <p>
-            Use your API key to authenticate requests to the AI Visibility API. Include it in the Authorization header:
+            Use your API key to authenticate requests to the Echo AI API. Include it in the Authorization header:
           </p>
           <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
             {`curl -H "Authorization: Bearer YOUR_API_KEY" \\

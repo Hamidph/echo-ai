@@ -1,5 +1,5 @@
 /**
- * TypeScript type definitions for AI Visibility platform
+ * TypeScript type definitions for Echo AI platform
  */
 
 export interface User {

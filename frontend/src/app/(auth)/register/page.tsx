@@ -39,7 +39,7 @@ export default function RegisterPage() {
       });
 
       const loginData = await loginResponse.json();
-      localStorage.setItem('access_token', loginData.access_token);
+      localStorage.setItem('token', loginData.access_token);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
@@ -54,9 +54,9 @@ export default function RegisterPage() {
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center space-x-2 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">AI</span>
+            <span className="text-white font-bold text-2xl">E</span>
           </div>
-          <span className="text-white font-bold text-2xl">AI Visibility</span>
+          <span className="text-white font-bold text-2xl">Echo AI</span>
         </Link>
 
         {/* Register Card */}
