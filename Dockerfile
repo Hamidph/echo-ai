@@ -40,6 +40,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY backend/ ./backend/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
+COPY start.sh ./
+COPY frontend/out/ ./frontend/out/
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
@@ -55,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
 
 # Run application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["bash", "start.sh"]
