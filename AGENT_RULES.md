@@ -14,6 +14,13 @@ This document defines the rules for all AI agents (Claude, Cursor, Gemini, etc.)
 - **Project Structure**: If you add/remove files or routes, you **MUST** update `WEBSITE_SITEMAP.md` or the relevant architecture map immediately.
 - **Commit Message**: Mention documentation updates in your commit message (e.g., `feat: add new page and update sitemap`).
 
+## 5. Handoff Protocol (Mandatory)
+Every agent session **MUST** conclude with a status update in `AI_HANDOFF_CONTEXT.md` (root directory). This file serves as the "brain dump" for the next agent.
+- **Summary**: What was accomplished?
+- **State**: What is the current status of the code (working, broken, testing)?
+- **Next Steps**: Explicit list of actionable items for the next agent.
+- **Warnings**: Any "gotchas" or critical context (e.g., "router exists but is disabled").
+
 ## 2. Deployment
 - **Method**: The application is deployed as a single Railway service (Monolithic Deployment). 
     - Frontend is statically exported and served by the Backend (`FastAPI`).
