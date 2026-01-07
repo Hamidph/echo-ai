@@ -9,6 +9,11 @@ This document defines the rules for all AI agents (Claude, Cursor, Gemini, etc.)
 - **No Empty Files**: Do not create placeholders. If a document is empty, delete it.
 - **Update, Don't Duplicate**: If a guide is outdated, update the existing file instead of creating `NEW_GUIDE.md`.
 
+## 4. Documentation Maintenance
+- **Review & Update**: Every time an agent modifies code (especially Frontend structure or Backend API routers), they **MUST** review and update the corresponding documentation.
+- **Project Structure**: If you add/remove files or routes, you **MUST** update `WEBSITE_SITEMAP.md` or the relevant architecture map immediately.
+- **Commit Message**: Mention documentation updates in your commit message (e.g., `feat: add new page and update sitemap`).
+
 ## 2. Deployment
 - **Method**: The application is deployed as a single Railway service (Monolithic Deployment). 
     - Frontend is statically exported and served by the Backend (`FastAPI`).

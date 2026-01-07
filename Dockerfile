@@ -1,27 +1,8 @@
-# Multi-stage Dockerfile for monolithic deployment
-# Stage 1: Frontend Builder
-FROM node:20-slim AS frontend_builder
-WORKDIR /app/frontend
+# Multi-stage Dockerfile for production deployment
+# Stage 1: Builder - Install dependencies
+FROM python:3.11-slim as builder
 
-# Copy frontend dependency files
-COPY frontend/package*.json ./
-RUN npm install
-
-# Copy frontend source
-COPY frontend/ .
-
-# Build frontend (static export)
-# We set the API URL to the production Railway URL
-# This enables the frontend to talk to the backend on the same domain
-# (Functionally, since we are serving static files, we could use relative paths,
-# but the current api.ts implementation relies on this env var)
-# ENV NEXT_PUBLIC_API_URL=https://echo-ai-production.up.railway.app
-# We rely on build args or default behavior now
-RUN npm run build
-
-# Stage 2: Backend Builder
-FROM python:3.11-slim as backend_builder
-
+# Set working directory
 WORKDIR /app
 
 # Install uv for fast dependency management
@@ -30,31 +11,28 @@ RUN pip install --no-cache-dir uv
 # Copy dependency files
 COPY pyproject.toml ./
 COPY uv.lock* ./
-COPY README.md ./
 
 # Install dependencies to a virtual environment
 RUN uv venv /opt/venv
-ENV VIRTUAL_ENV=/opt/venv
-ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-ENV UV_LINK_MODE=copy
 RUN uv sync --frozen
 
-# Stage 3: Runtime
+# Stage 2: Runtime - Minimal production image
 FROM python:3.11-slim
 
-# Install runtime dependencies
+# Install runtime dependencies only
 RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
+# Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
+# Set working directory
 WORKDIR /app
 
-# Copy virtual environment
-COPY --from=backend_builder /opt/venv /opt/venv
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
@@ -62,21 +40,18 @@ COPY backend/ ./backend/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 
-# Copy built frontend assets
-COPY --from=frontend_builder /app/frontend/out /app/static
-
-# Copy startup script
-COPY start.sh ./
-RUN chmod +x ./start.sh
-
-# Change ownership
+# Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
+# Expose port
 EXPOSE 8080
 
-# Run startup script (migrations + server + worker)
-CMD ["./start.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
 
+# Run application
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8080"]

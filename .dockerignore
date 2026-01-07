@@ -32,7 +32,6 @@ htmlcov/
 
 # Documentation
 *.md
-!README.md
 docs/
 
 # Environment files

@@ -98,10 +98,10 @@ async def send_email(
         aiosmtplib.SMTPException: If email sending fails.
     """
     if not settings.smtp_username or not settings.smtp_password:
-        # In development, log the email details
-        logger.info(f"[EMAIL PREVIEW] To: {to_email}")
-        logger.info(f"[EMAIL PREVIEW] Subject: {subject}")
-        logger.info(f"[EMAIL PREVIEW] Content: {html_content[:200]}...")
+        # In development, just log the email
+        print(f"[EMAIL] To: {to_email}")
+        print(f"[EMAIL] Subject: {subject}")
+        print(f"[EMAIL] Content: {html_content[:200]}...")
         return
 
     # Create message

@@ -353,8 +353,14 @@ POST   /billing/cancel-subscription    Cancel paid plan
 
 ### System
 ```
-GET    /health                 Health check (Redis + DB)
+GET    /health                 Health check (Basic)
+GET    /api/v1/health/detailed Detailed Health (DB + Redis)
 GET    /api/v1/docs            Swagger UI docs
+```
+
+### Demo (Public)
+```
+POST   /api/v1/demo/quick-analysis   Run quick demo (5 iterations)
 ```
 
 ---

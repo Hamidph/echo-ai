@@ -5,6 +5,7 @@ This module defines the database schema for storing experiments,
 results, and statistical analysis data.
 """
 
+from backend.app.models.demo import DemoUsage
 from backend.app.models.experiment import (
     BatchRun,
     BatchRunStatus,
@@ -16,6 +17,7 @@ from backend.app.models.experiment import (
 __all__ = [
     "BatchRun",
     "BatchRunStatus",
+    "DemoUsage",
     "Experiment",
     "ExperimentStatus",
     "Iteration",

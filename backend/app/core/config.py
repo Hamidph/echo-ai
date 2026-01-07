@@ -8,7 +8,6 @@ Innovation: Configuration supports probabilistic engine parameters like
 default iteration counts and confidence interval thresholds.
 """
 
-import os
 from functools import lru_cache
 from typing import Any, Literal
 
@@ -128,21 +127,7 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def database_url(self) -> PostgresDsn:
-        """
-        Construct PostgreSQL connection URL from components or use Railway's DATABASE_URL.
-        
-        Railway provides DATABASE_URL as a single environment variable.
-        For local development, constructs URL from individual components.
-        """
-        # Check if Railway/external DATABASE_URL is provided
-        database_url_env = os.getenv("DATABASE_URL")
-        if database_url_env:
-            # Railway uses postgresql:// but SQLAlchemy async needs postgresql+asyncpg://
-            if database_url_env.startswith("postgresql://"):
-                database_url_env = database_url_env.replace("postgresql://", "postgresql+asyncpg://", 1)
-            return PostgresDsn(database_url_env)
-        
-        # Fallback to component-based construction for local development
+        """Construct PostgreSQL connection URL from components."""
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=self.postgres_user,
@@ -156,15 +141,6 @@ class Settings(BaseSettings):
     @property
     def database_url_sync(self) -> PostgresDsn:
         """Construct synchronous PostgreSQL connection URL for Alembic migrations."""
-        # Check if Railway/external DATABASE_URL is provided
-        database_url_env = os.getenv("DATABASE_URL")
-        if database_url_env:
-            # Railway uses postgresql:// but SQLAlchemy + psycopg2 needs postgresql+psycopg2://
-            # Note: The async driver uses postgresql+asyncpg://
-            if database_url_env.startswith("postgresql://"):
-                database_url_env = database_url_env.replace("postgresql://", "postgresql+psycopg2://", 1)
-            return PostgresDsn(database_url_env)
-
         return PostgresDsn.build(
             scheme="postgresql+psycopg2",
             username=self.postgres_user,
@@ -183,22 +159,7 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def redis_url(self) -> RedisDsn:
-        """
-        Construct Redis connection URL from components or use Railway's REDIS_URL.
-        
-        Railway provides REDIS_URL as a single environment variable.
-        For local development, constructs URL from individual components.
-        """
-        # Check if Railway/external REDIS_URL is provided
-        redis_url_env = os.getenv("REDIS_URL")
-        # Fallback to CELERY_RESULT_BACKEND if REDIS_URL is not set (Railway default for Redis add-on)
-        if not redis_url_env:
-            redis_url_env = os.getenv("CELERY_RESULT_BACKEND")
-            
-        if redis_url_env:
-            return RedisDsn(redis_url_env)
-        
-        # Fallback to component-based construction for local development
+        """Construct Redis connection URL from components."""
         return RedisDsn.build(
             scheme="redis",
             password=self.redis_password,

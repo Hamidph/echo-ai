@@ -8,7 +8,6 @@ Innovation: The platform uses async context managers for resource lifecycle,
 ensuring clean startup/shutdown of database and Redis connections.
 """
 
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -27,10 +26,8 @@ from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.billing import router as billing_router
-from backend.app.routers.dashboard import router as dashboard_router
-
-# Initialize logger
-logger = logging.getLogger(__name__)
+from backend.app.routers.demo import router as demo_router
+from backend.app.routers.health import router as health_router
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -62,18 +59,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     redis_healthy = await check_redis_health()
     if not redis_healthy:
         # Log warning but don't fail - Redis might not be needed for all operations
-        logger.warning("Redis connection not available - some features may be limited")
+        print("Warning: Redis connection not available")
 
-    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    logger.info(f"Environment: {settings.environment}")
+    print(f"Starting {settings.app_name} v{settings.app_version}")
+    print(f"Environment: {settings.environment}")
 
     yield
 
     # Shutdown: Cleanup resources
-    logger.info("Shutting down application...")
+    print("Shutting down application...")
     await close_redis_connection()
     await engine.dispose()
-    logger.info("Cleanup complete")
+    print("Cleanup complete")
 
 
 def create_application() -> FastAPI:
@@ -113,9 +110,14 @@ def create_application() -> FastAPI:
 
     # Configure CORS
     # In development, allow all origins. In production, use frontend_url from settings
-    # In development, allow all origins. In production, use frontend_url from settings
-    allowed_origins = [str(settings.frontend_url), "http://localhost:3000", "http://127.0.0.1:3000"]
-    # Removed wildcard '*' for development security
+    allowed_origins = (
+        ["*"]
+        if settings.environment == "development"
+        else [
+            settings.frontend_url,
+            "https://echo-ai.vercel.app",  # Add your production frontend URL
+        ]
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -129,68 +131,6 @@ def create_application() -> FastAPI:
 
     # Register routers
     _register_routers(app, settings)
-
-    # Innovation: Serve React Frontend Static Files (Production/Docker)
-    # This allows the backend to serve the frontend, creating a single deployable unit.
-    import os
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
-
-    static_dir = "/app/static"
-    if os.path.exists(static_dir):
-        # Mount specific static folders first to allow direct access
-        # _next folder contains the build hashes and static chunks
-        if os.path.exists(os.path.join(static_dir, "_next")):
-            app.mount("/_next", StaticFiles(directory=os.path.join(static_dir, "_next")), name="next-static")
-        
-        # Serve favicon and other root files directly if they exist
-        for root_file in ["favicon.ico", "robots.txt", "manifest.json"]:
-            if os.path.exists(os.path.join(static_dir, root_file)):
-                @app.get(f"/{root_file}", include_in_schema=False)
-                async def serve_root_file(file_path=os.path.join(static_dir, root_file)):
-                    return FileResponse(file_path)
-
-        # Root route for SPA
-        @app.get("/", include_in_schema=False)
-        async def serve_root():
-            return FileResponse(os.path.join(static_dir, "index.html"))
-
-        # Catch-all route for SPA (must be defined LAST)
-        @app.get("/{full_path:path}", include_in_schema=False)
-        async def serve_frontend(full_path: str):
-            # 1. Check if exact file exists
-            file_path = os.path.join(static_dir, full_path)
-            if os.path.isfile(file_path):
-                return FileResponse(file_path)
-            
-            # 2. Check if it's a directory with index.html (trailingSlash behavior)
-            index_path = os.path.join(static_dir, full_path, "index.html")
-            if os.path.isfile(index_path):
-                return FileResponse(index_path)
-                
-            # 3. Fallback to root index.html for SPA routing (client-side transitions)
-            return FileResponse(os.path.join(static_dir, "index.html"))
-
-    # Debug endpoint for Celery (Internal only, but exposed for now)
-    @app.get("/api/v1/debug/celery", include_in_schema=False)
-    async def debug_celery():
-        from backend.app.worker import celery_app
-        try:
-            # Check active workers
-            i = celery_app.control.inspect()
-            active = i.active()
-            registered = i.registered()
-            stats = i.stats()
-            
-            return {
-                "status": "connected",
-                "broker": str(celery_app.connection().as_uri()),
-                "active_workers": list(active.keys()) if active else [],
-                "registered_tasks": list(registered.values())[0] if registered else [],
-                "stats": stats
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
 
     return app
 
@@ -265,24 +205,22 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         prefix=settings.api_v1_prefix,
     )
 
-    # Dashboard router
-    app.include_router(
-        dashboard_router,
-        prefix=settings.api_v1_prefix,
-    )
-
-    # Redirect root to docs only if static files are not mounted
-    # (Here we disable it because we expect static files)
-    # from fastapi.responses import RedirectResponse
-    #
-    # @app.get("/", include_in_schema=False)
-    # async def root() -> RedirectResponse:
-    #     return RedirectResponse(url=f"{settings.api_v1_prefix}/docs")
-
     # Innovation: The experiments router exposes the Probabilistic Visibility
     # Analysis service via a RESTful API
     app.include_router(
         experiments_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    # Public Demo router
+    app.include_router(
+        demo_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    # Detailed Health router
+    app.include_router(
+        health_router,
         prefix=settings.api_v1_prefix,
     )
 
