@@ -48,10 +48,9 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 
 # Copy virtual environment from backend-builder
-# Copy uv's default .venv into /opt/venv for runtime use
-# We rename it to /opt/venv to match our standard path convention
-COPY --from=backend-builder /app/.venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Copy uv's default .venv into /app/.venv (matching creation path)
+COPY --from=backend-builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY backend/ ./backend/
