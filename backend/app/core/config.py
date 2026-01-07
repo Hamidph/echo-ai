@@ -123,11 +123,30 @@ class Settings(BaseSettings):
     postgres_host: str = Field(default="localhost", description="PostgreSQL host")
     postgres_port: int = Field(default=5432, description="PostgreSQL port")
     postgres_db: str = Field(default="ai_visibility_db", description="PostgreSQL database name")
+    
+    # Allow raw DATABASE_URL from environment (e.g. Railway)
+    # This must be distinct from the computed properties
+    raw_database_url: str | None = Field(default=None, alias="DATABASE_URL")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def database_url(self) -> PostgresDsn:
-        """Construct PostgreSQL connection URL from components."""
+        """
+        Construct PostgreSQL connection URL.
+        
+        Priority:
+        1. DATABASE_URL env var (adjusted for asyncpg)
+        2. Computed from components
+        """
+        if self.raw_database_url:
+            url_str = self.raw_database_url
+            # Ensure it uses asyncpg driver
+            if url_str.startswith("postgres://"):
+                url_str = url_str.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif url_str.startswith("postgresql://"):
+                url_str = url_str.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return PostgresDsn(url_str)
+
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=self.postgres_user,
@@ -140,7 +159,25 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def database_url_sync(self) -> PostgresDsn:
-        """Construct synchronous PostgreSQL connection URL for Alembic migrations."""
+        """
+        Construct synchronous PostgreSQL connection URL for Alembic migrations.
+        
+        Priority:
+        1. DATABASE_URL env var (adjusted for psycopg2)
+        2. Computed from components
+        """
+        if self.raw_database_url:
+            url_str = self.raw_database_url
+            # Ensure it uses standard postgresql scheme (defaults to psycopg2 usually)
+            # Railway often validates using postgres:// or postgresql://
+            if url_str.startswith("postgres://"):
+                url_str = url_str.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url_str.startswith("postgresql://"):
+                # Explicitly set driver to match expectations or leave as default
+                # But to be safe vs asyncpg, we make it explicit
+                url_str = url_str.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return PostgresDsn(url_str)
+
         return PostgresDsn.build(
             scheme="postgresql+psycopg2",
             username=self.postgres_user,
