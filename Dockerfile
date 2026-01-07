@@ -30,9 +30,7 @@ COPY uv.lock* ./
 COPY README.md ./
 
 # Install dependencies to a virtual environment
-RUN uv venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/opt/venv"
+# uv sync creates .venv by default in the current directory (/app/.venv)
 RUN uv sync --frozen
 
 # Stage 3: Runtime - Minimal production image
@@ -50,7 +48,9 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 
 # Copy virtual environment from backend-builder
-COPY --from=backend-builder /opt/venv /opt/venv
+# Copy uv's default .venv into /opt/venv for runtime use
+# We rename it to /opt/venv to match our standard path convention
+COPY --from=backend-builder /app/.venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
