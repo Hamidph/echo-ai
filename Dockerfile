@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir uv
 # Copy dependency files
 COPY pyproject.toml ./
 COPY uv.lock* ./
+COPY README.md ./
 
 # Install dependencies to a virtual environment
 RUN uv venv /opt/venv
