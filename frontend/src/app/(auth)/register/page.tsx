@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Button from '@/components/ui/Button';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,7 +21,10 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register`, {
+      // Use relative path if proxy is set up or rely on global configured API URL
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://echo-ai-production.up.railway.app';
+
+      const response = await fetch(`${apiUrl}/api/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -32,7 +36,7 @@ export default function RegisterPage() {
       }
 
       // Auto-login after registration
-      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      const loginResponse = await fetch(`${apiUrl}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, password: formData.password }),
@@ -49,130 +53,123 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-6 py-12">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center px-6 relative overflow-hidden">
+      {/* Background gradients aligned with Login page */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div className="max-w-md w-full relative z-10">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center space-x-2 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">E</span>
+        <Link href="/" className="flex items-center justify-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-md">
+            ECHO
           </div>
-          <span className="text-white font-bold text-2xl">Echo AI</span>
+          <span className="font-heading font-bold text-2xl text-slate-900">Echo AI</span>
         </Link>
 
         {/* Register Card */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl">
-          <h1 className="text-3xl font-bold text-white mb-2">Create account</h1>
-          <p className="text-gray-400 mb-8">Start analyzing brand visibility today</p>
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-xl p-8">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Create an account</h1>
+          <p className="text-slate-500 mb-8">Start tracking your brand's AI visibility today</p>
 
           {error && (
-            <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-6">
-              {error}
+            <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-lg mb-6 flex items-start gap-2 text-sm">
+              <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-2">
-                Full Name
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
               <input
                 type="text"
-                id="full_name"
+                className="w-full px-4 py-2.5 rounded-lg border border-stone-200 bg-stone-50 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                placeholder="John Doe"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
               <input
                 type="email"
-                id="email"
+                className="w-full px-4 py-2.5 rounded-lg border border-stone-200 bg-stone-50 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                placeholder="you@example.com"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
               <input
                 type="password"
-                id="password"
+                className="w-full px-4 py-2.5 rounded-lg border border-stone-200 bg-stone-50 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                placeholder="••••••••"
                 required
                 minLength={8}
               />
-              <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+              <p className="mt-1 text-xs text-slate-400">Must be at least 8 characters</p>
             </div>
 
             <div className="flex items-start">
               <input
                 type="checkbox"
                 id="terms"
-                className="w-4 h-4 mt-1 bg-white/5 border-white/10 rounded text-purple-500 focus:ring-purple-500"
+                className="w-4 h-4 mt-0.5 rounded border-stone-300 text-blue-600 focus:ring-blue-500 bg-stone-50"
                 required
               />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-400">
+              <label htmlFor="terms" className="ml-2 text-sm text-slate-500">
                 I agree to the{' '}
-                <Link href="/terms" className="text-purple-400 hover:text-purple-300">
-                  Terms of Service
+                <Link href="/terms" className="text-blue-600 hover:text-blue-700 transition font-medium">
+                  Terms
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-purple-400 hover:text-purple-300">
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-700 transition font-medium">
                   Privacy Policy
                 </Link>
               </label>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition transform disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+              isLoading={loading}
             >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
+              Create Account
+            </Button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-gray-400">
-              Already have an account?{' '}
-              <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition">
+          <div className="mt-6 relative">
+            <div className="absolute inset-x-0 top-1/2 h-px bg-stone-200"></div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-slate-500">Already have an account?</span>
+            </div>
+            <p className="text-center text-slate-500 text-sm mt-4">
+              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-bold transition">
                 Sign in
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Benefits */}
-        <div className="mt-6 space-y-3">
-          {[
-            '100 free prompts to start',
-            'No credit card required',
-            'Full access to all features',
-          ].map((benefit, i) => (
-            <div key={i} className="flex items-center text-gray-300 text-sm">
-              <svg className="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {benefit}
-            </div>
-          ))}
+        {/* Benefits text below card */}
+        <div className="mt-8 grid grid-cols-1 gap-2 text-center">
+          <p className="text-sm text-slate-400 font-medium tracking-wide">
+            <span className="text-emerald-500 text-lg mr-1.5">✓</span> No credit card required
+          </p>
+          <p className="text-sm text-slate-400 font-medium tracking-wide">
+            <span className="text-emerald-500 text-lg mr-1.5">✓</span> 14-day free trial
+          </p>
         </div>
       </div>
     </div>

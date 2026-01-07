@@ -5,7 +5,7 @@
  * All endpoints use the BASE_URL from environment variables.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://echo-ai-production.up.railway.app";
 const API_PREFIX = "/api/v1";
 
 /**

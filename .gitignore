@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/  <-- blocked frontend source, commenting out
 lib64/
 parts/
 sdist/
@@ -116,3 +116,4 @@ frontend/.env*.local
 frontend/.vercel
 frontend/.turbo
 
+docs/investor_deck/
