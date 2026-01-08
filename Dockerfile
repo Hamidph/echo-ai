@@ -11,8 +11,6 @@ RUN npm ci
 COPY frontend/ .
 
 # Build frontend (static export)
-# NEXT_PUBLIC_API_URL is set to empty for monolithic deployment (frontend code already includes /api/v1)
-ENV NEXT_PUBLIC_API_URL=
 RUN npm run build
 
 # Stage 2: Backend Builder
