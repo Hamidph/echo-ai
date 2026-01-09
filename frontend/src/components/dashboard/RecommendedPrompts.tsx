@@ -47,8 +47,8 @@ export function RecommendedPrompts() {
                                 {rec.category}
                             </span>
                             <span className={`text-xs px-1.5 py-0.5 rounded ${rec.difficulty === 'High' ? 'text-amber-400 bg-amber-500/10' :
-                                    rec.difficulty === 'Medium' ? 'text-blue-400 bg-blue-500/10' :
-                                        'text-emerald-400 bg-emerald-500/10'
+                                rec.difficulty === 'Medium' ? 'text-blue-400 bg-blue-500/10' :
+                                    'text-emerald-400 bg-emerald-500/10'
                                 }`}>
                                 {rec.difficulty} Difficulty
                             </span>

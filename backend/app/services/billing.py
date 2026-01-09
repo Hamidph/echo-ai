@@ -23,9 +23,9 @@ if hasattr(settings, 'stripe_api_key') and settings.stripe_api_key:
 # Pricing tier to Stripe price ID mapping
 PRICE_IDS = {
     PricingTier.FREE: None,  # Free tier has no Stripe price
-    PricingTier.STARTER: "price_starter_monthly",  # Replace with actual Stripe price ID
-    PricingTier.PRO: "price_pro_monthly",  # Replace with actual Stripe price ID
-    PricingTier.ENTERPRISE: "price_enterprise_monthly",  # Replace with actual Stripe price ID
+    PricingTier.STARTER: settings.stripe_price_id_starter,
+    PricingTier.PRO: settings.stripe_price_id_pro,
+    PricingTier.ENTERPRISE: settings.stripe_price_id_enterprise,
 }
 
 # Quota mapping

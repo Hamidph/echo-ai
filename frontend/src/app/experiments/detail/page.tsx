@@ -20,7 +20,7 @@ function ExperimentDetailContent() {
 
     const { data: experimentData, isLoading, refetch } = useQuery({
         queryKey: ["experiment", experimentId],
-        queryFn: () => (experimentId ? experimentsApi.get(experimentId) : Promise.reject("No ID")),
+        queryFn: () => (experimentId ? experimentsApi.getDetails(experimentId) : Promise.reject("No ID")),
         enabled: !!user && !!experimentId,
         refetchInterval: (query) => ((query.state.data as any)?.status === "running" ? 3000 : false),
     });
@@ -338,6 +338,44 @@ function ExperimentDetailContent() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Raw Analysis Data - DEBUG VIEW */}
+                        <div className="mt-8 bg-[#0a0f1a] border border-white/10 rounded-xl overflow-hidden">
+                            <div className="p-6 border-b border-white/10">
+                                <h3 className="text-lg font-semibold text-white">Raw Analysis Data</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Review the actual responses from the AI model to verify why they were scored this way.
+                                </p>
+                            </div>
+                            <div className="max-h-[600px] overflow-y-auto p-4 space-y-4">
+                                {(experiment.iterations || []).map((iter: any) => (
+                                    <div key={iter.iteration_index} className="bg-white/5 rounded-lg p-4 border border-white/5">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-mono text-cyan-400">Iteration #{iter.iteration_index + 1}</span>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${iter.is_success ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                                }`}>
+                                                {iter.status}
+                                            </span>
+                                        </div>
+                                        <div className="prose prose-invert prose-sm max-w-none">
+                                            <pre className="whitespace-pre-wrap text-xs text-gray-300 font-mono bg-black/30 p-3 rounded">
+                                                {iter.raw_response ? iter.raw_response : "(No response content)"}
+                                            </pre>
+                                        </div>
+                                        {iter.error_message && (
+                                            <div className="mt-2 text-xs text-rose-400">
+                                                Error: {iter.error_message}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {(!experiment.iterations || experiment.iterations.length === 0) && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        No iteration data available.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </>

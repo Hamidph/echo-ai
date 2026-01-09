@@ -137,10 +137,9 @@
 - `backend/app/main.py`: Entry point, all routers registered
 - `backend/app/worker.py`: Core experiment logic (Celery tasks)
 - `backend/app/tasks/scheduler.py`: Recurring experiment scheduler (has fix pending deployment)
-- `backend/app/routers/demo.py`: Public demo endpoint
-- `backend/app/routers/health.py`: Detailed health check endpoint
+- `backend/app/core/config.py`: Configuration loader (Fixed to respect `DATABASE_URL`).
 - `start.sh`: Monolithic startup script for Railway
-- `Dockerfile`: Multi-stage build for production
+- `Dockerfile`: Multi-stage build (Node.js for frontend -> Python for backend). **Note**: venv kept at `/app/.venv`.
 
 ## Testing Credentials
 - **Demo User**: test@echoai.com / password123
@@ -150,5 +149,12 @@
 ## Important Notes
 - ⚠️ TypeScript strict mode is disabled in `next.config.js` (`ignoreBuildErrors: true`)
 - ⚠️ The project uses `npm` for frontend (not `pnpm` as per dotfiles preference)
-- ✅ All critical systems are operational and healthy
-- ✅ The only issue is a non-critical scheduler error that's already fixed in code
+- ✅ The only issue is a non-critical scheduler error that's already fixed in code (`fix(scheduler): fix NameError`)
+
+## Recent Fixes (January 7, 2026 - Session 2)
+- **UI/Nav**: Fixed Dashboard overlap issue (blocking navigation) by adding top padding.
+- **Branding**: Replaced "AI Visibility" with "Echo AI" in Register page and global frontend files.
+- **Auth**: Fixed session persistence issue by unifying token storage key (`token`).
+- **Fix**: Hardcoded production API URL fallback in `frontend/src/lib/api.ts` to solve "Failed to fetch" client-side errors.
+- **Fix**: Removed `localhost:8000` default from `next.config.js` and `Dockerfile` which was overriding the production URL in the build.
+- **Design**: Unified Register page design to match Login page (Light Mode/Clean style).

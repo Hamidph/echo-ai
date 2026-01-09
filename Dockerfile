@@ -29,7 +29,7 @@ COPY README.md ./
 
 # Install dependencies to a virtual environment
 # uv sync creates .venv by default in the current directory (/app/.venv)
-RUN uv sync --frozen
+RUN uv sync
 
 # Stage 3: Runtime - Minimal production image
 FROM python:3.11-slim

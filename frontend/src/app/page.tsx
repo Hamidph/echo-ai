@@ -26,7 +26,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Echo AI gives you the visibility you need to optimize your brand's presence in the age of Generative Search.
+            Echo AI gives you the visibility you need to optimize your brand&apos;s presence in the age of Generative Search.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
@@ -138,7 +138,7 @@ export default function Home() {
                 Stop guessing.<br />Start measuring.
               </h2>
               <p className="text-lg text-slate-500 mb-8 leading-relaxed">
-                Traditional SEO tools can't see inside the "black box" of LLMs. Echo AI generates thousands of probes to map exactly how, when, and why AI recommends your brand.
+                Traditional SEO tools can&apos;t see inside the &quot;black box&quot; of LLMs. Echo AI generates thousands of probes to map exactly how, when, and why AI recommends your brand.
               </p>
               <ul className="space-y-4">
                 {[
@@ -189,7 +189,7 @@ export default function Home() {
                     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold shrink-0">AI</div>
                     <div>
                       <div className="text-sm font-bold text-slate-900 mb-1">Recommendation Engine</div>
-                      <div className="text-sm text-slate-500 italic">"The best option for enterprise scaling is [Your Brand] due to its robust API..."</div>
+                      <div className="text-sm text-slate-500 italic">&quot;The best option for enterprise scaling is [Your Brand] due to its robust API...&quot;</div>
                     </div>
                   </div>
                 </div>

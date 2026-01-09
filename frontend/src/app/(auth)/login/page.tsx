@@ -98,9 +98,12 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-slate-500 text-sm">
-              Don't have an account?{' '}
+          <div className="mt-6 relative">
+            <div className="absolute inset-x-0 top-1/2 h-px bg-stone-200"></div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-slate-500">Don&apos;t have an account?</span>
+            </div>
+            <p className="text-center text-slate-500 text-sm mt-4">
               <Link href="/register" className="text-blue-600 hover:text-blue-700 font-bold transition">
                 Create one now
               </Link>

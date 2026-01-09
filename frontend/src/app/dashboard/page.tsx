@@ -196,7 +196,7 @@ export default function DashboardPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Welcome to Echo AI</h2>
             <p className="text-gray-400 text-center max-w-md mb-8">
-              Start analyzing your brand's visibility across AI platforms. Run your first experiment to see how AI search engines respond to prompts about your brand.
+              Start analyzing your brand&apos;s visibility across AI platforms. Run your first experiment to see how AI search engines respond to prompts about your brand.
             </p>
             <Link
               href="/experiments/new"

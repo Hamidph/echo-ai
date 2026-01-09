@@ -5,7 +5,7 @@
  * All endpoints use the BASE_URL from environment variables.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://echo-ai-production.up.railway.app";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const API_PREFIX = "/api/v1";
 
 /**
@@ -32,6 +32,14 @@ async function apiFetch<T>(
     });
 
     if (!response.ok) {
+        // Handle case where API returns HTML (e.g. 404 page from frontend server instead of API JSON)
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            throw new Error(
+                `API Configuration Error: The API endpoint returned HTML instead of JSON. This usually means NEXT_PUBLIC_API_URL is pointing to a frontend URL instead of the backend API. (Endpoint: ${endpoint})`
+            );
+        }
+
         const error = await response.json().catch(() => ({ detail: "An error occurred" }));
         throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
     }
