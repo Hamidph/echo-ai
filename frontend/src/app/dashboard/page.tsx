@@ -82,8 +82,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Always show charts and experiments list together */}
-        {hasExperiments && (
+        {hasExperiments ? (
           <div className="space-y-8 animate-fade-in">
             {/* Top Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6">
