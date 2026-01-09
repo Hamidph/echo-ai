@@ -8,6 +8,9 @@ echo "[STARTUP] Current Time: $(date)"
 echo "[STARTUP] Running database migrations..."
 alembic upgrade head
 
+echo "[STARTUP] Seeding test data..."
+python backend/scripts/seed_test_data.py || echo "[STARTUP] Warning: Failed to seed test data (may already exist)"
+
 echo "[STARTUP] Starting Celery worker with low concurrency..."
 # Reduced concurrency to 2 to prevent OOM in small containers
 celery -A backend.app.worker worker -B --loglevel=info --concurrency=2 &
