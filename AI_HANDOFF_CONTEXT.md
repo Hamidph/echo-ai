@@ -1,4 +1,4 @@
-# Echo AI - Handoff Context (January 7, 2026)
+# Echo AI - Handoff Context (January 9, 2026)
 
 ## Project Overview
 **Echo AI** is a "Visibility Intelligence Platform" that tracks brand presence across LLM search engines (Perplexity, ChatGPT, Claude) using Monte Carlo simulations (50-100 iterations per prompt).
@@ -11,7 +11,30 @@
 - **Deployment**: Railway (Service `echo-ai`, linked to `main` branch).
 - **Server**: Hypercorn (ASGI server) on port 8080.
 
-## Current System Status (January 7, 2026)
+## Latest Updates (January 9, 2026)
+
+### ✅ Dashboard Router Fixed
+- **Issue**: Dashboard showing empty state despite having experiments
+- **Root Cause**: Dashboard router never registered in `main.py`
+- **Fix**: Added `dashboard_router` import and `app.include_router()` call
+- **Files**: `backend/app/main.py`
+
+### ✅ Recurring Experiments Enabled
+- **Issue**: No daily runs, visibility scores = 0%
+- **Fix**: Updated `seed_test_data.py` to set `is_recurring=True`, `frequency="daily"`, fixed metrics structure
+- **Result**: All 9 test experiments now run daily automatically
+
+### ✅ Admin Panel Deployed
+- **Routes**: `/admin` (frontend), `/api/v1/admin/*` (backend)
+- **Features**: System config, platform stats, user management
+- **Default**: Recurring frequency set to "daily" (value proposition)
+
+### ✅ Local Development Environment
+- **Setup**: Docker Compose (PostgreSQL + Redis), hot reload
+- **Speed**: 1-2 sec iteration vs 5+ min Railway deploys
+- **Docs**: `LOCAL_DEVELOPMENT.md`, `scripts/dev.sh`
+
+## Current System Status (January 9, 2026)
 
 ### ✅ WORKING SYSTEMS
 1. **Railway Deployment**: 
