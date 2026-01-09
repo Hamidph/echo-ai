@@ -49,6 +49,8 @@ async def get_dashboard_stats(
     total_experiments = (await session.execute(total_query)).scalar() or 0
     completed_experiments = (await session.execute(completed_query)).scalar() or 0
 
+    # Return basic stats even if no completed experiments
+    # This ensures the dashboard shows experiments list even if none are completed yet
     if completed_experiments == 0:
         return DashboardStatsResponse(
             total_experiments=total_experiments,
