@@ -11,8 +11,10 @@ from backend.app.models.experiment import (
     BatchRunStatus,
     Experiment,
     ExperimentStatus,
+    ExperimentFrequency,
     Iteration,
 )
+from backend.app.models.user import User, UserRole, PricingTier
 
 __all__ = [
     "BatchRun",
@@ -20,5 +22,9 @@ __all__ = [
     "DemoUsage",
     "Experiment",
     "ExperimentStatus",
+    "ExperimentFrequency",
     "Iteration",
+    "User",
+    "UserRole",
+    "PricingTier",
 ]
