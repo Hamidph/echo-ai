@@ -34,14 +34,17 @@ export default function DashboardPage() {
   });
 
   // Fix hydration mismatch for time-based greeting
+  const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
+    setMounted(true);
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good morning");
     else if (hour < 18) setGreeting("Good afternoon");
     else setGreeting("Good evening");
   }, []);
 
-  if (authLoading || statsLoading) {
+  if (authLoading || statsLoading || !mounted) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center">
         <div className="relative">
