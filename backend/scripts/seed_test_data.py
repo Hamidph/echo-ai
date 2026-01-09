@@ -21,7 +21,14 @@ sys.path.append(os.getcwd())
 from sqlalchemy import select
 from backend.app.core.database import get_session_factory
 from backend.app.models.user import User, PricingTier, UserRole
-from backend.app.models.experiment import Experiment, BatchRun, Iteration, ExperimentStatus, BatchRunStatus
+from backend.app.models.experiment import (
+    Experiment,
+    BatchRun,
+    Iteration,
+    ExperimentStatus,
+    ExperimentFrequency,
+    BatchRunStatus,
+)
 from backend.app.core.security import get_password_hash
 
 
@@ -137,7 +144,7 @@ async def create_sample_experiment(session, user_id, exp_data):
     """Create a sample experiment with complete data."""
     created_at = datetime.now(timezone.utc) - timedelta(days=exp_data["days_ago"])
     
-    # Create experiment
+    # Create experiment (set as recurring with daily frequency)
     experiment = Experiment(
         user_id=user_id,
         prompt=exp_data["prompt"],
@@ -150,6 +157,10 @@ async def create_sample_experiment(session, user_id, exp_data):
             "temperature": 0.7,
         },
         status=exp_data["status"].value,
+        is_recurring=True,
+        frequency=ExperimentFrequency.DAILY.value,
+        next_run_at=datetime.now(timezone.utc) + timedelta(days=1),
+        last_run_at=created_at + timedelta(minutes=5),
         created_at=created_at,
         updated_at=created_at + timedelta(minutes=5),
     )
@@ -171,9 +182,17 @@ async def create_sample_experiment(session, user_id, exp_data):
         failed_iterations=0,
         total_tokens=exp_data["iterations"] * 500,  # Realistic token count
         metrics={
-            "visibility_rate": exp_data["visibility_rate"],
+            "target_visibility": {
+                "visibility_rate": exp_data["visibility_rate"],
+                "confidence_interval_95": [exp_data["visibility_rate"] - 0.05, exp_data["visibility_rate"] + 0.05],
+            },
+            "share_of_voice": [
+                {"brand": exp_data["target_brand"], "share": exp_data["visibility_rate"]},
+            ] + [
+                {"brand": comp, "share": (1 - exp_data["visibility_rate"]) / len(exp_data["competitor_brands"])}
+                for comp in exp_data["competitor_brands"]
+            ],
             "avg_position": exp_data["avg_position"],
-            "confidence_interval_95": [exp_data["visibility_rate"] - 0.05, exp_data["visibility_rate"] + 0.05],
             "consistency_score": exp_data["visibility_rate"],
         },
     )
@@ -236,11 +255,21 @@ async def seed_test_data():
             )
             existing_experiments = result.scalars().all()
             
-            if len(existing_experiments) >= len(SAMPLE_EXPERIMENTS):
-                print(f"✓ User already has {len(existing_experiments)} experiments. Skipping seed.")
+            # Update existing experiments to be recurring
+            if len(existing_experiments) > 0:
+                print(f"✓ Found {len(existing_experiments)} existing experiments. Updating to recurring...")
+                for exp in existing_experiments:
+                    exp.is_recurring = True
+                    exp.frequency = ExperimentFrequency.DAILY.value
+                    exp.next_run_at = datetime.now(timezone.utc) + timedelta(days=1)
+                    if not exp.last_run_at:
+                        exp.last_run_at = exp.updated_at
+                    session.add(exp)
+                await session.commit()
+                print(f"✓ Updated {len(existing_experiments)} experiments to daily recurring")
                 print()
                 print("=" * 80)
-                print("Test data already exists!")
+                print("Test data updated to recurring!")
                 print("=" * 80)
                 return True
             
