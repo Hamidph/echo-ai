@@ -24,6 +24,7 @@ from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import get_engine
 from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
+from backend.app.routers.admin import router as admin_router
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.billing import router as billing_router
 from backend.app.routers.demo import router as demo_router
@@ -259,6 +260,14 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
         health_router,
         prefix=settings.api_v1_prefix,
     )
+
+    # Admin router (system configuration and management)
+    app.include_router(
+        admin_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    return app
 
 
 # Create the application instance
