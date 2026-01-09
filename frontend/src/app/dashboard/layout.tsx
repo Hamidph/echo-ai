@@ -1,20 +1,25 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, isLoading, isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [mounted, isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center">
         <div className="relative">
