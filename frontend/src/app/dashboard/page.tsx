@@ -26,10 +26,10 @@ export default function DashboardPage() {
     enabled: !!user,
   });
 
-  // Fetch Recent Experiments
+  // Fetch All Experiments (not just recent)
   const { data: experiments, isLoading: experimentsLoading } = useQuery({
-    queryKey: ["recentExperiments"],
-    queryFn: () => experimentsApi.list(5, 0),
+    queryKey: ["allExperiments"],
+    queryFn: () => experimentsApi.list(50, 0),
     enabled: !!user,
   });
 
@@ -78,11 +78,12 @@ export default function DashboardPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Analysis
+            New Experiment
           </Link>
         </div>
 
-        {hasExperiments ? (
+        {/* Always show charts and experiments list together */}
+        {hasExperiments && (
           <div className="space-y-8 animate-fade-in">
             {/* Top Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6">
@@ -140,18 +141,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bottom Section: Recent & Recommendations */}
+            {/* All Experiments Section */}
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <Card className="h-full">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">Recent Experiments</h2>
-                    <Link
-                      href="/experiments"
-                      className="text-sm text-cyan-400 hover:text-cyan-300 transition"
-                    >
-                      View all →
-                    </Link>
+                    <h2 className="text-xl font-bold text-white">Your Experiments</h2>
+                    <span className="text-sm text-gray-400">{experiments?.total || 0} total</span>
                   </div>
 
                   <div className="space-y-3">

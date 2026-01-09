@@ -1,7 +1,7 @@
 # Echo AI - Complete Website Sitemap & Feature Documentation
 
-**Last Updated**: January 1, 2026
-**Environment**: Development (Testing Mode Enabled)
+**Last Updated**: January 9, 2026
+**Environment**: Production (Railway Deployment)
 
 ---
 
@@ -16,11 +16,11 @@ Echo AI Platform
 │   └── /register
 │
 ├── 🔐 Application Pages (Authenticated)
-│   ├── /dashboard
-│   ├── /experiments
-│   ├── /experiments/new
-│   ├── /experiments/[id]
-│   └── /settings
+│   ├── /dashboard (Main hub: charts + experiments list)
+│   ├── /experiments/new (Create new experiment)
+│   ├── /experiments/detail?id={id} (View experiment results)
+│   ├── /admin (Admin panel - admin role only)
+│   └── /settings (User settings)
 │
 └── 📡 API Endpoints (Backend)
     ├── /health
@@ -103,77 +103,50 @@ Echo AI Platform
 ---
 
 ### 4. **Dashboard** (`/dashboard`)
-**Purpose**: Main analytics overview
+**Purpose**: Central hub showing analytics + all experiments in one place
 
 **Layout**:
 ```
-Header: Welcome, [User Name]!
+Header: Welcome, [User Name]! + "New Experiment" button
 │
 ├── Top Metrics Row (3 cards)
-│   ├── Visibility: XX% (+/- change)
-│   ├── Sentiment: XX/100 (+/- change)
-│   └── Position: #X (+/- change)
+│   ├── Avg Visibility Score: XX%
+│   ├── Completed Runs: X
+│   └── Total Experiments: X
 │
-├── Main Content (2 columns)
-│   ├── Left: 12-month trend chart
-│   │   └── Bar chart showing visibility over time
-│   ├── Right: Competitor comparison
-│   │   └── Horizontal bars for brand rankings
+├── Charts Section (2 columns)
+│   ├── Left (2/3): Visibility Trend Chart
+│   │   └── Line/bar chart showing visibility over time
+│   └── Right (1/3): Share of Voice Chart
+│       └── Pie chart showing brand distribution
 │
-└── Sidebar (Right)
-    ├── Usage Stats
-    │   ├── Prompts used: X/100
-    │   ├── Remaining: XX
-    │   └── Next reset: [date]
-    ├── Quick Actions
-    │   ├── New Analysis button
-    │   └── View History button
-    └── Recent Analyses (last 3)
+└── Experiments Section (2 columns)
+    ├── Left (2/3): Your Experiments (All experiments list)
+    │   └── Cards showing all experiments with status
+    └── Right (1/3): Recommended Prompts
+        └── Suggested prompts to try
 ```
+
+**Key Features**:
+- ✅ Shows charts AND experiments in one view
+- ✅ "New Experiment" button prominently displayed
+- ✅ No separate "All Experiments" page needed
+- ✅ Everything accessible from one dashboard
 
 **Data Sources**:
 - Real experiment results from database
 - Aggregated metrics calculated from experiments
-- **Note**: Currently may show dummy data - needs real experiments
+- Shows up to 50 experiments (most recent first)
 
 **Interactive Elements**:
-- Metric cards are tabs (click to switch views)
+- Click experiment card → view details
+- Click "New Experiment" → create new
 - Chart hover tooltips
-- Competitor bars are clickable
+- Recommended prompts are clickable
 
 ---
 
-### 5. **Experiments List** (`/experiments`)
-**Purpose**: View all experiments with search/filter
-
-**Features**:
-- Table view with columns:
-  - Prompt (truncated)
-  - Target Brand
-  - Provider (ChatGPT/Perplexity/Claude)
-  - Status (completed/running/failed/pending)
-  - Created date
-  - Actions (View button)
-
-**Filters**:
-- All / Completed / Running / Failed (tabs)
-- Search bar (searches prompts)
-
-**Status Indicators**:
-- Completed: Green badge
-- Running: Cyan badge with pulse animation
-- Failed: Red badge
-- Pending: Amber badge
-
-**Pagination**: 10 results per page
-
-**Empty State**: Shows when no experiments exist
-- Message: "No experiments yet"
-- CTA: "Create your first experiment"
-
----
-
-### 6. **Create Experiment** (`/experiments/new`)
+### 5. **Create Experiment** (`/experiments/new`)
 **Purpose**: Run new AI visibility analysis
 
 **Multi-Step Form**:
@@ -221,7 +194,7 @@ Header: Welcome, [User Name]!
 
 ---
 
-### 7. **Experiment Details** (`/experiments/[id]`)
+### 6. **Experiment Details** (`/experiments/detail?id={id}`)
 **Purpose**: View results of a specific experiment
 
 **Status Banner** (top):
@@ -264,6 +237,40 @@ Sentiment (if analyzed):
 - Share (copy link)
 
 **Polling**: Auto-refreshes every 5 seconds while status = "running"
+
+---
+
+### 7. **Admin Panel** (`/admin`)
+**Purpose**: System configuration and management (admin users only)
+
+**Access**: Requires `role="admin"` in user account
+
+**Tabs**:
+
+**System Configuration**:
+- Default Iterations (1-100)
+- Default Recurring Frequency (daily/weekly/monthly)
+- Enable Recurring by Default (toggle)
+- Max Iterations Per Experiment (1-1000)
+- Enable Recurring Experiments (platform-wide toggle)
+- Maintenance Mode (emergency toggle)
+
+**Platform Statistics**:
+- Total Users / Active Users
+- Total Experiments / Completed / Running
+- Recurring Experiments / Active Recurring
+- Current System Configuration display
+
+**User Management**:
+- Table showing all users
+- Columns: Email, Name, Role, Tier, Quota, Status
+- Future: Update roles and quotas
+
+**Features**:
+- ✅ Change settings without code deployment
+- ✅ Real-time platform monitoring
+- ✅ Enterprise-grade configuration management
+- ✅ Same approach as Stripe/Shopify/Salesforce
 
 ---
 
@@ -341,6 +348,16 @@ GET    /experiments            List experiments (paginated)
 GET    /experiments/{id}       Get experiment status & results
 GET    /experiments/{id}/details       Get full details
 GET    /experiments/{id}/report        Get visibility report
+```
+
+### Admin (`/api/v1/admin`)
+```
+GET    /admin/config           Get system configuration
+PUT    /admin/config           Update system configuration
+GET    /admin/stats            Get platform statistics
+GET    /admin/users            List all users (paginated)
+PATCH  /admin/users/{id}/role  Update user role
+PATCH  /admin/users/{id}/quota Update user quota
 ```
 
 ### Billing (`/api/v1/billing`)
