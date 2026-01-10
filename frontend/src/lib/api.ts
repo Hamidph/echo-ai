@@ -240,6 +240,65 @@ export const billingApi = {
 };
 
 /**
+ * Brand Management API
+ */
+export const brandApi = {
+    /**
+     * Get current user's brand profile
+     */
+    async getProfile() {
+        return apiFetch<{
+            brand_name: string;
+            brand_description: string | null;
+            brand_website: string | null;
+            brand_industry: string | null;
+            brand_competitors: string[];
+            brand_target_keywords: string[];
+            has_brand_profile: boolean;
+        }>("/brand/profile", {
+            method: "GET",
+        });
+    },
+
+    /**
+     * Update user's brand profile
+     */
+    async updateProfile(profile: {
+        brand_name: string;
+        brand_description?: string | null;
+        brand_website?: string | null;
+        brand_industry?: string | null;
+        brand_competitors?: string[];
+        brand_target_keywords?: string[];
+    }) {
+        return apiFetch("/brand/profile", {
+            method: "PUT",
+            body: JSON.stringify(profile),
+        });
+    },
+
+    /**
+     * Add a competitor to brand profile
+     */
+    async addCompetitor(competitorName: string) {
+        return apiFetch("/brand/competitors", {
+            method: "POST",
+            body: JSON.stringify({ competitor_name: competitorName }),
+        });
+    },
+
+    /**
+     * Remove a competitor from brand profile
+     */
+    async removeCompetitor(competitorName: string) {
+        return apiFetch("/brand/competitors", {
+            method: "DELETE",
+            body: JSON.stringify({ competitor_name: competitorName }),
+        });
+    },
+};
+
+/**
  * Health check API (not under /api/v1 prefix)
  */
 export const healthApi = {

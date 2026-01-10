@@ -27,6 +27,7 @@ from backend.app.routers import experiments_router
 from backend.app.routers.admin import router as admin_router
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.billing import router as billing_router
+from backend.app.routers.brand import router as brand_router
 from backend.app.routers.dashboard import router as dashboard_router
 from backend.app.routers.demo import router as demo_router
 from backend.app.routers.health import router as health_router
@@ -240,6 +241,12 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
     # Billing router
     app.include_router(
         billing_router,
+        prefix=settings.api_v1_prefix,
+    )
+
+    # Brand management router
+    app.include_router(
+        brand_router,
         prefix=settings.api_v1_prefix,
     )
 

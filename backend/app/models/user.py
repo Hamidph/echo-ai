@@ -142,6 +142,43 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+    # Brand Management (Phase 1)
+    brand_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Company/Brand name",
+    )
+    brand_description: Mapped[str | None] = mapped_column(
+        String, # Text type in Postgres
+        nullable=True,
+        comment="Description of what the brand does",
+    )
+    brand_website: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Company website URL",
+    )
+    brand_industry: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        comment="Industry category",
+    )
+    # Storing lists as JSON for simplicity in MVP (Phase 1)
+    # Ideally these would be separate tables if we need complex queries later
+    from sqlalchemy.dialects.postgresql import JSONB
+    brand_competitors: Mapped[list[str] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=list,
+        comment="List of competitor names",
+    )
+    brand_target_keywords: Mapped[list[str] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=list,
+        comment="List of target SEO keywords",
+    )
     experiments: Mapped[list["Experiment"]] = relationship(
         "Experiment",
         back_populates="user",

@@ -29,7 +29,19 @@ export default function DashboardPage() {
   // Fetch All Experiments (not just recent)
   const { data: experiments, isLoading: experimentsLoading } = useQuery({
     queryKey: ["allExperiments"],
-    queryFn: () => experimentsApi.list(50, 0),
+    queryFn: async () => {
+      const result = await experimentsApi.list(50, 0);
+      console.log('[Dashboard] Experiments API response:', {
+        total: result.total,
+        count: result.experiments?.length,
+        experiments: result.experiments?.map((e: any) => ({
+          id: e.experiment_id,
+          prompt: e.prompt?.substring(0, 30),
+          status: e.status
+        }))
+      });
+      return result;
+    },
     enabled: !!user,
   });
 
@@ -153,7 +165,9 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {experiments?.experiments?.map((exp: any) => (
+                    {(() => {
+                      console.log('[Dashboard] Rendering experiments:', experiments?.experiments?.length);
+                      return experiments?.experiments?.map((exp: any) => (
                       <Link
                         key={exp.experiment_id}
                         href={`/experiments/detail?id=${exp.experiment_id}`}
@@ -175,7 +189,7 @@ export default function DashboardPage() {
                           <StatusBadge status={exp.status} />
                         </div>
                       </Link>
-                    ))}
+                    ))})()}
                   </div>
                 </Card>
               </div>

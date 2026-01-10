@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { experimentsApi, billingApi } from "@/lib/api";
+import { experimentsApi, billingApi, brandApi } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 const providers = [
@@ -52,11 +52,25 @@ function NewExperimentForm() {
   const [step, setStep] = useState(1);
   const [prompt, setPrompt] = useState(initialPrompt);
   const [targetBrand, setTargetBrand] = useState("");
-  const [competitorBrands, setCompetitorBrands] = useState("");
+  const [selectedCompetitors, setSelectedCompetitors] = useState<string[]>([]);
   const [provider, setProvider] = useState<string | null>(null);
   const [iterations, setIterations] = useState(10);
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState("daily");
+
+  // Fetch brand profile
+  const { data: brandProfile, isLoading: brandLoading } = useQuery({
+    queryKey: ["brandProfile"],
+    queryFn: brandApi.getProfile,
+    enabled: !!user,
+  });
+
+  // Initialize target brand from profile
+  useEffect(() => {
+    if (brandProfile?.brand_name) {
+      setTargetBrand(brandProfile.brand_name);
+    }
+  }, [brandProfile]);
 
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ["usage"],
@@ -86,7 +100,7 @@ function NewExperimentForm() {
     createExperimentMutation.mutate({
       prompt,
       target_brand: targetBrand,
-      competitor_brands: competitorBrands.split(",").map((b) => b.trim()).filter(Boolean),
+      competitor_brands: selectedCompetitors,
       provider: provider,
       iterations,
       is_recurring: isRecurring,
@@ -181,31 +195,75 @@ function NewExperimentForm() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  {/* Target Brand - Read-only if brand profile exists */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Target Brand <span className="text-rose-400">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={targetBrand}
-                      onChange={(e) => setTargetBrand(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
-                      placeholder="Salesforce"
-                    />
+                    {brandProfile?.brand_name ? (
+                      <div className="w-full px-4 py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-white">
+                        <span className="font-medium">{brandProfile.brand_name}</span>
+                        <span className="text-cyan-400 text-sm ml-2">(Your brand)</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="text"
+                          value={targetBrand}
+                          onChange={(e) => setTargetBrand(e.target.value)}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                          placeholder="Enter your brand name"
+                        />
+                        <p className="mt-2 text-xs text-amber-400">
+                          <Link href="/dashboard/brand" className="hover:underline">Set up your brand profile</Link> to lock this automatically.
+                        </p>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Competitors - Checkboxes if brand profile has competitors */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Competitors <span className="text-gray-500">(optional)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={competitorBrands}
-                      onChange={(e) => setCompetitorBrands(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
-                      placeholder="HubSpot, Zoho, Pipedrive"
-                    />
-                    <p className="mt-2 text-xs text-gray-500">Comma-separated list</p>
+                    {brandProfile?.brand_competitors && brandProfile.brand_competitors.length > 0 ? (
+                      <div className="space-y-2">
+                        {brandProfile.brand_competitors.map((competitor: string) => (
+                          <label
+                            key={competitor}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCompetitors.includes(competitor)
+                                ? "bg-cyan-500/10 border-cyan-500/30"
+                                : "bg-white/5 border-white/10 hover:border-white/20"
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedCompetitors.includes(competitor)}
+                              onChange={(e) => {
+                                if (e.target.checked && selectedCompetitors.length < 5) {
+                                  setSelectedCompetitors([...selectedCompetitors, competitor]);
+                                } else if (!e.target.checked) {
+                                  setSelectedCompetitors(selectedCompetitors.filter((c) => c !== competitor));
+                                }
+                              }}
+                              className="w-4 h-4 rounded text-cyan-500 bg-white/10 border-white/20 focus:ring-cyan-500/50"
+                            />
+                            <span className="text-white">{competitor}</span>
+                          </label>
+                        ))}
+                        <p className="mt-2 text-xs text-gray-500">
+                          Select up to 5 competitors ({selectedCompetitors.length}/5)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-white/5 border border-dashed border-white/10 rounded-lg text-center">
+                        <p className="text-gray-400 text-sm">No competitors defined.</p>
+                        <Link href="/dashboard/brand" className="text-cyan-400 hover:underline text-sm">
+                          Add competitors in Brand Profile
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

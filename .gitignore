@@ -116,4 +116,9 @@ frontend/.env*.local
 frontend/.vercel
 frontend/.turbo
 
+# Celery runtime files
+celerybeat-schedule*
+celerybeat.pid
+
+# Investor docs (private)
 docs/investor_deck/

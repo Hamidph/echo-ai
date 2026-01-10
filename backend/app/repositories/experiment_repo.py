@@ -177,6 +177,35 @@ class ExperimentRepository:
         stmt = stmt.limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+    
+    async def count_experiments(
+        self,
+        user_id: UUID,
+        status: ExperimentStatus | None = None,
+    ) -> int:
+        """
+        Count total experiments for a user with optional status filter.
+
+        Args:
+            user_id: Filter experiments by this user ID.
+            status: Optional status filter.
+
+        Returns:
+            Total count of experiments.
+        """
+        from sqlalchemy import func
+        
+        stmt = (
+            select(func.count())
+            .select_from(Experiment)
+            .where(Experiment.user_id == user_id)
+        )
+
+        if status:
+            stmt = stmt.where(Experiment.status == status.value)
+
+        result = await self.session.execute(stmt)
+        return result.scalar() or 0
 
     async def get_experiment_by_user(
         self,

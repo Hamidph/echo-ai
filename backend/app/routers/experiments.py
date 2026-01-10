@@ -88,6 +88,13 @@ async def create_experiment(
         f"User {current_user.email} creating experiment for brand '{experiment_request.target_brand}'"
     )
 
+    # Require brand profile for non-admin users
+    if not current_user.brand_name and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please complete your brand profile before creating experiments. Go to Settings > Brand Profile.",
+        )
+
     # Validate iterations against max allowed BEFORE quota check
     settings = get_settings()
     iterations_requested = experiment_request.iterations
@@ -127,12 +134,15 @@ async def create_experiment(
     if experiment_request.system_prompt:
         config["system_prompt"] = experiment_request.system_prompt
 
+    # Use user's brand profile if set, otherwise fall back to request body
+    effective_target_brand = current_user.brand_name or experiment_request.target_brand
+
     # Create experiment in database
     exp_repo = ExperimentRepository(session)
     experiment = await exp_repo.create_experiment(
         user_id=current_user.id,
         prompt=experiment_request.prompt,
-        target_brand=experiment_request.target_brand,
+        target_brand=effective_target_brand,
         config=config,
         competitor_brands=experiment_request.competitor_brands,
         domain_whitelist=experiment_request.domain_whitelist,
@@ -504,6 +514,12 @@ async def list_experiments(
         offset=offset,
         status=status_enum,
     )
+    
+    # Get total count for pagination
+    total_count = await exp_repo.count_experiments(
+        user_id=current_user.id,
+        status=status_enum,
+    )
 
     # Convert to response models
     items = [
@@ -523,7 +539,7 @@ async def list_experiments(
 
     return ExperimentListResponse(
         experiments=items,
-        total=len(items),  # Would need count query for accurate total
+        total=total_count,  # Accurate total count from database
         limit=limit,
         offset=offset,
     )

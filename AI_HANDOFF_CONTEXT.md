@@ -1,4 +1,6 @@
-# Echo AI - Handoff Context (January 9, 2026)
+# Echo AI - Handoff Context (January 10, 2026)
+
+> **Agent Rules**: See `.agent/AGENT_RULES.md` for comprehensive collaboration guidelines
 
 ## Project Overview
 **Echo AI** is a "Visibility Intelligence Platform" that tracks brand presence across LLM search engines (Perplexity, ChatGPT, Claude) using Monte Carlo simulations (50-100 iterations per prompt).
@@ -11,7 +13,38 @@
 - **Deployment**: Railway (Service `echo-ai`, linked to `main` branch).
 - **Server**: Hypercorn (ASGI server) on port 8080.
 
-## Latest Updates (January 9, 2026)
+## Latest Updates (January 10, 2026)
+
+### ✅ Codebase Cleanup
+- **Removed debug scripts**: `check_status.py`, `debug_todays_experiments.py`
+- **Removed test scripts**: `backend/scripts/test_regex.py`, `debug_visibility.py`, `test_celery.py`
+- **Added to .gitignore**: `celerybeat-schedule*` files
+- **New agent docs**: `.agent/AGENT_RULES.md`, `.agent/HANDOFF.md`
+- **Module READMEs**: `backend/README.md` (frontend already had one)
+
+### ✅ UX Improvements
+- **Legal pages**: `/terms`, `/privacy` with real company data
+- **Pricing section**: 4 tiers (FREE: 100, STARTER: 5000, PRO: 50000, ENTERPRISE: 1M prompts)
+- **Section IDs**: `#demo`, `#features`, `#pricing` for anchor navigation
+- **Footer**: Added Terms, Privacy, Contact links
+
+### ✅ Brand Management System
+
+- **New Endpoints**: `/api/v1/brand/profile` (GET/PUT) and `/api/v1/brand/competitors` (POST/DELETE)
+- **New Page**: `/dashboard/brand` for managing brand profile and competitors
+- **Experiment Integration**: Target brand auto-populates from user profile (read-only)
+- **Competitor Selection**: Checkboxes instead of text input (up to 5 per experiment)
+- **Files Changed**:
+  - `backend/app/schemas/brand.py` (NEW)
+  - `backend/app/routers/brand.py` (NEW)
+  - `backend/app/main.py` (brand router registered)
+  - `backend/app/routers/experiments.py` (uses user's brand)
+  - `frontend/src/lib/api.ts` (brandApi added)
+  - `frontend/src/app/dashboard/brand/page.tsx` (NEW)
+  - `frontend/src/components/Navbar.tsx` (Brand Profile link)
+  - `frontend/src/app/experiments/new/page.tsx` (read-only brand, competitor checkboxes)
+
+### Previous Updates (January 9, 2026)
 
 ### ✅ Dashboard Router Fixed
 - **Issue**: Dashboard showing empty state despite having experiments
@@ -88,6 +121,18 @@
 - Railway needs to redeploy from latest `main` branch to pick up the fix
 - Command: `railway up` or trigger redeploy via Railway dashboard
 - The fix is already committed and pushed to GitHub
+
+#### Issue #2: Dashboard Shows 4 Experiments Instead of 9 (Local Dev)
+**Bug**: Frontend dashboard displays only 4 experiments, but backend returns 9  
+**Verified**: 
+- Backend API `/api/v1/experiments?limit=50` returns 9 experiments correctly
+- Dashboard stats API shows `total_experiments: 9`
+- Database has 14 total (9 recurring, 5 non-recurring)
+- Frontend fetches with `limit=50` in `frontend/src/app/dashboard/page.tsx`
+
+**Likely Cause**: Frontend is filtering/slicing experiments array after fetch (look for `.slice(0, 4)`, `.filter()`, or pagination logic)  
+**Fix**: Find and remove code limiting display to 4 items in `frontend/src/app/dashboard/page.tsx`  
+**Environment**: Local development only (`localhost:3000`)
 
 ## Recent Work (Completed)
 

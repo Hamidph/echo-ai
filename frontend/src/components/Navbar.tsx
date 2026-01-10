@@ -93,6 +93,14 @@ export function Navbar() {
                         </div>
                       </Link>
                     )}
+                    <Link href="/dashboard/brand" className="block px-4 py-2 text-sm text-slate-700 hover:bg-stone-50">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Brand Profile
+                      </div>
+                    </Link>
                     <Link href="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-stone-50">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,6 +163,7 @@ export function Navbar() {
                 {(user as any)?.role === 'admin' && (
                   <Link href="/admin" className="block py-2 font-medium text-slate-900">Admin Panel</Link>
                 )}
+                <Link href="/dashboard/brand" className="block py-2 font-medium text-slate-900">Brand Profile</Link>
                 <Link href="/settings" className="block py-2 font-medium text-slate-900">Settings</Link>
                 <button onClick={logout} className="block py-2 w-full text-left text-slate-500">Sign out</button>
               </>

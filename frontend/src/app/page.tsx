@@ -9,7 +9,7 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section - Creamy, Modern, Geometric */}
-      <section className="pt-24 pb-20 border-b border-stone-200/60 overflow-hidden relative">
+      <section id="demo" className="pt-24 pb-20 border-b border-stone-200/60 overflow-hidden relative">
         <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
           {/* Announcement Pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 shadow-sm mb-8 animate-fade-in hover:border-blue-200 transition-colors cursor-default">
@@ -33,8 +33,8 @@ export default function Home() {
             <Link href="/register" className="px-8 py-4 text-base font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5">
               Start Free Trial
             </Link>
-            <Link href="#demo" className="px-8 py-4 text-base font-bold text-slate-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:border-stone-300 transition-all shadow-sm">
-              See How It Works
+            <Link href="#pricing" className="px-8 py-4 text-base font-bold text-slate-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:border-stone-300 transition-all shadow-sm">
+              View Pricing
             </Link>
           </div>
 
@@ -129,7 +129,7 @@ export default function Home() {
       </section>
 
       {/* Feature Section - Creamy Cards */}
-      <section className="py-24 bg-white border-t border-stone-100">
+      <section id="features" className="py-24 bg-white border-t border-stone-100">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
@@ -199,8 +199,133 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 bg-[#FDFCF8] border-t border-stone-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <div className="text-blue-600 font-bold tracking-wide uppercase text-sm mb-2">Pricing</div>
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+              Start free and scale as you grow. All plans include access to all AI providers.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6">
+            {/* Free Tier */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Free</div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold text-slate-900">$0</span>
+                <span className="text-slate-500">/month</span>
+              </div>
+              <div className="text-sm text-slate-600 mb-6">Perfect for getting started</div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>100</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  All AI providers
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Basic analytics
+                </li>
+              </ul>
+              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-slate-700 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors">
+                Get Started Free
+              </Link>
+            </div>
+
+            {/* Starter Tier */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Starter</div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold text-slate-900">$29</span>
+                <span className="text-slate-500">/month</span>
+              </div>
+              <div className="text-sm text-slate-600 mb-6">For growing brands</div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>5,000</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Daily recurring experiments
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Competitor tracking
+                </li>
+              </ul>
+              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                Start Trial
+              </Link>
+            </div>
+
+            {/* Pro Tier */}
+            <div className="bg-white rounded-2xl border-2 border-blue-500 p-6 relative shadow-lg shadow-blue-500/10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">Most Popular</div>
+              <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold text-slate-900">$99</span>
+                <span className="text-slate-500">/month</span>
+              </div>
+              <div className="text-sm text-slate-600 mb-6">For serious marketers</div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>50,000</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Priority API access
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Advanced reports & exports
+                </li>
+              </ul>
+              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                Start Trial
+              </Link>
+            </div>
+
+            {/* Enterprise Tier */}
+            <div className="bg-slate-900 rounded-2xl p-6 text-white">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise</div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold">Custom</span>
+              </div>
+              <div className="text-sm text-slate-400 mb-6">For large organizations</div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>1,000,000+</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Dedicated support
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Custom integrations
+                </li>
+              </ul>
+              <Link href="mailto:sales@echoai.com" className="block w-full py-3 text-center text-sm font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-100 transition-colors">
+                Contact Sales
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
-      <section className="py-24 bg-[#FDFCF8]">
+      <section className="py-24 bg-white border-t border-stone-100">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-8">
             Take control of your <br />AI Narrative.
@@ -213,15 +338,23 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-white border-t border-stone-100">
-        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px]">ECHO</div>
-            <span className="font-heading font-bold text-xl text-slate-900">Echo AI</span>
+      <footer className="py-12 bg-[#FDFCF8] border-t border-stone-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px]">ECHO</div>
+              <span className="font-heading font-bold text-xl text-slate-900">Echo AI</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-slate-500 font-medium">
+              <Link href="/terms" className="hover:text-slate-700 transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="hover:text-slate-700 transition-colors">Privacy Policy</Link>
+              <a href="mailto:support@echoai.com" className="hover:text-slate-700 transition-colors">Contact</a>
+            </div>
+            <div className="text-sm text-slate-500 font-medium">© 2026 Echo AI</div>
           </div>
-          <div className="text-sm text-slate-500 font-medium">© 2026 Echo AI</div>
         </div>
       </footer>
     </div>
   );
 }
+

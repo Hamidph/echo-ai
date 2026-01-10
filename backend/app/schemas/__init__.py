@@ -5,6 +5,12 @@ This module contains request/response schemas with strict typing
 for API validation and serialization.
 """
 
+from backend.app.schemas.brand import (
+    BrandProfileCreate,
+    BrandProfileResponse,
+    CompetitorAdd,
+    CompetitorRemove,
+)
 from backend.app.schemas.experiment import (
     BatchRunResult,
     ExperimentDetailResponse,
@@ -39,6 +45,10 @@ __all__ = [
     "BatchConfig",
     "BatchResult",
     "BatchRunResult",
+    "BrandProfileCreate",
+    "BrandProfileResponse",
+    "CompetitorAdd",
+    "CompetitorRemove",
     "ExperimentDetailResponse",
     "ExperimentListResponse",
     "ExperimentRequest",
@@ -60,3 +70,4 @@ __all__ = [
     "UsageInfo",
     "VisibilityReport",
 ]
+
