@@ -72,7 +72,7 @@ export default function RegisterPage() {
         {/* Register Card */}
         <div className="bg-white rounded-2xl border border-stone-200 shadow-xl p-8">
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Create an account</h1>
-          <p className="text-slate-500 mb-8">Start tracking your brand's AI visibility today</p>
+          <p className="text-slate-500 mb-8">Start tracking your brand&apos;s AI visibility today</p>
 
           {error && (
             <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-lg mb-6 flex items-start gap-2 text-sm">

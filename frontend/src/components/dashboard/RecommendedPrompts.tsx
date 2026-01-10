@@ -54,7 +54,7 @@ export function RecommendedPrompts() {
                             </span>
                         </div>
                         <p className="text-sm text-gray-200 font-medium group-hover:text-white mb-2">
-                            "{rec.text}"
+                            &quot;{rec.text}&quot;
                         </p>
                         <Link
                             href={`/experiments/new?prompt=${encodeURIComponent(rec.text)}`}

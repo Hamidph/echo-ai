@@ -65,29 +65,24 @@ export default function AdminPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"config" | "stats" | "users">("config");
-
-  // Check if user is admin
-  if (user && (user as any).role !== "admin") {
-    router.push("/dashboard");
-    return null;
-  }
+  const [editedConfig, setEditedConfig] = useState<any>(null);
 
   const { data: config, isLoading: configLoading } = useQuery({
     queryKey: ["adminConfig"],
     queryFn: adminApi.getConfig,
-    enabled: !!user,
+    enabled: !!user && (user as any).role === "admin",
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["adminStats"],
     queryFn: adminApi.getStats,
-    enabled: !!user && activeTab === "stats",
+    enabled: !!user && (user as any).role === "admin" && activeTab === "stats",
   });
 
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: () => adminApi.getUsers(),
-    enabled: !!user && activeTab === "users",
+    enabled: !!user && (user as any).role === "admin" && activeTab === "users",
   });
 
   const updateConfigMutation = useMutation({
@@ -101,15 +96,17 @@ export default function AdminPage() {
     },
   });
 
-  const [editedConfig, setEditedConfig] = useState<any>(null);
-
   const handleSaveConfig = () => {
     if (editedConfig) {
       updateConfigMutation.mutate(editedConfig);
     }
   };
 
+  // Check if user is admin - after all hooks are declared
   if (!user || (user as any).role !== "admin") {
+    if (user && (user as any).role !== "admin") {
+      router.push("/dashboard");
+    }
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center">
         <div className="text-center">
@@ -139,31 +136,28 @@ export default function AdminPage() {
         <div className="flex items-center gap-4 mb-8 border-b border-white/10">
           <button
             onClick={() => setActiveTab("config")}
-            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-              activeTab === "config"
+            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "config"
                 ? "text-cyan-400 border-cyan-400"
                 : "text-gray-400 border-transparent hover:text-white"
-            }`}
+              }`}
           >
             System Configuration
           </button>
           <button
             onClick={() => setActiveTab("stats")}
-            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-              activeTab === "stats"
+            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "stats"
                 ? "text-cyan-400 border-cyan-400"
                 : "text-gray-400 border-transparent hover:text-white"
-            }`}
+              }`}
           >
             Platform Statistics
           </button>
           <button
             onClick={() => setActiveTab("users")}
-            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-              activeTab === "users"
+            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "users"
                 ? "text-cyan-400 border-cyan-400"
                 : "text-gray-400 border-transparent hover:text-white"
-            }`}
+              }`}
           >
             User Management
           </button>
@@ -238,14 +232,12 @@ export default function AdminPage() {
                   </div>
                   <button
                     onClick={() => setEditedConfig({ ...config, ...editedConfig, default_recurring: !(editedConfig?.default_recurring ?? config.default_recurring) })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      (editedConfig?.default_recurring ?? config.default_recurring) ? "bg-cyan-500" : "bg-gray-600"
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(editedConfig?.default_recurring ?? config.default_recurring) ? "bg-cyan-500" : "bg-gray-600"
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        (editedConfig?.default_recurring ?? config.default_recurring) ? "translate-x-6" : "translate-x-1"
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(editedConfig?.default_recurring ?? config.default_recurring) ? "translate-x-6" : "translate-x-1"
+                        }`}
                     />
                   </button>
                 </div>
@@ -280,14 +272,12 @@ export default function AdminPage() {
                   </div>
                   <button
                     onClick={() => setEditedConfig({ ...config, ...editedConfig, enable_recurring_experiments: !(editedConfig?.enable_recurring_experiments ?? config.enable_recurring_experiments) })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      (editedConfig?.enable_recurring_experiments ?? config.enable_recurring_experiments) ? "bg-cyan-500" : "bg-gray-600"
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(editedConfig?.enable_recurring_experiments ?? config.enable_recurring_experiments) ? "bg-cyan-500" : "bg-gray-600"
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        (editedConfig?.enable_recurring_experiments ?? config.enable_recurring_experiments) ? "translate-x-6" : "translate-x-1"
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(editedConfig?.enable_recurring_experiments ?? config.enable_recurring_experiments) ? "translate-x-6" : "translate-x-1"
+                        }`}
                     />
                   </button>
                 </div>
@@ -304,14 +294,12 @@ export default function AdminPage() {
                   </div>
                   <button
                     onClick={() => setEditedConfig({ ...config, ...editedConfig, maintenance_mode: !(editedConfig?.maintenance_mode ?? config.maintenance_mode) })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      (editedConfig?.maintenance_mode ?? config.maintenance_mode) ? "bg-rose-500" : "bg-gray-600"
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(editedConfig?.maintenance_mode ?? config.maintenance_mode) ? "bg-rose-500" : "bg-gray-600"
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        (editedConfig?.maintenance_mode ?? config.maintenance_mode) ? "translate-x-6" : "translate-x-1"
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(editedConfig?.maintenance_mode ?? config.maintenance_mode) ? "translate-x-6" : "translate-x-1"
+                        }`}
                     />
                   </button>
                 </div>
@@ -408,11 +396,10 @@ export default function AdminPage() {
                         <td className="px-6 py-4 text-sm text-white">{user.email}</td>
                         <td className="px-6 py-4 text-sm text-gray-400">{user.full_name || "-"}</td>
                         <td className="px-6 py-4 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.role === "admin" ? "bg-rose-500/20 text-rose-400" :
-                            user.role === "user" ? "bg-cyan-500/20 text-cyan-400" :
-                            "bg-gray-500/20 text-gray-400"
-                          }`}>
+                          <span className={`px-2 py-1 rounded-full text-xs ${user.role === "admin" ? "bg-rose-500/20 text-rose-400" :
+                              user.role === "user" ? "bg-cyan-500/20 text-cyan-400" :
+                                "bg-gray-500/20 text-gray-400"
+                            }`}>
                             {user.role}
                           </span>
                         </td>
@@ -421,9 +408,8 @@ export default function AdminPage() {
                           {user.prompts_used_this_month} / {user.monthly_prompt_quota}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
-                          }`}>
+                          <span className={`px-2 py-1 rounded-full text-xs ${user.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                            }`}>
                             {user.is_active ? "Active" : "Inactive"}
                           </span>
                         </td>

@@ -125,7 +125,7 @@ export default function APIKeysPage() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
           <h3 className="font-semibold text-green-900 mb-2">API Key Created Successfully!</h3>
           <p className="text-sm text-green-700 mb-4">
-            Make sure to copy your API key now. You won't be able to see it again!
+            Make sure to copy your API key now. You won&apos;t be able to see it again!
           </p>
           <div className="bg-white border border-green-300 rounded-lg p-4 flex items-center justify-between">
             <code className="text-sm font-mono text-gray-900">{newKeyValue}</code>

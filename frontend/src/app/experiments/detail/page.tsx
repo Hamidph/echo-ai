@@ -196,7 +196,7 @@ function ExperimentDetailContent() {
                                             <span className="text-xs text-slate-500 font-medium">i</span>
                                         </div>
                                         <div className="absolute right-0 top-6 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                                            <strong>Share of Voice</strong><br />Your brand's mention share compared to competitors. Indicates market dominance in AI responses.
+                                            <strong>Share of Voice</strong><br />Your brand&apos;s mention share compared to competitors. Indicates market dominance in AI responses.
                                         </div>
                                     </div>
                                 </div>
