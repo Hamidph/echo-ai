@@ -18,14 +18,14 @@ export default function Card({
   const baseStyles = "rounded-2xl transition-all";
 
   const variantStyles = {
-    default: "bg-[#0a0f1a] border border-white/10",
-    glass: "bg-white/5 backdrop-blur-xl border border-white/10",
+    default: "bg-white border border-stone-200 shadow-sm",
+    glass: "bg-white/80 backdrop-blur-xl border border-stone-200 shadow-sm",
     gradient:
-      "bg-gradient-to-br from-[#0a0f1a] to-[#0f172a] border border-white/10",
+      "bg-gradient-to-br from-white to-slate-50 border border-stone-200 shadow-sm",
   };
 
   const hoverStyles = hover
-    ? "hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.1)] cursor-pointer"
+    ? "hover:border-blue-300 hover:shadow-md cursor-pointer"
     : "";
 
   const paddingStyles = {
@@ -62,7 +62,7 @@ export function CardTitle({
   className?: string;
 }) {
   return (
-    <h3 className={`text-xl font-semibold text-white ${className}`}>
+    <h3 className={`text-xl font-semibold text-slate-900 ${className}`}>
       {children}
     </h3>
   );
@@ -75,7 +75,7 @@ export function CardDescription({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <p className={`text-sm text-gray-400 mt-1 ${className}`}>{children}</p>;
+  return <p className={`text-sm text-slate-500 mt-1 ${className}`}>{children}</p>;
 }
 
 export function CardContent({
@@ -96,7 +96,7 @@ export function CardFooter({
   className?: string;
 }) {
   return (
-    <div className={`mt-6 pt-6 border-t border-white/5 ${className}`}>
+    <div className={`mt-6 pt-6 border-t border-stone-200 ${className}`}>
       {children}
     </div>
   );
