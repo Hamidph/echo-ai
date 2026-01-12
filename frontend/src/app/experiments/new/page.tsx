@@ -124,22 +124,22 @@ function NewExperimentForm() {
   const canProceed = step === 1 ? (prompt && targetBrand) : step === 2 ? provider : iterations > 0;
 
   return (
-    <div className="min-h-screen bg-[#030712]">
+    <div className="min-h-screen bg-[#FDFCF8]">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/experiments" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors mb-4">
+          <Link href="/experiments" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-4">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to analyses
           </Link>
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+          <h1 className="font-display text-2xl md:text-3xl font-bold text-slate-900 mb-2">
             New Visibility Analysis
           </h1>
-          <p className="text-gray-500">
+          <p className="text-slate-500">
             Configure and run a new AI visibility analysis for your brand
           </p>
         </div>
@@ -151,10 +151,10 @@ function NewExperimentForm() {
               <button
                 onClick={() => s < step && setStep(s)}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${s === step
-                  ? "bg-gradient-to-r from-cyan-500 to-violet-500 text-white"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
                   : s < step
-                    ? "bg-cyan-500/20 text-cyan-400"
-                    : "bg-white/5 text-gray-500"
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-slate-100 text-slate-400"
                   }`}
               >
                 {s < step ? (
@@ -166,7 +166,7 @@ function NewExperimentForm() {
                 )}
               </button>
               {s < 3 && (
-                <div className={`w-16 h-0.5 ${s < step ? "bg-cyan-500/50" : "bg-white/10"}`} />
+                <div className={`w-16 h-0.5 ${s < step ? "bg-blue-200" : "bg-slate-200"}`} />
               )}
             </div>
           ))}
@@ -175,22 +175,22 @@ function NewExperimentForm() {
         <form onSubmit={(e) => e.preventDefault()}>
           {/* Step 1: Query Configuration */}
           {step === 1 && (
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
-              <h2 className="text-lg font-semibold text-white mb-6">Query Configuration</h2>
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6 animate-fade-in">
+              <h2 className="text-lg font-semibold text-slate-900 mb-6">Query Configuration</h2>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Prompt <span className="text-rose-400">*</span>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Prompt <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     rows={3}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 resize-none"
+                    className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     placeholder="What is the best CRM software for small businesses?"
                   />
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-slate-500">
                     Enter the question users might ask where your brand could appear
                   </p>
                 </div>
@@ -198,13 +198,13 @@ function NewExperimentForm() {
                 <div className="space-y-4">
                   {/* Target Brand - Read-only if brand profile exists */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Target Brand <span className="text-rose-400">*</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Target Brand <span className="text-rose-500">*</span>
                     </label>
                     {brandProfile?.brand_name ? (
-                      <div className="w-full px-4 py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-white">
+                      <div className="w-full px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg text-slate-900">
                         <span className="font-medium">{brandProfile.brand_name}</span>
-                        <span className="text-cyan-400 text-sm ml-2">(Your brand)</span>
+                        <span className="text-blue-600 text-sm ml-2">(Your brand)</span>
                       </div>
                     ) : (
                       <div>
@@ -212,10 +212,10 @@ function NewExperimentForm() {
                           type="text"
                           value={targetBrand}
                           onChange={(e) => setTargetBrand(e.target.value)}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                          className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter your brand name"
                         />
-                        <p className="mt-2 text-xs text-amber-400">
+                        <p className="mt-2 text-xs text-amber-600">
                           <Link href="/dashboard/brand" className="hover:underline">Set up your brand profile</Link> to lock this automatically.
                         </p>
                       </div>
@@ -224,8 +224,8 @@ function NewExperimentForm() {
 
                   {/* Competitors - Checkboxes if brand profile has competitors */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Competitors <span className="text-gray-500">(optional)</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Competitors <span className="text-slate-400">(optional)</span>
                     </label>
                     {brandProfile?.brand_competitors && brandProfile.brand_competitors.length > 0 ? (
                       <div className="space-y-2">
@@ -233,8 +233,8 @@ function NewExperimentForm() {
                           <label
                             key={competitor}
                             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCompetitors.includes(competitor)
-                              ? "bg-cyan-500/10 border-cyan-500/30"
-                              : "bg-white/5 border-white/10 hover:border-white/20"
+                              ? "bg-blue-50 border-blue-200 shadow-sm"
+                              : "bg-white border-stone-200 hover:border-blue-200 hover:bg-slate-50"
                               }`}
                           >
                             <input
@@ -247,19 +247,19 @@ function NewExperimentForm() {
                                   setSelectedCompetitors(selectedCompetitors.filter((c) => c !== competitor));
                                 }
                               }}
-                              className="w-4 h-4 rounded text-cyan-500 bg-white/10 border-white/20 focus:ring-cyan-500/50"
+                              className="w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500"
                             />
-                            <span className="text-white">{competitor}</span>
+                            <span className="text-slate-900">{competitor}</span>
                           </label>
                         ))}
-                        <p className="mt-2 text-xs text-gray-500">
+                        <p className="mt-2 text-xs text-slate-500">
                           Select up to 5 competitors ({selectedCompetitors.length}/5)
                         </p>
                       </div>
                     ) : (
-                      <div className="p-4 bg-white/5 border border-dashed border-white/10 rounded-lg text-center">
-                        <p className="text-gray-400 text-sm">No competitors defined.</p>
-                        <Link href="/dashboard/brand" className="text-cyan-400 hover:underline text-sm">
+                      <div className="p-4 bg-slate-50 border border-dashed border-stone-300 rounded-lg text-center">
+                        <p className="text-slate-500 text-sm">No competitors defined.</p>
+                        <Link href="/dashboard/brand" className="text-blue-600 hover:underline text-sm">
                           Add competitors in Brand Profile
                         </Link>
                       </div>
@@ -272,8 +272,8 @@ function NewExperimentForm() {
 
           {/* Step 2: AI Provider */}
           {step === 2 && (
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
-              <h2 className="text-lg font-semibold text-white mb-6">Select AI Provider</h2>
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6 animate-fade-in">
+              <h2 className="text-lg font-semibold text-slate-900 mb-6">Select AI Provider</h2>
 
               <div className="grid gap-4">
                 {providers.map((p) => (
@@ -282,20 +282,20 @@ function NewExperimentForm() {
                     type="button"
                     onClick={() => setProvider(p.id)}
                     className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${provider === p.id
-                      ? "bg-cyan-500/10 border-cyan-500/50"
-                      : "bg-white/5 border-white/10 hover:border-white/20"
+                      ? "bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200"
+                      : "bg-white border-stone-200 hover:border-blue-200 hover:shadow-sm"
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${provider === p.id ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-gray-400"
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${provider === p.id ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"
                       }`}>
                       {p.icon}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-white">{p.name}</p>
-                      <p className="text-sm text-gray-500">{p.description}</p>
+                      <p className="font-medium text-slate-900">{p.name}</p>
+                      <p className="text-sm text-slate-500">{p.description}</p>
                     </div>
                     {provider === p.id && (
-                      <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -309,14 +309,14 @@ function NewExperimentForm() {
 
           {/* Step 3: Configuration */}
           {step === 3 && (
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 animate-fade-in">
-              <h2 className="text-lg font-semibold text-white mb-6">Experiment Configuration</h2>
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6 animate-fade-in">
+              <h2 className="text-lg font-semibold text-slate-900 mb-6">Experiment Configuration</h2>
 
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400">Iterations per Experiment</span>
-                    <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
+                    <span className="text-slate-500">Iterations per Experiment</span>
+                    <span className="text-3xl font-bold text-blue-600">
                       {iterations}
                     </span>
                   </div>
@@ -327,30 +327,30 @@ function NewExperimentForm() {
                     step={5}
                     value={iterations}
                     onChange={(e) => setIterations(Number(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-500"
+                    className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-blue-600"
                   />
-                  <div className="flex justify-between mt-2 text-xs text-gray-600">
+                  <div className="flex justify-between mt-2 text-xs text-slate-500">
                     <span>5</span>
                     <span>25</span>
                     <span>50</span>
                     <span>75</span>
                     <span>100</span>
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-slate-500">
                     Each experiment runs {iterations} iterations (API calls) for statistical significance
                   </p>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-stone-200">
                     <div>
-                      <h3 className="text-white font-medium">Recurring Experiment</h3>
-                      <p className="text-sm text-gray-500">Run this analysis periodically</p>
+                      <h3 className="text-slate-900 font-medium">Recurring Experiment</h3>
+                      <p className="text-sm text-slate-500">Run this analysis periodically</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsRecurring(!isRecurring)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isRecurring ? "bg-cyan-500" : "bg-white/10"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isRecurring ? "bg-blue-600" : "bg-slate-300"
                         }`}
                     >
                       <span
@@ -362,67 +362,67 @@ function NewExperimentForm() {
 
                   {isRecurring && (
                     <div className="mt-4 animate-fade-in">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         Frequency
                       </label>
                       <select
                         value={frequency}
                         onChange={(e) => setFrequency(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 appearance-none"
+                        className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                       >
-                        <option value="daily" className="bg-[#0a0f1a]">Daily</option>
-                        <option value="weekly" className="bg-[#0a0f1a]">Weekly</option>
-                        <option value="monthly" className="bg-[#0a0f1a]">Monthly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
                       </select>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                  <span className="text-sm text-gray-400">Remaining prompts</span>
-                  <span className={`text-sm font-medium ${remainingQuota >= 1 ? "text-emerald-400" : "text-rose-400"}`}>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-stone-200">
+                  <span className="text-sm text-slate-500">Remaining prompts</span>
+                  <span className={`text-sm font-medium ${remainingQuota >= 1 ? "text-emerald-600" : "text-rose-600"}`}>
                     {usageLoading ? "..." : remainingQuota} prompts
                   </span>
                 </div>
 
                 {remainingQuota < 1 && (
-                  <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-lg">
-                    <svg className="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-lg">
+                    <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div className="flex-1">
-                      <p className="text-sm text-rose-400">No prompts remaining</p>
-                      <p className="text-xs text-gray-500">Upgrade your plan to run more experiments</p>
+                      <p className="text-sm text-rose-600">No prompts remaining</p>
+                      <p className="text-xs text-slate-500">Upgrade your plan to run more experiments</p>
                     </div>
-                    <Link href="/billing" className="text-sm text-cyan-400 hover:text-cyan-300">
+                    <Link href="/billing" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
                       Upgrade
                     </Link>
                   </div>
                 )}
 
                 {/* Summary */}
-                <div className="border-t border-white/5 pt-6">
-                  <h3 className="text-sm font-medium text-gray-400 mb-4">Summary</h3>
+                <div className="border-t border-slate-200 pt-6">
+                  <h3 className="text-sm font-medium text-slate-500 mb-4">Summary</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Prompt</span>
-                      <span className="text-white truncate max-w-[200px]">{prompt}</span>
+                      <span className="text-slate-500">Prompt</span>
+                      <span className="text-slate-900 truncate max-w-[200px]">{prompt}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Target Brand</span>
-                      <span className="text-white">{targetBrand}</span>
+                      <span className="text-slate-500">Target Brand</span>
+                      <span className="text-slate-900">{targetBrand}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Provider</span>
-                      <span className="text-white capitalize">{provider}</span>
+                      <span className="text-slate-500">Provider</span>
+                      <span className="text-slate-900 capitalize">{provider}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Iterations</span>
-                      <span className="text-white">{iterations}</span>
+                      <span className="text-slate-500">Iterations</span>
+                      <span className="text-slate-900">{iterations}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Schedule</span>
-                      <span className="text-white capitalize">
+                      <span className="text-slate-500">Schedule</span>
+                      <span className="text-slate-900 capitalize">
                         {isRecurring ? frequency : "One-time"}
                       </span>
                     </div>
@@ -438,7 +438,7 @@ function NewExperimentForm() {
               <button
                 type="button"
                 onClick={() => setStep(step - 1)}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
               >
                 Back
               </button>
@@ -452,7 +452,7 @@ function NewExperimentForm() {
                 type="button"
                 onClick={handleNextStep}
                 disabled={!canProceed || isNavigating}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 Continue
               </button>
@@ -462,7 +462,7 @@ function NewExperimentForm() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canProceed || createExperimentMutation.isPending || remainingQuota < 1 || isNavigating}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 {createExperimentMutation.isPending ? (
                   <>
@@ -489,9 +489,9 @@ function NewExperimentForm() {
 export default function NewExperimentPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#030712] flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-cyan-500/20 rounded-full" />
-        <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
+      <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-blue-100 rounded-full" />
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0" />
       </div>
     }>
       <NewExperimentForm />

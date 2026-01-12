@@ -14,8 +14,10 @@ from datetime import datetime
 from time import perf_counter
 from typing import Any
 
+import logging
 import httpx
 from tenacity import (
+    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -35,6 +37,9 @@ from backend.app.schemas.llm import (
     PerplexitySearchResult,
     UsageInfo,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimitError(Exception):
@@ -171,6 +176,7 @@ class BaseLLMProvider(ABC):
         wait=wait_exponential(multiplier=1, min=1, max=60),
         stop=stop_after_attempt(5),
         reraise=True,
+        before_sleep=before_sleep_log(logger, logging.WARNING),
     )
     async def generate(self, request: LLMRequest) -> LLMResponse:
         """

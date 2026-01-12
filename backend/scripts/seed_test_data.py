@@ -277,9 +277,10 @@ async def seed_test_data():
             print()
             
             # Step 3: Create sample experiments
-            print("Step 3: Creating sample experiments...")
-            for exp_data in SAMPLE_EXPERIMENTS:
-                await create_sample_experiment(session, user.id, exp_data)
+            print("Step 3: Creating sample experiments... (SKIPPED FOR PROD)")
+            # PRODUCTION: Do not create dummy experiments
+            # for exp_data in SAMPLE_EXPERIMENTS:
+            #     await create_sample_experiment(session, user.id, exp_data)
             
             await session.commit()
             print()
