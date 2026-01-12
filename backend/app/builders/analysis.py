@@ -297,9 +297,15 @@ class AnalysisBuilder:
         Returns:
             VisibilityMetrics: Computed visibility metrics.
         """
-        # Create case-insensitive pattern with word boundaries
+        # Create case-insensitive pattern with smart boundaries
+        # Regex \b only works between \w and \W. If brand starts/ends with \W, \b fails.
+        escaped_brand = re.escape(brand)
+        
+        prefix = r"\b" if re.match(r"^\w", brand) else ""
+        suffix = r"\b" if re.match(r".*\w$", brand) else ""
+        
         pattern = re.compile(
-            self._word_boundary_pattern.format(re.escape(brand)),
+            f"{prefix}{escaped_brand}{suffix}",
             re.IGNORECASE,
         )
 
