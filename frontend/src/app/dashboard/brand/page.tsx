@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { brandApi } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "react-hot-toast";
-import Link from "next/link";
+import { Button, Input, Card } from "@/components/ui";
 
 export default function BrandProfilePage() {
-    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [isEditing, setIsEditing] = useState(false);
     const [newCompetitor, setNewCompetitor] = useState("");
@@ -27,7 +24,6 @@ export default function BrandProfilePage() {
     const { data: profile, isLoading } = useQuery({
         queryKey: ["brandProfile"],
         queryFn: brandApi.getProfile,
-        enabled: !!user,
     });
 
     // Initialize form when profile loads
@@ -49,10 +45,6 @@ export default function BrandProfilePage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["brandProfile"] });
             setIsEditing(false);
-            toast.success("Brand profile updated!");
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to update brand profile");
         },
     });
 
@@ -62,10 +54,6 @@ export default function BrandProfilePage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["brandProfile"] });
             setNewCompetitor("");
-            toast.success("Competitor added!");
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to add competitor");
         },
     });
 
@@ -74,10 +62,6 @@ export default function BrandProfilePage() {
         mutationFn: brandApi.removeCompetitor,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["brandProfile"] });
-            toast.success("Competitor removed");
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to remove competitor");
         },
     });
 
@@ -97,78 +81,56 @@ export default function BrandProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#030712]">
+            <div className="min-h-screen bg-[#FDFCF8]">
                 <Navbar />
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-                    <div className="flex items-center justify-center h-64">
-                        <div className="relative">
-                            <div className="w-16 h-16 border-4 border-cyan-500/20 rounded-full" />
-                            <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
-                        </div>
-                    </div>
+                    <div className="text-slate-900">Loading...</div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#030712]">
+        <div className="min-h-screen bg-[#FDFCF8]">
             <Navbar />
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-                {/* Breadcrumb */}
-                <div className="mb-6">
-                    <Link
-                        href="/dashboard"
-                        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Back to Dashboard
-                    </Link>
-                </div>
-
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Brand Profile</h1>
-                    <p className="text-gray-400">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Brand Profile</h1>
+                    <p className="text-slate-500">
                         Manage your brand information and competitors. Your brand name will be used in all experiments.
                     </p>
                 </div>
 
                 {/* Brand Information Card */}
-                <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6 mb-6">
+                <Card className="bg-white border-stone-200 p-6 mb-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-white">Brand Information</h2>
+                        <h2 className="text-xl font-semibold text-slate-900">Brand Information</h2>
                         {!isEditing && (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="px-4 py-2 text-sm font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors"
-                            >
+                            <Button onClick={() => setIsEditing(true)} variant="outline">
                                 Edit
-                            </button>
+                            </Button>
                         )}
                     </div>
 
                     {isEditing ? (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Brand Name <span className="text-rose-400">*</span>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Brand Name *
                                 </label>
-                                <input
-                                    type="text"
+                                <Input
                                     value={formData.brand_name}
                                     onChange={(e) => setFormData({ ...formData, brand_name: e.target.value })}
                                     placeholder="e.g., Salesforce"
                                     required
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                                    className="bg-white border-stone-200 text-slate-900"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Description
                                 </label>
                                 <textarea
@@ -176,143 +138,135 @@ export default function BrandProfilePage() {
                                     onChange={(e) => setFormData({ ...formData, brand_description: e.target.value })}
                                     placeholder="What does your company do?"
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 resize-none"
+                                    className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Website
                                 </label>
-                                <input
-                                    type="url"
+                                <Input
                                     value={formData.brand_website}
                                     onChange={(e) => setFormData({ ...formData, brand_website: e.target.value })}
                                     placeholder="https://yourcompany.com"
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                                    type="url"
+                                    className="bg-white border-stone-200 text-slate-900"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Industry
                                 </label>
                                 <select
                                     value={formData.brand_industry}
                                     onChange={(e) => setFormData({ ...formData, brand_industry: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 appearance-none"
+                                    className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                    <option value="" className="bg-[#0a0f1a]">Select industry</option>
-                                    <option value="SaaS" className="bg-[#0a0f1a]">SaaS</option>
-                                    <option value="E-commerce" className="bg-[#0a0f1a]">E-commerce</option>
-                                    <option value="Healthcare" className="bg-[#0a0f1a]">Healthcare</option>
-                                    <option value="Finance" className="bg-[#0a0f1a]">Finance</option>
-                                    <option value="Education" className="bg-[#0a0f1a]">Education</option>
-                                    <option value="Marketing" className="bg-[#0a0f1a]">Marketing</option>
-                                    <option value="Technology" className="bg-[#0a0f1a]">Technology</option>
-                                    <option value="Other" className="bg-[#0a0f1a]">Other</option>
+                                    <option value="">Select industry</option>
+                                    <option value="SaaS">SaaS</option>
+                                    <option value="E-commerce">E-commerce</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
 
                             <div className="flex gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={updateMutation.isPending || !formData.brand_name}
-                                    className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                                >
+                                <Button type="submit" disabled={updateMutation.isPending}>
                                     {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
+                                    variant="outline"
                                     onClick={() => setIsEditing(false)}
-                                    className="px-6 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors"
                                 >
                                     Cancel
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     ) : (
                         <div className="space-y-4">
                             <div>
-                                <div className="text-sm text-gray-500 mb-1">Brand Name</div>
-                                <div className="text-lg text-white font-medium">
-                                    {profile?.brand_name || (
-                                        <span className="text-gray-500 italic">Not set - Click Edit to add your brand</span>
-                                    )}
+                                <div className="text-sm text-slate-500">Brand Name</div>
+                                <div className="text-lg text-slate-900 font-medium">
+                                    {profile?.brand_name || "Not set"}
                                 </div>
                             </div>
+
                             {profile?.brand_description && (
                                 <div>
-                                    <div className="text-sm text-gray-500 mb-1">Description</div>
-                                    <div className="text-white">{profile.brand_description}</div>
+                                    <div className="text-sm text-slate-500">Description</div>
+                                    <div className="text-slate-900">{profile.brand_description}</div>
                                 </div>
                             )}
+
                             {profile?.brand_website && (
                                 <div>
-                                    <div className="text-sm text-gray-500 mb-1">Website</div>
+                                    <div className="text-sm text-slate-500">Website</div>
                                     <a
                                         href={profile.brand_website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                                        className="text-blue-600 hover:text-blue-700"
                                     >
                                         {profile.brand_website}
                                     </a>
                                 </div>
                             )}
+
                             {profile?.brand_industry && (
                                 <div>
-                                    <div className="text-sm text-gray-500 mb-1">Industry</div>
-                                    <div className="text-white">{profile.brand_industry}</div>
+                                    <div className="text-sm text-slate-500">Industry</div>
+                                    <div className="text-slate-900">{profile.brand_industry}</div>
                                 </div>
                             )}
                         </div>
                     )}
-                </div>
+                </Card>
 
                 {/* Competitors Card */}
-                <div className="bg-[#0a0f1a] border border-white/10 rounded-xl p-6">
-                    <h2 className="text-xl font-semibold text-white mb-2">Competitors</h2>
-                    <p className="text-gray-400 text-sm mb-6">
+                <Card className="bg-white border-stone-200 p-6">
+                    <h2 className="text-xl font-semibold text-slate-900 mb-4">Competitors</h2>
+                    <p className="text-slate-500 text-sm mb-4">
                         Add competitors to track in your experiments. You can add up to 10 competitors.
                     </p>
 
                     {/* Add Competitor */}
                     <div className="flex gap-3 mb-6">
-                        <input
-                            type="text"
+                        <Input
                             value={newCompetitor}
                             onChange={(e) => setNewCompetitor(e.target.value)}
                             placeholder="e.g., HubSpot"
-                            onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCompetitor())}
-                            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                            onKeyPress={(e) => e.key === "Enter" && handleAddCompetitor()}
+                            className="bg-white border-stone-200 text-slate-900 flex-1"
                         />
-                        <button
+                        <Button
                             onClick={handleAddCompetitor}
-                            disabled={!newCompetitor.trim() || addCompetitorMutation.isPending || (profile?.brand_competitors?.length ?? 0) >= 10}
-                            className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            disabled={!newCompetitor.trim() || addCompetitorMutation.isPending}
                         >
-                            {addCompetitorMutation.isPending ? "Adding..." : "Add"}
-                        </button>
+                            Add
+                        </Button>
                     </div>
 
                     {/* Competitors List */}
                     <div className="space-y-2">
-                        {!profile?.brand_competitors?.length ? (
-                            <div className="text-gray-500 text-sm py-4 text-center border border-dashed border-white/10 rounded-lg">
-                                No competitors added yet. Add your first competitor above.
-                            </div>
+                        {profile?.brand_competitors?.length === 0 ? (
+                            <div className="text-slate-400 text-sm">No competitors added yet</div>
                         ) : (
-                            profile.brand_competitors.map((competitor: string) => (
+                            profile?.brand_competitors?.map((competitor: string) => (
                                 <div
                                     key={competitor}
-                                    className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-stone-200"
                                 >
-                                    <span className="text-white font-medium">{competitor}</span>
+                                    <span className="text-slate-900">{competitor}</span>
                                     <button
                                         onClick={() => removeCompetitorMutation.mutate(competitor)}
-                                        disabled={removeCompetitorMutation.isPending}
-                                        className="text-sm text-rose-400 hover:text-rose-300 transition-colors disabled:opacity-50"
+                                        className="text-red-600 hover:text-red-700 text-sm"
                                     >
                                         Remove
                                     </button>
@@ -320,13 +274,7 @@ export default function BrandProfilePage() {
                             ))
                         )}
                     </div>
-
-                    {(profile?.brand_competitors?.length ?? 0) >= 10 && (
-                        <p className="mt-4 text-sm text-amber-400">
-                            Maximum 10 competitors reached. Remove one to add more.
-                        </p>
-                    )}
-                </div>
+                </Card>
             </div>
         </div>
     );

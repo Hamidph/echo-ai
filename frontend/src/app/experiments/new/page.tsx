@@ -233,8 +233,8 @@ function NewExperimentForm() {
                           <label
                             key={competitor}
                             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCompetitors.includes(competitor)
-                                ? "bg-cyan-500/10 border-cyan-500/30"
-                                : "bg-white/5 border-white/10 hover:border-white/20"
+                              ? "bg-cyan-500/10 border-cyan-500/30"
+                              : "bg-white/5 border-white/10 hover:border-white/20"
                               }`}
                           >
                             <input

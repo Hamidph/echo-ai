@@ -299,6 +299,9 @@ export const brandApi = {
 };
 
 /**
+ * Brand Management API
+ */
+/**
  * Health check API (not under /api/v1 prefix)
  */
 export const healthApi = {
