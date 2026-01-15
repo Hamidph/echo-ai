@@ -36,7 +36,18 @@ class Base(DeclarativeBase):
 
 def create_database_engine(settings: Settings) -> AsyncEngine:
     """
-    Create an async SQLAlchemy engine with connection pooling.
+    Create an async SQLAlchemy engine with optimized connection pooling.
+
+    Connection Pool Configuration:
+    - pool_size: 20 connections (baseline for moderate traffic)
+    - max_overflow: 10 additional connections under load (total: 30)
+    - pool_pre_ping: Verify connection health before use
+    - pool_recycle: Recycle connections every hour
+    - pool_timeout: Wait up to 30 seconds for available connection
+    - pool_use_lifo: Use LIFO for better cache locality
+
+    This configuration is optimized for Railway/Cloud SQL deployments
+    with auto-scaling containers.
 
     Args:
         settings: Application settings containing database configuration.
@@ -46,10 +57,15 @@ def create_database_engine(settings: Settings) -> AsyncEngine:
     """
     return create_async_engine(
         str(settings.database_url),
-        echo=settings.debug,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
+        # Logging
+        echo=settings.debug,  # Log SQL in debug mode
+        # Connection pool settings
+        pool_size=20,  # Maintain 20 persistent connections
+        max_overflow=10,  # Allow 10 additional connections under load (total: 30)
+        pool_pre_ping=True,  # Verify connection before use (adds ~1ms latency)
+        pool_recycle=3600,  # Recycle connections every hour (prevents stale connections)
+        pool_timeout=30,  # Wait up to 30s for connection (prevents deadlock)
+        pool_use_lifo=True,  # Use LIFO for better cache locality
     )
 
 
