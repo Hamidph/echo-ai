@@ -88,7 +88,7 @@ async def register(
         )
     except Exception as e:
         # Log error but don't fail registration
-        print(f"Failed to send verification email: {e}")
+        logger.error(f"Failed to send verification email: {e}", exc_info=True)
 
     return new_user
 
@@ -329,7 +329,7 @@ async def verify_email(
             user_name=user.full_name or user.email,
         )
     except Exception as e:
-        print(f"Failed to send welcome email: {e}")
+        logger.error(f"Failed to send welcome email: {e}", exc_info=True)
 
     return {"message": "Email verified successfully"}
 
@@ -387,7 +387,7 @@ async def forgot_password(
             user_id=str(user.id),
         )
     except Exception as e:
-        print(f"Failed to send password reset email: {e}")
+        logger.error(f"Failed to send password reset email: {e}", exc_info=True)
 
     return {"message": "If the email exists, a password reset link has been sent"}
 

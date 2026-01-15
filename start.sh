@@ -5,11 +5,17 @@
 set -e
 
 echo "[STARTUP] Current Time: $(date)"
+echo "[STARTUP] Environment: ${ENVIRONMENT:-production}"
 echo "[STARTUP] Running database migrations..."
 alembic upgrade head
 
-echo "[STARTUP] Seeding test data..."
-python backend/scripts/seed_test_data.py || echo "[STARTUP] Warning: Failed to seed test data (may already exist)"
+# Only seed test data in development/staging environments
+if [ "$ENVIRONMENT" != "production" ]; then
+    echo "[STARTUP] Seeding test data (non-production environment)..."
+    python backend/scripts/seed_test_data.py || echo "[STARTUP] Warning: Failed to seed test data (may already exist)"
+else
+    echo "[STARTUP] Skipping test data seed (production environment)"
+fi
 
 echo "[STARTUP] Starting Celery worker with low concurrency..."
 # Optimized concurrency based on environment (default 4)

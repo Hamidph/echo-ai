@@ -1,5 +1,51 @@
 ---
 alwaysApply: true
 ---
-always follow the rules AGENT_RULES.md file
 
+# 🚨 READ FIRST: `.agent/AGENT_RULES.md`
+
+**Before making ANY changes, you MUST read `.agent/AGENT_RULES.md`**
+
+This is the CENTRAL SOURCE OF TRUTH containing:
+- Project overview & deployment info (Railway, echoai.uk)
+- Documentation standards (what to update, when, how)
+- Code standards (Python, TypeScript)
+- Session end protocol (MANDATORY)
+- Common tasks & emergency procedures
+
+## Quick Rules
+
+### Documentation Hierarchy
+1. **`.agent/AGENT_RULES.md`** - Central source of truth (update for architecture/deployment changes)
+2. **`.agent/HANDOFF.md`** - Session handoff (UPDATE EVERY SESSION - MANDATORY)
+3. **`AI_HANDOFF_CONTEXT.md`** - Historical context (update for major features)
+4. **`.agent/audits/YYYY-MM-DD_description.md`** - Dated audit reports only
+
+### ❌ FORBIDDEN
+- DO NOT create random markdown files in project root
+- DO NOT skip updating `.agent/HANDOFF.md` at session end
+- DO NOT use `print()` in backend (use `logger.*()`)
+
+### Code Standards
+- **Backend:** `logger.*()` not `print()`, async/await, type hints required
+- **Frontend:** TypeScript strict mode, proper component structure
+- **Database:** Always create Alembic migrations for schema changes
+
+### Deployment
+- **Platform:** Railway
+- **Domain:** https://echoai.uk
+- **Branch:** main (auto-deploy)
+- **Health:** https://echoai.uk/health
+
+## Session End Checklist (MANDATORY)
+
+Before ending your session:
+1. ✅ Update `.agent/HANDOFF.md` (REQUIRED - no exceptions)
+2. ✅ Update `AI_HANDOFF_CONTEXT.md` if significant changes
+3. ✅ Update `.agent/AGENT_RULES.md` if new rules/deployment info
+4. ✅ Commit with proper format: `type: description`
+5. ✅ Verify health check passes
+
+## For Complete Details
+
+**Read `.agent/AGENT_RULES.md` - 570 lines of comprehensive rules, standards, and protocols**

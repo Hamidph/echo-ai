@@ -1,0 +1,45 @@
+# Cursor AI Rules for Echo AI Project
+
+## 🚨 CRITICAL: Read Agent Rules First
+
+**Before making ANY changes, you MUST read:**
+- `.agent/AGENT_RULES.md` - Central source of truth for all rules, standards, and protocols
+
+This file contains:
+- Project overview and deployment information
+- Documentation standards (what to update, when, and how)
+- Code standards and best practices
+- Session end protocol (MANDATORY)
+- Common tasks and file locations
+
+## Quick Rules Summary
+
+### Documentation (See AGENT_RULES.md Section 2.1 for details)
+- **NEVER** create random markdown files in project root
+- **ALWAYS** update `.agent/HANDOFF.md` at session end (MANDATORY)
+- **Audit reports** go in `.agent/audits/YYYY-MM-DD_description.md`
+- Follow the documentation hierarchy defined in AGENT_RULES.md
+
+### Code Standards
+- **Backend:** Use `logger.*()` NOT `print()`
+- **Frontend:** TypeScript strict mode, proper component structure
+- **Database:** Always create migrations for schema changes
+- **Testing:** Write tests for new features
+
+### Deployment
+- **Platform:** Railway (https://echoai.uk)
+- **Branch:** main (auto-deploy)
+- **Health Check:** https://echoai.uk/health
+
+## Session End Checklist
+
+Before ending your session:
+1. ✅ Update `.agent/HANDOFF.md` with session notes (REQUIRED)
+2. ✅ Update `AI_HANDOFF_CONTEXT.md` if significant changes
+3. ✅ Update `AGENT_RULES.md` if new rules/deployment info
+4. ✅ Commit changes with proper format
+5. ✅ Verify health check passes
+
+## For More Details
+
+**Read `.agent/AGENT_RULES.md` - It's the central source of truth!**

@@ -63,18 +63,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     redis_healthy = await check_redis_health()
     if not redis_healthy:
         # Log warning but don't fail - Redis might not be needed for all operations
-        print("Warning: Redis connection not available")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Redis connection not available")
 
-    print(f"Starting {settings.app_name} v{settings.app_version}")
-    print(f"Environment: {settings.environment}")
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
+    logger.info(f"Environment: {settings.environment}")
 
     yield
 
     # Shutdown: Cleanup resources
-    print("Shutting down application...")
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("Shutting down application...")
     await close_redis_connection()
     await engine.dispose()
-    print("Cleanup complete")
+    logger.info("Cleanup complete")
 
 
 def create_application() -> FastAPI:

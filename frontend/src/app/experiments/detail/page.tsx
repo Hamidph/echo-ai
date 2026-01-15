@@ -8,7 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { experimentsApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
-function ExperimentDetailContent() {
+export function ExperimentDetailContent() {
     const searchParams = useSearchParams();
     const experimentId = searchParams.get("id");
     const { user, isLoading: authLoading } = useAuth();
