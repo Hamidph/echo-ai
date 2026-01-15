@@ -111,6 +111,10 @@ def create_application() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+    # Add security headers middleware (MUST be before CORS)
+    from backend.app.middleware.security_headers import SecurityHeadersMiddleware
+    app.add_middleware(SecurityHeadersMiddleware)
+
     # Configure CORS
     # In development, allow all origins. In production, use frontend_url from settings
     allowed_origins = (
