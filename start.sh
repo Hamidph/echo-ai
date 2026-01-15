@@ -12,10 +12,10 @@ echo "[STARTUP] Seeding test data..."
 python backend/scripts/seed_test_data.py || echo "[STARTUP] Warning: Failed to seed test data (may already exist)"
 
 echo "[STARTUP] Starting Celery worker with low concurrency..."
-# Reduced concurrency to 2 to prevent OOM in small containers
-celery -A backend.app.worker worker -B --loglevel=info --concurrency=2 &
+# Optimized concurrency based on environment (default 4)
+celery -A backend.app.worker worker -B --loglevel=info --concurrency=${CELERY_CONCURRENCY:-4} &
 WORKER_PID=$!
-echo "[STARTUP] Celery worker started with PID $WORKER_PID (concurrency=2)"
+echo "[STARTUP] Celery worker started with PID $WORKER_PID (concurrency=${CELERY_CONCURRENCY:-4})"
 
 # Wait a moment
 sleep 2

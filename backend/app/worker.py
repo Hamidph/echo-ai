@@ -50,6 +50,10 @@ celery_app.conf.beat_schedule = {
         "task": "check_scheduled_experiments",
         "schedule": 3600.0,  # Run every hour
     },
+    "cleanup-old-pii-data-daily": {
+        "task": "cleanup_old_pii_data",
+        "schedule": 86400.0,  # Run every 24 hours (daily)
+    },
 }
 
 logger = logging.getLogger(__name__)
@@ -464,3 +468,19 @@ def check_scheduled_experiments_task() -> dict[str, int]:
     except Exception as e:
         logger.exception(f"Scheduler task failed: {e}")
         return {"triggered": 0, "error": str(e)}
+
+
+@celery_app.task(name="cleanup_old_pii_data")  # type: ignore[untyped-decorator]
+def cleanup_old_pii_data_task() -> str:
+    """
+    Periodic task to clean up old PII data.
+    """
+    from backend.app.tasks.maintenance import cleanup_old_pii_data
+    
+    logger.info("Starting scheduled PII data cleanup...")
+    try:
+        result = run_async(cleanup_old_pii_data())
+        return result
+    except Exception as e:
+        logger.exception(f"PII cleanup task failed: {e}")
+        return f"Error: {e}"

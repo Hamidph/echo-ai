@@ -22,6 +22,7 @@ from slowapi.util import get_remote_address
 
 from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import get_engine
+from backend.app.core.logging import setup_logging
 from backend.app.core.redis import check_redis_health, close_redis_connection
 from backend.app.routers import experiments_router
 from backend.app.routers.admin import router as admin_router
@@ -79,10 +80,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_application() -> FastAPI:
     """
     Create and configure the FastAPI application instance.
-
+    
     Returns:
         FastAPI: Configured FastAPI application ready for use.
     """
+    setup_logging()
     settings = get_settings()
 
     # Initialize Sentry for error tracking (production only)

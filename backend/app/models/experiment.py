@@ -185,7 +185,7 @@ class Experiment(Base):
     __table_args__ = (
         Index("ix_experiments_created_at", "created_at"),
         Index("ix_experiments_status_created", "status", "created_at"),
-        Index("ix_experiments_user_id", "user_id"),
+        # ix_experiments_user_id is already created by index=True on the column
         Index("ix_experiments_user_status", "user_id", "status"),
         Index("ix_experiments_user_created", "user_id", "created_at"),
     )

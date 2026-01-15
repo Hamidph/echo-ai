@@ -103,9 +103,14 @@ export default function DashboardPage() {
                   <InfoTooltip content="Average unweighted brand visibility across your experiments" />
                 </div>
                 <p className="text-sm text-slate-500 mb-1">Avg Visibility Score</p>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-center gap-2 mt-1">
                   <p className="text-3xl font-bold text-slate-900">{stats?.avg_visibility_score}%</p>
-                  <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">High</span>
+                  <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    +2.5%
+                  </span>
                 </div>
               </Card>
 
@@ -119,7 +124,15 @@ export default function DashboardPage() {
                   <InfoTooltip content="Completed experiments" />
                 </div>
                 <p className="text-sm text-slate-500 mb-1">Completed Runs</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.completed_experiments}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-3xl font-bold text-slate-900">{stats?.completed_experiments}</p>
+                  <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    +12%
+                  </span>
+                </div>
               </Card>
 
               <Card className="border-amber-200">
@@ -132,7 +145,15 @@ export default function DashboardPage() {
                   <InfoTooltip content="Experiments currently executing" />
                 </div>
                 <p className="text-sm text-slate-500 mb-1">Total Experiments</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.total_experiments}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-3xl font-bold text-slate-900">{stats?.total_experiments}</p>
+                  <span className="flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                    </svg>
+                    0%
+                  </span>
+                </div>
               </Card>
             </div>
 

@@ -428,15 +428,52 @@ function ExperimentDetailContent() {
                             <span>&nbsp;</span>
                         )}
                     </div>
-                    <Link
-                        href="/experiments/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        New Analysis
-                    </Link>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                if (!experiment.iterations || experiment.iterations.length === 0) return;
+
+                                const headers = ["Iteration", "Status", "Success", "Wait Time", "Error", "Response"];
+                                const rows = experiment.iterations.map((iter: any) => [
+                                    iter.iteration_index + 1,
+                                    iter.status,
+                                    iter.is_success ? "Yes" : "No",
+                                    iter.wait_time || 0,
+                                    iter.error_message || "",
+                                    `"${(iter.raw_response || "").replace(/"/g, '""')}"` // Escape quotes
+                                ]);
+
+                                const csvContent = [
+                                    headers.join(","),
+                                    ...rows.map((row: any[]) => row.join(","))
+                                ].join("\n");
+
+                                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.setAttribute("href", url);
+                                link.setAttribute("download", `experiment_${experiment.id}_export.csv`);
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export CSV
+                        </button>
+                        <Link
+                            href="/experiments/new"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            New Analysis
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

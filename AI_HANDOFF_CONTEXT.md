@@ -13,7 +13,16 @@
 - **Deployment**: Railway (Service `echo-ai`, linked to `main` branch).
 - **Server**: Hypercorn (ASGI server) on port 8080.
 
-## Latest Updates (January 10, 2026)
+## Latest Updates (January 15, 2026)
+
+### ✅ Audit Fixes (Security & Performance)
+- **SEC-01 (API Keys)**: Optimized lookup to O(1) using prefix filtering.
+- **PRIV-01 (Data Retention)**: Implemented `cleanup_old_pii_data` task (Daily, 30 days retention).
+- **PERF-04 (Workers)**: Configured vertical scaling with `CELERY_CONCURRENCY` (default 4).
+- **Observability**: Added Structured JSON Logging for production.
+- **Fix**: Corrected `test_auth.py` to match `User` model changes (`monthly_prompt_quota`).
+
+### Previous Updates (January 10, 2026)
 
 ### ✅ Codebase Cleanup
 - **Removed debug scripts**: `check_status.py`, `debug_todays_experiments.py`

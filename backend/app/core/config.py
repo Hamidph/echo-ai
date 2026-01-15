@@ -241,6 +241,12 @@ class Settings(BaseSettings):
         description="Disable prompt quota limits (for testing only)",
     )
 
+    # Data Retention Policy (GDPR Compliance)
+    data_retention_days: int = Field(
+        default=30,
+        description="Number of days to retain raw PII data (e.g. LLM responses)",
+    )
+
     # LLM Provider API Keys (loaded from environment)
     openai_api_key: str | None = Field(default=None, description="OpenAI API key")
     openai_default_model: str = Field(
@@ -268,6 +274,10 @@ class Settings(BaseSettings):
     celery_result_backend: str | None = Field(
         default=None,
         description="Celery result backend URL (defaults to Redis URL if not set)",
+    )
+    celery_concurrency: int = Field(
+        default=4,
+        description="Number of worker processes (default 4)",
     )
 
     @computed_field  # type: ignore[prop-decorator]

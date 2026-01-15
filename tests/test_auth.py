@@ -39,7 +39,7 @@ async def test_register_duplicate_email(client: TestClient, db_session: AsyncSes
         hashed_password=get_password_hash("password123"),
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
-        monthly_iteration_quota=100,
+        monthly_prompt_quota=100,
     )
     db_session.add(user)
     await db_session.commit()
@@ -66,7 +66,7 @@ async def test_login_success(client: TestClient, db_session: AsyncSession) -> No
         hashed_password=get_password_hash("password123"),
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
-        monthly_iteration_quota=100,
+        monthly_prompt_quota=100,
         is_active=True,
     )
     db_session.add(user)
@@ -96,7 +96,7 @@ async def test_login_wrong_password(client: TestClient, db_session: AsyncSession
         hashed_password=get_password_hash("password123"),
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
-        monthly_iteration_quota=100,
+        monthly_prompt_quota=100,
         is_active=True,
     )
     db_session.add(user)

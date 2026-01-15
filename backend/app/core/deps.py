@@ -18,14 +18,14 @@ from backend.app.core.security import decode_access_token, verify_api_key
 from backend.app.models.user import APIKey, User
 
 # Security schemes
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def get_current_user_from_jwt(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> User:
+) -> User | None:
     """
     Get the current user from a JWT token in the Authorization header.
 
@@ -39,6 +39,9 @@ async def get_current_user_from_jwt(
     Raises:
         HTTPException: If the token is invalid or the user doesn't exist.
     """
+    if not credentials:
+        return None
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -90,13 +93,29 @@ async def get_current_user_from_api_key(
     if api_key is None:
         return None
 
-    # Fetch all active API keys (we need to hash-compare)
-    result = await db.execute(
-        select(APIKey).where(APIKey.is_active == True)  # noqa: E712
-    )
-    api_keys = result.scalars().all()
+    # Optimize: keys are stored as "prefix..." so we can extract the prefix
+    # Default format from security.py: key[:12] + "..."
+    # But we should rely on the extraction function
+    from backend.app.core.security import get_api_key_prefix
 
-    # Check each API key
+    try:
+        prefix = get_api_key_prefix(api_key)
+    except Exception:
+        # If key format is invalid, fail early
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key format",
+        )
+
+    # Fetch ONLY active API keys with matching prefix (O(1) with index)
+    stmt = select(APIKey).where(
+        APIKey.is_active == True,  # noqa: E712
+        APIKey.prefix == prefix
+    )
+    result = await db.execute(stmt)
+    api_keys = result.scalars().all()
+    
+    # Check each API key (usually just 1, but prefix collisions theoretically possible)
     for key_record in api_keys:
         if verify_api_key(api_key, key_record.key):
             # Update last used timestamp (commit handled by dependency manager)

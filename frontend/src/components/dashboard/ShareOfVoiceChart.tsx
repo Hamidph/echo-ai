@@ -39,6 +39,7 @@ export function ShareOfVoiceChart({ data }: ShareOfVoiceChartProps) {
                             outerRadius={80}
                             paddingAngle={5}
                             dataKey="percentage"
+                            nameKey="brand"
                         >
                             {data.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
