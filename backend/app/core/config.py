@@ -197,11 +197,23 @@ class Settings(BaseSettings):
     redis_port: int = Field(default=6379, description="Redis port")
     redis_password: str = Field(default="redis_secret", description="Redis password")
     redis_db: int = Field(default=0, description="Redis database number")
+    
+    # Allow raw REDIS_URL from environment (e.g. Railway)
+    raw_redis_url: str | None = Field(default=None, alias="REDIS_URL")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def redis_url(self) -> RedisDsn:
-        """Construct Redis connection URL from components."""
+        """
+        Construct Redis connection URL.
+        
+        Priority:
+        1. REDIS_URL env var (Railway provides this)
+        2. Computed from components
+        """
+        if self.raw_redis_url:
+            return RedisDsn(self.raw_redis_url)
+            
         return RedisDsn.build(
             scheme="redis",
             password=self.redis_password,
