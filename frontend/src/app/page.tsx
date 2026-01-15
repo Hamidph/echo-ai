@@ -17,7 +17,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
-            <span className="text-sm font-semibold text-slate-600 tracking-tight">Now tracking Claude 3.5 & GPT-4o</span>
+            <span className="text-sm font-semibold text-slate-600 tracking-tight">Now tracking Claude 4.5 & GPT-5.2</span>
           </div>
 
           <h1 className="font-heading text-6xl md:text-7xl font-bold text-slate-900 mb-6 tracking-tight leading-[1.05]">
@@ -100,8 +100,8 @@ export default function Home() {
                     </thead>
                     <tbody className="divide-y divide-stone-100 bg-white">
                       {[
-                        { q: "Top 5 CRM tools for startups 2025", m: "GPT-4o", p: "#1 Recommended", s: "Winning" },
-                        { q: "Best project management software", m: "Claude 3.5", p: "#3 Listed", s: "Tracking" },
+                        { q: "Top 5 CRM tools for startups 2026", m: "GPT-5.2", p: "#1 Recommended", s: "Winning" },
+                        { q: "Best project management software", m: "Claude 4.5", p: "#3 Listed", s: "Tracking" },
                         { q: "Cheap alternatives to Salesforce", m: "Perplexity", p: "#1 Citation", s: "Winning" },
                         { q: "Marketing analytics platform comparison", m: "Gemini", p: "Not Found", s: "Critical" },
                       ].map((row, i) => (
@@ -142,7 +142,7 @@ export default function Home() {
               </p>
               <ul className="space-y-4">
                 {[
-                  "Reverse-engineer ranking factors for GPT-4 & Claude",
+                  "Reverse-engineer ranking factors for GPT-5.2 & Claude",
                   "Track citation drift over time",
                   "Identify negative sentiment hallucinations"
                 ].map(item => (
@@ -217,7 +217,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Free</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">$0</span>
+                <span className="text-4xl font-bold text-slate-900">£0</span>
                 <span className="text-slate-500">/month</span>
               </div>
               <div className="text-sm text-slate-600 mb-6">Perfect for getting started</div>
@@ -226,9 +226,11 @@ export default function Home() {
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   <strong>100</strong> prompts/month
                 </li>
-                <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  All AI providers
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-600">Access to <strong>GPT-5.2 & Claude 4.5</strong></span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -244,7 +246,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Starter</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">$29</span>
+                <span className="text-4xl font-bold text-slate-900">£25</span>
                 <span className="text-slate-500">/month</span>
               </div>
               <div className="text-sm text-slate-600 mb-6">For growing brands</div>
@@ -272,7 +274,7 @@ export default function Home() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">Most Popular</div>
               <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">$99</span>
+                <span className="text-4xl font-bold text-slate-900">£80</span>
                 <span className="text-slate-500">/month</span>
               </div>
               <div className="text-sm text-slate-600 mb-6">For serious marketers</div>

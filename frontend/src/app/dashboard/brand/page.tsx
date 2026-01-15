@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { brandApi } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
+import Link from "next/link";
 import { Button, Input, Card } from "@/components/ui";
 
 export default function BrandProfilePage() {
@@ -97,6 +98,14 @@ export default function BrandProfilePage() {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
                 {/* Header */}
                 <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-4">
+                        <Link href="/experiments" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back to Dashboard
+                        </Link>
+                    </div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">Brand Profile</h1>
                     <p className="text-slate-500">
                         Manage your brand information and competitors. Your brand name will be used in all experiments.
@@ -125,7 +134,7 @@ export default function BrandProfilePage() {
                                     onChange={(e) => setFormData({ ...formData, brand_name: e.target.value })}
                                     placeholder="e.g., Salesforce"
                                     required
-                                    className="bg-white border-stone-200 text-slate-900"
+                                    className="bg-white border-stone-200 !text-slate-900"
                                 />
                             </div>
 
@@ -151,7 +160,7 @@ export default function BrandProfilePage() {
                                     onChange={(e) => setFormData({ ...formData, brand_website: e.target.value })}
                                     placeholder="https://yourcompany.com"
                                     type="url"
-                                    className="bg-white border-stone-200 text-slate-900"
+                                    className="bg-white border-stone-200 !text-slate-900"
                                 />
                             </div>
 
@@ -243,7 +252,7 @@ export default function BrandProfilePage() {
                             onChange={(e) => setNewCompetitor(e.target.value)}
                             placeholder="e.g., HubSpot"
                             onKeyPress={(e) => e.key === "Enter" && handleAddCompetitor()}
-                            className="bg-white border-stone-200 text-slate-900 flex-1"
+                            className="bg-white border-stone-200 !text-slate-900 flex-1"
                         />
                         <Button
                             onClick={handleAddCompetitor}

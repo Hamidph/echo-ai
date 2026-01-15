@@ -86,6 +86,8 @@ async def add_competitor(
             detail="Maximum 10 competitors allowed",
         )
     
+    # Create a new list to ensure SQLAlchemy detects the change
+    competitors = list(current_user.brand_competitors or [])
     competitors.append(competitor.competitor_name)
     current_user.brand_competitors = competitors
     

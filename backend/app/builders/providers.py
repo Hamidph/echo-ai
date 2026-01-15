@@ -300,6 +300,15 @@ class PerplexityProvider(BaseLLMProvider):
             "Content-Type": "application/json",
         }
 
+    MAX_RETRIES = 3
+
+    def _get_headers(self) -> dict[str, str]:
+        """Get Perplexity-specific headers."""
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
     async def _make_request(self, request: LLMRequest) -> dict[str, Any]:
         """
         Make a chat completion request to Perplexity.
@@ -429,13 +438,13 @@ class OpenAIProvider(BaseLLMProvider):
     mirroring the capabilities of the ChatGPT web interface.
     """
 
-    MODEL_GPT4O = "gpt-4o"
+    MODEL_GPT5_2 = "gpt-5.2"
     MODEL_GPT4O = "gpt-4o"
     
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = MODEL_GPT4O,
+        model: str = MODEL_GPT5_2,
         timeout: float = 60.0,
     ) -> None:
         """Initialize the OpenAI provider."""
@@ -613,16 +622,14 @@ class AnthropicProvider(BaseLLMProvider):
     but will be fully implemented when Anthropic integration is needed.
     """
 
-    MODEL_CLAUDE_4_SONNET = "claude-sonnet-4-20250514"
-    MODEL_CLAUDE_35_SONNET = "claude-3-5-sonnet-20241022"
-    MODEL_CLAUDE_35_HAIKU = "claude-3-5-haiku-20241022"
-    MODEL_CLAUDE_45_SONNET = "claude-4-5-sonnet-latest"
-
+    MODEL_CLAUDE_45_SONNET = "claude-sonnet-4-5-20250929"
+    MODEL_CLAUDE_35_SONNET = "claude-3-5-sonnet-20240620"
+    
     def __init__(
         self,
         api_key: str | None = None,
         model: str = MODEL_CLAUDE_45_SONNET,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
     ) -> None:
         """Initialize the Anthropic provider."""
         settings = get_settings()
@@ -772,12 +779,12 @@ def get_provider(
     if provider == LLMProviderEnum.PERPLEXITY:
         return PerplexityProvider(
             api_key=api_key,
-            model=model or PerplexityProvider.MODEL_SONAR_PRO,
+            model=model or PerplexityProvider.MODEL_SONAR_DEEP_RESEARCH,
         )
     elif provider == LLMProviderEnum.OPENAI:
         return OpenAIProvider(
             api_key=api_key,
-            model=model or OpenAIProvider.MODEL_GPT4O,
+            model=model or OpenAIProvider.MODEL_GPT5_2,
         )
     elif provider == LLMProviderEnum.ANTHROPIC:
         return AnthropicProvider(

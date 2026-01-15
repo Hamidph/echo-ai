@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Force rebuild for GBP update
 const nextConfig = {
   output: 'export',
   trailingSlash: true,

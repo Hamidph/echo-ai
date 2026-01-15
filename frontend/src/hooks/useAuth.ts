@@ -20,6 +20,7 @@ export function useAuth() {
       authApi.login(email, password),
     onSuccess: (data) => {
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
       queryClient.invalidateQueries({ queryKey: ["user"] });
       router.push("/dashboard");
     },
