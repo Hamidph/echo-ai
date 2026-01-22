@@ -28,12 +28,12 @@ PRICE_IDS = {
     PricingTier.ENTERPRISE: settings.stripe_price_id_enterprise,
 }
 
-# Quota mapping
+# Quota mapping (prompts per month, each prompt runs 10 iterations)
 TIER_QUOTAS = {
-    PricingTier.FREE: 100,
-    PricingTier.STARTER: 5000,
-    PricingTier.PRO: 50000,
-    PricingTier.ENTERPRISE: 1000000,
+    PricingTier.FREE: 3,
+    PricingTier.STARTER: 10,
+    PricingTier.PRO: 15,
+    PricingTier.ENTERPRISE: 50,
 }
 
 

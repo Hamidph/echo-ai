@@ -70,7 +70,7 @@ async def register(
         full_name=user_data.full_name,
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
-        monthly_prompt_quota=100,  # Free tier quota (100 prompts/month, each runs 10 iterations)
+        monthly_prompt_quota=3,  # Free tier quota (3 prompts/month, each runs 10 iterations)
         quota_reset_date=datetime.now(timezone.utc) + timedelta(days=30),
     )
 

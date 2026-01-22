@@ -224,13 +224,13 @@ export default function Home() {
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>100</strong> prompts/month
+                  <strong>3</strong> prompts/month
                 </li>
                 <li className="flex items-start">
                   <svg className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-600">Access to <strong>GPT-5.2 & Claude 4.5</strong></span>
+                  <span className="text-slate-600">10 iterations per prompt</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -246,18 +246,18 @@ export default function Home() {
             <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Starter</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£25</span>
+                <span className="text-4xl font-bold text-slate-900">£35</span>
                 <span className="text-slate-500">/month</span>
               </div>
               <div className="text-sm text-slate-600 mb-6">For growing brands</div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>5,000</strong> prompts/month
+                  <strong>10</strong> prompts/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Daily recurring experiments
+                  10 iterations per prompt
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -274,18 +274,18 @@ export default function Home() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">Most Popular</div>
               <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£80</span>
+                <span className="text-4xl font-bold text-slate-900">£55</span>
                 <span className="text-slate-500">/month</span>
               </div>
               <div className="text-sm text-slate-600 mb-6">For serious marketers</div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>50,000</strong> prompts/month
+                  <strong>15</strong> prompts/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Priority API access
+                  10 iterations per prompt
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -301,21 +301,22 @@ export default function Home() {
             <div className="bg-slate-900 rounded-2xl p-6 text-white">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold">Custom</span>
+                <span className="text-4xl font-bold">£169</span>
+                <span className="text-slate-300 text-lg">/month</span>
               </div>
               <div className="text-sm text-slate-400 mb-6">For large organizations</div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>1,000,000+</strong> prompts/month
+                  <strong>50</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  10 iterations per prompt
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   Dedicated support
-                </li>
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Custom integrations
                 </li>
               </ul>
               <Link href="mailto:sales@echoai.com" className="block w-full py-3 text-center text-sm font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-100 transition-colors">
