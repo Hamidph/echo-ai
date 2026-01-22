@@ -68,12 +68,26 @@ const PRICING_TIERS = [
       '50 prompts/month',
       '10 iterations per prompt',
       'All AI providers',
+      'Priority support',
+      'Advanced analytics',
+      'Custom integrations',
+    ],
+    description: 'Growing agencies',
+  },
+  {
+    name: 'ENTERPRISE_PLUS',
+    price: 599,
+    iterations: 200,
+    features: [
+      '200 prompts/month',
+      '10 iterations per prompt',
+      'All AI providers',
       'Unlimited users',
       'White-label options',
-      '24/7 priority support',
+      '24/7 dedicated support',
       'Custom SLA',
     ],
-    description: 'Custom solutions',
+    description: 'Large agencies',
   },
 ];
 

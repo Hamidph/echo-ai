@@ -212,7 +212,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-5 gap-4">
             {/* Free Tier */}
             <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Free</div>
@@ -298,17 +298,44 @@ export default function Home() {
             </div>
 
             {/* Enterprise Tier */}
-            <div className="bg-slate-900 rounded-2xl p-6 text-white">
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise</div>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold">£169</span>
+                <span className="text-4xl font-bold text-slate-900">£169</span>
+                <span className="text-slate-500">/month</span>
+              </div>
+              <div className="text-sm text-slate-600 mb-6">Growing agencies</div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>50</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  10 iterations per prompt
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Priority support
+                </li>
+              </ul>
+              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                Start Trial
+              </Link>
+            </div>
+
+            {/* Enterprise+ Tier */}
+            <div className="bg-slate-900 rounded-2xl p-6 text-white">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise+</div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-4xl font-bold">£599</span>
                 <span className="text-slate-300 text-lg">/month</span>
               </div>
-              <div className="text-sm text-slate-400 mb-6">For large organizations</div>
+              <div className="text-sm text-slate-400 mb-6">Large agencies</div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>50</strong> prompts/month
+                  <strong>200</strong> prompts/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -316,7 +343,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Dedicated support
+                  Dedicated support & SLA
                 </li>
               </ul>
               <Link href="mailto:sales@echoai.com" className="block w-full py-3 text-center text-sm font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-100 transition-colors">

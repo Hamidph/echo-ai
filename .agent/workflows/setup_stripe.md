@@ -12,13 +12,14 @@ description: How to setup Stripe for billing and subscriptions
 
 2. **Create Products (Tiers)**
    - Go to **Product Catalog** -> **Add Product**.
-   - Create the following 3 products (Recurring, Monthly):
+   - Create the following 4 products (Recurring, Monthly):
 
    | Product Name | Price (Monthly) | Description |
    | :--- | :--- | :--- |
-   | **Starter** | £25 (example) | 5,000 Prompts / Month |
-   | **Pro** | £80 (example) | 50,000 Prompts / Month |
-   | **Enterprise** | £400 (example) | 1,000,000 Prompts / Month |
+   | **Echo AI - Starter** | £35 | 10 Monitored Prompts / Month (10 iterations daily each) |
+   | **Echo AI - Pro** | £55 | 15 Monitored Prompts / Month (10 iterations daily each) |
+   | **Echo AI - Enterprise** | £169 | 50 Monitored Prompts / Month (10 iterations daily each) |
+   | **Echo AI - Enterprise+** | £599 | 200 Monitored Prompts / Month (10 iterations daily each) |
 
    - **Important**: After creating each, copy the **Price ID** (starts with `price_...`).
 
@@ -43,9 +44,10 @@ description: How to setup Stripe for billing and subscriptions
    - Add/Update the following:
      - `STRIPE_API_KEY`: (Your Secret Key)
      - `STRIPE_WEBHOOK_SECRET`: (Your Webhook Signing Secret)
-     - `STRIPE_PRICE_ID_STARTER`: (Price ID for Starter)
-     - `STRIPE_PRICE_ID_PRO`: (Price ID for Pro)
-     - `STRIPE_PRICE_ID_ENTERPRISE`: (Price ID for Enterprise)
+     - `STRIPE_PRICE_ID_STARTER`: (Price ID for Starter - £35/month)
+     - `STRIPE_PRICE_ID_PRO`: (Price ID for Pro - £55/month)
+     - `STRIPE_PRICE_ID_ENTERPRISE`: (Price ID for Enterprise - £169/month)
+     - `STRIPE_PRICE_ID_ENTERPRISE_PLUS`: (Price ID for Enterprise+ - £599/month)
 
 6.  **Redeploy**
     - Redeploy the service for changes to take effect.

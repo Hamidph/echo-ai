@@ -51,14 +51,18 @@ export default function TermsPage() {
                     <section className="mb-8">
                         <h2 className="text-xl font-semibold text-slate-800 mb-4">3. Pricing and Plans</h2>
                         <p className="text-slate-600 mb-4">
-                            Echo AI offers the following pricing tiers (each prompt runs 10 iterations):
+                            Echo AI offers the following pricing tiers. Each monitored prompt runs 10 iterations daily for continuous monitoring and statistical confidence:
                         </p>
                         <ul className="list-disc list-inside text-slate-600 space-y-2 mb-4">
-                            <li><strong>Free</strong>: £0/month - 3 prompts per month</li>
-                            <li><strong>Starter</strong>: £35/month - 10 prompts per month</li>
-                            <li><strong>Pro</strong>: £55/month - 15 prompts per month</li>
-                            <li><strong>Enterprise</strong>: £169/month - 50 prompts per month</li>
+                            <li><strong>Free</strong>: £0/month - 3 monitored prompts</li>
+                            <li><strong>Starter</strong>: £35/month - 10 monitored prompts</li>
+                            <li><strong>Pro</strong>: £55/month - 15 monitored prompts</li>
+                            <li><strong>Enterprise</strong>: £169/month - 50 monitored prompts</li>
+                            <li><strong>Enterprise+</strong>: £599/month - 200 monitored prompts</li>
                         </ul>
+                        <p className="text-slate-600 mb-4">
+                            All quotas reset monthly on your subscription renewal date.
+                        </p>
                     </section>
 
                     <section className="mb-8">

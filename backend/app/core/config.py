@@ -92,6 +92,7 @@ class Settings(BaseSettings):
     stripe_price_id_starter: str | None = Field(default=None, description="Stripe Price ID for Starter Tier")
     stripe_price_id_pro: str | None = Field(default=None, description="Stripe Price ID for Pro Tier")
     stripe_price_id_enterprise: str | None = Field(default=None, description="Stripe Price ID for Enterprise Tier")
+    stripe_price_id_enterprise_plus: str | None = Field(default=None, description="Stripe Price ID for Enterprise+ Tier")
 
     # Email Configuration
     smtp_host: str = Field(

@@ -30,6 +30,7 @@ class PricingTier(str, Enum):
     STARTER = "starter"
     PRO = "pro"
     ENTERPRISE = "enterprise"
+    ENTERPRISE_PLUS = "enterprise_plus"
 
 
 class User(Base):

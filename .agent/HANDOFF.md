@@ -1,32 +1,32 @@
 # Echo AI - Agent Handoff Context
 
 > **Last Updated**: January 22, 2026  
-> **Session**: Pricing Structure Update Across Backend and Frontend
+> **Session**: Pricing Structure Update - Added Enterprise+ Tier (Pitch Deck Alignment)
 
 ---
 
 ## Current System State: ✅ WORKING
 
-Production platform deployed on Railway (echoai.uk). Pricing structure updated across all backend and frontend components. Ready for deployment.
+Production platform deployed on Railway (echoai.uk). Complete pricing structure updated to match pitch deck unit economics with 5 tiers including new ENTERPRISE+ tier.
 
 ---
 
 ## What I Did This Session
 
-### 1. Updated Backend Pricing Configuration
-- Modified `backend/app/services/billing.py` TIER_QUOTAS to new values
-- Updated `backend/app/routers/auth.py` to set new FREE tier quota (3 prompts)
-- Changed from high-volume model to low-volume, high-quality model
+### 1. Added ENTERPRISE+ Tier to Backend
+- Added `ENTERPRISE_PLUS` to `PricingTier` enum in `backend/app/models/user.py`
+- Updated `backend/app/services/billing.py` with ENTERPRISE_PLUS quota (200 prompts)
+- Updated `backend/app/core/config.py` to support `stripe_price_id_enterprise_plus`
 
-### 2. Updated Frontend Pricing Display
-- Updated landing page (`frontend/src/app/page.tsx`) pricing section
-- Updated billing page (`frontend/src/app/dashboard/billing/page.tsx`) tier definitions
-- Updated Terms of Service page with new pricing information
-- All prices now show: FREE: £0 (3), STARTER: £35 (10), PRO: £55 (15), ENTERPRISE: £169 (50)
+### 2. Updated All Frontend Pricing Displays
+- Landing page (`frontend/src/app/page.tsx`) - Now shows all 5 tiers in grid
+- Billing dashboard (`frontend/src/app/dashboard/billing/page.tsx`) - Complete tier list
+- Terms of Service - Updated with all 5 pricing tiers and continuous monitoring explanation
 
 ### 3. Updated Documentation
-- Updated `AI_HANDOFF_CONTEXT.md` with new pricing structure
-- Updated `.agent/HANDOFF.md` with session details
+- `AI_HANDOFF_CONTEXT.md` - Updated pricing section with all 5 tiers
+- `.agent/workflows/setup_stripe.md` - Updated Stripe setup guide with new pricing
+- `.agent/HANDOFF.md` - This file with complete session notes
 
 ---
 
@@ -34,88 +34,144 @@ Production platform deployed on Railway (echoai.uk). Pricing structure updated a
 
 | File | Change |
 |------|--------|
-| `backend/app/services/billing.py` | Updated TIER_QUOTAS: FREE: 3, STARTER: 10, PRO: 15, ENTERPRISE: 50 prompts |
-| `backend/app/routers/auth.py` | Updated new user default quota from 100 to 3 prompts |
-| `frontend/src/app/page.tsx` | Updated pricing section with new prices and quotas |
-| `frontend/src/app/dashboard/billing/page.tsx` | Updated PRICING_TIERS array with new values |
-| `frontend/src/app/terms/page.tsx` | Updated pricing information in Terms of Service |
-| `AI_HANDOFF_CONTEXT.md` | Updated pricing tier information |
-| `.agent/HANDOFF.md` | This file - session documentation |
+| `backend/app/models/user.py` | Added ENTERPRISE_PLUS to PricingTier enum |
+| `backend/app/services/billing.py` | Added ENTERPRISE_PLUS quota (200 prompts) and Price ID mapping |
+| `backend/app/core/config.py` | Added stripe_price_id_enterprise_plus field |
+| `frontend/src/app/page.tsx` | Updated to 5-column grid, added ENTERPRISE+ tier card |
+| `frontend/src/app/dashboard/billing/page.tsx` | Added ENTERPRISE_PLUS tier to PRICING_TIERS array |
+| `frontend/src/app/terms/page.tsx` | Updated with all 5 tiers and continuous monitoring description |
+| `AI_HANDOFF_CONTEXT.md` | Updated pricing section |
+| `.agent/workflows/setup_stripe.md` | Updated Stripe setup guide with new pricing |
+| `.agent/HANDOFF.md` | This file - complete session documentation |
 
 ---
 
-## New Pricing Structure
+## Complete Pricing Structure (Pitch Deck Aligned)
 
-| Tier | Price | Prompts/Month | Iterations per Prompt | Total Iterations |
-|------|-------|---------------|----------------------|------------------|
-| FREE | £0 | 3 | 10 | 30 |
-| STARTER | £35 | 10 | 10 | 100 |
-| PRO | £55 | 15 | 10 | 150 |
-| ENTERPRISE | £169 | 50 | 10 | 500 |
+| Tier | Price | Monitored Prompts | Iterations/Day | Target Customer |
+|------|-------|------------------|----------------|-----------------|
+| **FREE** | £0/month | 3 | 10 | Testing & demos |
+| **STARTER** | £35/month | 10 | 10 | Solo consultants (2-3 brands) |
+| **PRO** | £55/month | 15 | 10 | Small agencies (3-5 brands) |
+| **ENTERPRISE** | £169/month | 50 | 10 | Growing agencies (10-15 brands) |
+| **ENTERPRISE+** | £599/month | 200 | 10 | Large agencies (40-50 brands) |
 
-**Key Change**: Moved from high-volume prompt model (100-1M prompts) to low-volume, focused model (3-50 prompts). This reflects a more realistic usage pattern where each prompt is a meaningful experiment with 10 iterations.
+**Key Points:**
+- Each monitored prompt runs 10 iterations **daily** (not just once)
+- This is continuous monitoring, not one-time queries
+- 10 iterations provide statistical confidence (Monte Carlo methodology)
+- Competitive moat: Competitors run 1 query, we run 10 for audit-grade data
+
+---
+
+## Stripe Configuration Required
+
+### New Environment Variable Needed
+
+Add to Railway Variables:
+
+```bash
+STRIPE_PRICE_ID_ENTERPRISE_PLUS=price_...  # £599/month tier
+```
+
+### Complete Stripe Setup (4 Paid Tiers)
+
+When setting up Stripe products:
+
+1. **Starter** - £35/month - "10 monitored prompts (10 iterations daily each)"
+2. **Pro** - £55/month - "15 monitored prompts (10 iterations daily each)"  
+3. **Enterprise** - £169/month - "50 monitored prompts (10 iterations daily each)"
+4. **Enterprise+** - £599/month - "200 monitored prompts (10 iterations daily each)"
+
+Copy each Price ID and set in Railway:
+- `STRIPE_PRICE_ID_STARTER`
+- `STRIPE_PRICE_ID_PRO`
+- `STRIPE_PRICE_ID_ENTERPRISE`
+- `STRIPE_PRICE_ID_ENTERPRISE_PLUS` (NEW)
+
+---
+
+## Unit Economics (From Pitch Deck)
+
+### Launch Metrics
+- **Blended ACV**: £70/month (conservative tier mix)
+- **COGS**: £35/month (LLM APIs, infrastructure, payment processing, support)
+- **Gross Margin**: 50% (land-grab strategy)
+- **CAC**: £300 (self-serve model)
+- **Payback Period**: 8 months
+- **LTV/CAC**: 2.5x (24-month customer lifetime)
+
+### Year 2 Target
+- **Blended ACV**: £120/month (tier upgrades + price increases)
+- **COGS**: £30/month (prompt caching, volume discounts)
+- **Gross Margin**: 75% (margin expansion)
+- **CAC**: £350 (scaled paid ads)
+- **Payback Period**: 4 months
+- **LTV/CAC**: 6x
 
 ---
 
 ## Next Steps for Future Agent
 
 ### Immediate (After Deployment)
-1. **Verify deployment** 
+1. **Create Stripe Products** with exact pricing from pitch deck
+   - Use product names: "Echo AI - Starter", "Echo AI - Pro", etc.
+   - Set descriptions to include "monitored prompts" and "10 iterations daily"
+   - Copy all 4 Price IDs
+
+2. **Update Railway Variables**
    ```bash
-   curl https://echoai.uk/health
+   railway variables set STRIPE_PRICE_ID_STARTER=price_...
+   railway variables set STRIPE_PRICE_ID_PRO=price_...
+   railway variables set STRIPE_PRICE_ID_ENTERPRISE=price_...
+   railway variables set STRIPE_PRICE_ID_ENTERPRISE_PLUS=price_...
    ```
 
-2. **Test new user registration**
-   - Register new account
-   - Verify FREE tier gets 3 prompts quota
-   - Test experiment creation with new quota
-
-3. **Update Stripe Products** (if using Stripe)
-   - Update Stripe product prices to match new pricing
-   - STARTER: £35/month
-   - PRO: £55/month  
-   - ENTERPRISE: £169/month
+3. **Test Checkout Flow**
+   - Use Stripe test mode first (`sk_test_...`)
+   - Test each tier's checkout
+   - Verify correct pricing displays
 
 ### Short-term (This Week)
 1. **Update Marketing Materials**
-   - Email templates with new pricing
-   - Any external documentation or sales collateral
+   - Ensure all external docs reference "monitored prompts" not just "prompts"
+   - Emphasize continuous daily monitoring (10 iterations/day)
+   - Highlight this as competitive moat vs one-time queries
 
-2. **Database Migration** (if needed)
-   - Existing users keep their current quotas
-   - Consider migration plan for legacy users
-
-3. **Monitor Impact**
-   - Track conversion rates with new pricing
-   - Monitor user feedback on quota changes
-   - Adjust if needed based on usage patterns
+2. **Prepare Investor Materials**
+   - Pricing aligns with pitch deck unit economics
+   - Can confidently explain blended ACV of £70
+   - Clear path to 75% margins by Year 2
 
 ---
 
 ## Known Issues
 
-None currently. All pricing updates applied consistently across backend and frontend.
+None currently. All pricing updates applied consistently.
 
 ---
 
 ## Warnings / Gotchas
 
-1. **Existing Users**
-   - Current users in database will keep their OLD quota values
-   - Only NEW registrations will get the new quotas
-   - Consider running a migration if you want to update existing users
+1. **Terminology Shift**: "Monitored Prompts" vs "Prompts"
+   - Each monitored prompt = 10 iterations daily
+   - This is different from one-time prompts
+   - Customer value prop: continuous tracking, not spot checks
 
-2. **Stripe Integration**
-   - Need to update Stripe Price IDs in Railway environment variables
-   - Old price IDs will not match new pricing
-   - Update these variables:
-     - `STRIPE_PRICE_ID_STARTER` (for £35/month)
-     - `STRIPE_PRICE_ID_PRO` (for £55/month)
-     - `STRIPE_PRICE_ID_ENTERPRISE` (for £169/month)
+2. **Existing Users**
+   - Database users keep their current quotas
+   - Only new registrations get the new structure
+   - May need migration for existing users
 
-3. **Documentation Consistency**
-   - Updated main docs, but check for any other references
-   - FAQ, help docs, onboarding emails may need updates
+3. **Stripe Price IDs**
+   - Must create 4 products (not 3 anymore)
+   - Don't forget ENTERPRISE_PLUS tier
+   - Price IDs are case-sensitive in environment variables
+
+4. **Frontend Grid Layout**
+   - Changed from 4-column to 5-column grid
+   - May need responsive design adjustments for mobile
+   - Consider scrolling on small screens
 
 ---
 
@@ -127,21 +183,23 @@ None currently. All pricing updates applied consistently across backend and fron
   - Custom: https://echoai.uk
 - **Health Check:** https://echoai.uk/health
 - **Environment:** production
-- **Last Commit:** Pending (pricing structure update)
+- **Last Commit:** Pending (ENTERPRISE+ tier addition)
 - **Status:** Ready to push and deploy
 
 ---
 
-## Testing Checklist
+## Pitch Deck Alignment Checklist
 
-Before considering this complete, verify:
-- [ ] Backend returns correct quotas for each tier
-- [ ] New user registration sets 3 prompts for FREE tier
-- [ ] Landing page displays correct pricing
-- [ ] Billing page shows correct tier information
-- [ ] Terms of Service reflects new pricing
-- [ ] Stripe products updated (if applicable)
-- [ ] Health check passes after deployment
+- ✅ 5 pricing tiers (FREE, STARTER, PRO, ENTERPRISE, ENTERPRISE+)
+- ✅ Correct prices (£0, £35, £55, £169, £599)
+- ✅ Correct quotas (3, 10, 15, 50, 200 monitored prompts)
+- ✅ Terminology: "monitored prompts" with "10 iterations daily"
+- ✅ Backend models support all 5 tiers
+- ✅ Frontend displays all 5 tiers
+- ✅ Terms of Service updated
+- ✅ Stripe setup guide updated
+- ⏳ Stripe products to be created (manual step)
+- ⏳ Railway environment variables to be set (manual step)
 
 ---
 
@@ -157,15 +215,16 @@ git diff
 
 # Commit and push
 git add -A
-git commit -m "feat: update pricing structure to new tier model
+git commit -m "feat: add ENTERPRISE+ tier and align pricing with pitch deck
 
-- FREE: £0 (3 prompts) - down from 100
-- STARTER: £35 (10 prompts) - down from 5000, price £35 vs £25
-- PRO: £55 (15 prompts) - down from 50000, price £55 vs £80
-- ENTERPRISE: £169 (50 prompts) - down from 1M, now fixed price £169
+- Added ENTERPRISE_PLUS tier (£599/month, 200 prompts)
+- Updated backend: PricingTier enum, billing service, config
+- Updated frontend: landing page, billing dashboard, terms
+- Updated documentation and Stripe setup guide
+- Complete 5-tier structure: FREE, STARTER, PRO, ENTERPRISE, ENTERPRISE+
 
-Each prompt runs 10 iterations across AI providers.
-Updated backend quotas, frontend pricing displays, and terms of service.
+Aligns with pitch deck unit economics and continuous monitoring model.
+Each monitored prompt runs 10 iterations daily.
 "
 
 # Push to deploy
@@ -175,8 +234,14 @@ git push origin main
 railway logs --follow
 ```
 
+**After deployment, set up Stripe:**
+1. Create 4 products in Stripe with exact pricing
+2. Copy all 4 Price IDs
+3. Set in Railway variables
+4. Test checkout flow with test mode
+
 **Remember to update this file (HANDOFF.md) at the end of your session!**
 
 ---
 
-**Ready for deployment. All pricing updates complete and consistent across the application.**
+**Pricing structure now fully aligned with pitch deck. Ready for investor presentations and production deployment.**

@@ -33,7 +33,7 @@
 
 ### ✅ UX Improvements
 - **Legal pages**: `/terms`, `/privacy` with real company data
-- **Pricing section**: 4 tiers (FREE: £0 (3 prompts), STARTER: £35 (10 prompts), PRO: £55 (15 prompts), ENTERPRISE: £169 (50 prompts) - each prompt runs 10 iterations)
+- **Pricing section**: 5 tiers (FREE: £0 (3 prompts), STARTER: £35 (10 prompts), PRO: £55 (15 prompts), ENTERPRISE: £169 (50 prompts), ENTERPRISE+: £599 (200 prompts) - each prompt runs 10 iterations daily)
 - **Section IDs**: `#demo`, `#features`, `#pricing` for anchor navigation
 - **Footer**: Added Terms, Privacy, Contact links
 
