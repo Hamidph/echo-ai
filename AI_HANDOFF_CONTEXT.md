@@ -13,7 +13,18 @@
 - **Deployment**: Railway (Service `echo-ai`, linked to `main` branch).
 - **Server**: Hypercorn (ASGI server) on port 8080.
 
-## Latest Updates (January 15, 2026)
+## Latest Updates (February 20, 2026)
+
+### ✅ AI SEO + AI Visibility Codebase Audit (February 20, 2026)
+- **What**: Completed a comprehensive audit of backend, frontend, worker lifecycle, billing/auth contracts, CI gates, and AI discoverability posture.
+- **Files**: `.agent/audits/2026-02-20_ai_seo_visibility_codebase_audit.md`, `.agent/HANDOFF.md`, `AI_HANDOFF_CONTEXT.md`
+- **Status**: Action required (multiple P0/P1 issues identified).
+- **Notes**:
+  - Critical risks identified in auth token flow, quota refund failure path, and frontend/backend contract drift.
+  - AI SEO baseline gaps identified (missing sitemap/robots/structured metadata).
+  - See audit report for prioritized remediation plan.
+
+### Previous Updates (January 15, 2026)
 
 ### ✅ Audit Fixes (Security & Performance)
 - **SEC-01 (API Keys)**: Optimized lookup to O(1) using prefix filtering.
