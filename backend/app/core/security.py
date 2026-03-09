@@ -60,9 +60,6 @@ def get_password_hash(password: str) -> str:
     return hashed.decode("utf-8")
 
 
-    return encoded_jwt
-
-
 def get_secret_key() -> str:
     """
     Get the secret key, enforcing security in production.

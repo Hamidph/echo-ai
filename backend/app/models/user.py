@@ -180,6 +180,11 @@ class User(Base):
         default=list,
         comment="List of target SEO keywords",
     )
+    webhook_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Webhook URL to notify on experiment completion",
+    )
     experiments: Mapped[list["Experiment"]] = relationship(
         "Experiment",
         back_populates="user",

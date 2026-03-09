@@ -300,6 +300,13 @@ class BatchRun(Base):
         nullable=True,
     )
 
+    # Cost tracking
+    estimated_cost_usd: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Estimated API cost in USD based on token usage",
+    )
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
