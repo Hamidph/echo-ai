@@ -64,10 +64,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if not redis_healthy:
         # Log warning but don't fail - Redis might not be needed for all operations
         import logging
+
         logger = logging.getLogger(__name__)
         logger.warning("Redis connection not available")
 
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Environment: {settings.environment}")
@@ -76,6 +78,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # Shutdown: Cleanup resources
     import logging
+
     logger = logging.getLogger(__name__)
     logger.info("Shutting down application...")
     await close_redis_connection()
@@ -86,7 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_application() -> FastAPI:
     """
     Create and configure the FastAPI application instance.
-    
+
     Returns:
         FastAPI: Configured FastAPI application ready for use.
     """
@@ -94,7 +97,7 @@ def create_application() -> FastAPI:
     settings = get_settings()
 
     # Initialize Sentry for error tracking (production only)
-    if settings.environment == "production" and hasattr(settings, 'sentry_dsn'):
+    if settings.environment == "production" and hasattr(settings, "sentry_dsn"):
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.environment,
@@ -145,20 +148,26 @@ def create_application() -> FastAPI:
 
     # Serve Frontend Static Files (Monolithic Deployment)
     # This allows the backend to serve the frontend, creating a single deployable unit.
-    import os
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
+    from pathlib import Path
 
-    static_dir = "/app/frontend/out"
-    if os.path.exists(static_dir):
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    static_dir = Path("/app/frontend/out")
+    if static_dir.exists():
         # Mount _next folder for Next.js static assets
-        if os.path.exists(os.path.join(static_dir, "_next")):
-            app.mount("/_next", StaticFiles(directory=os.path.join(static_dir, "_next")), name="next-static")
-        
+        if (static_dir / "_next").exists():
+            app.mount(
+                "/_next",
+                StaticFiles(directory=static_dir / "_next"),
+                name="next-static",
+            )
+
         # Serve root files directly
         for root_file in ["favicon.ico", "robots.txt", "manifest.json"]:
-            file_path = os.path.join(static_dir, root_file)
-            if os.path.exists(file_path):
+            file_path = static_dir / root_file
+            if file_path.exists():
+
                 @app.get(f"/{root_file}", include_in_schema=False)
                 async def serve_root_file(fp=file_path):
                     return FileResponse(fp)
@@ -167,17 +176,17 @@ def create_application() -> FastAPI:
         @app.get("/{full_path:path}", include_in_schema=False)
         async def serve_frontend(full_path: str):
             # 1. Check if exact file exists
-            file_path = os.path.join(static_dir, full_path)
-            if os.path.isfile(file_path):
+            file_path = static_dir / full_path
+            if file_path.is_file():
                 return FileResponse(file_path)
-            
+
             # 2. Check if it's a directory with index.html (Next.js trailingSlash behavior)
-            index_path = os.path.join(static_dir, full_path, "index.html")
-            if os.path.isfile(index_path):
+            index_path = static_dir / full_path / "index.html"
+            if index_path.is_file():
                 return FileResponse(index_path)
-                
+
             # 3. Fallback to root index.html for SPA routing
-            return FileResponse(os.path.join(static_dir, "index.html"))
+            return FileResponse(static_dir / "index.html")
 
     return app
 
@@ -204,6 +213,7 @@ def _register_routers(app: FastAPI, settings: Settings) -> None:
             dict: Health status including database and Redis connectivity.
         """
         from sqlalchemy import text
+
         from backend.app.core.database import get_session_factory
 
         # Check Redis

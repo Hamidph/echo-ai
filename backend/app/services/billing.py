@@ -17,7 +17,7 @@ from backend.app.models.user import PricingTier, User
 settings = get_settings()
 
 # Initialize Stripe
-if hasattr(settings, 'stripe_api_key') and settings.stripe_api_key:
+if hasattr(settings, "stripe_api_key") and settings.stripe_api_key:
     stripe.api_key = settings.stripe_api_key
 
 # Pricing tier to Stripe price ID mapping
@@ -26,7 +26,7 @@ PRICE_IDS = {
     PricingTier.STARTER: settings.stripe_price_id_starter,
     PricingTier.PRO: settings.stripe_price_id_pro,
     PricingTier.ENTERPRISE: settings.stripe_price_id_enterprise,
-    PricingTier.ENTERPRISE_PLUS: getattr(settings, 'stripe_price_id_enterprise_plus', None),
+    PricingTier.ENTERPRISE_PLUS: getattr(settings, "stripe_price_id_enterprise_plus", None),
 }
 
 # Quota mapping (monitored prompts per month, each runs 10 iterations daily)

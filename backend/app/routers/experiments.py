@@ -9,19 +9,23 @@ service via a RESTful API. The async design enables high-concurrency
 request handling while Celery processes experiments in the background.
 """
 
+import csv
+import io
+import json
 import logging
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import StreamingResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.app.core.config import get_settings
 from backend.app.core.database import DbSession
 from backend.app.core.deps import get_current_active_user
-from backend.app.models.user import User
 from backend.app.models.experiment import ExperimentStatus
+from backend.app.models.user import User
 from backend.app.repositories.experiment_repo import (
     ExperimentRepository,
 )
@@ -69,7 +73,7 @@ limiter = Limiter(key_func=get_remote_address)
 @limiter.limit("10/minute")
 async def create_experiment(
     experiment_request: ExperimentRequest,
-    request: Request,
+    request: Request,  # noqa: ARG001
     session: DbSession,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> ExperimentResponse:
@@ -108,7 +112,10 @@ async def create_experiment(
     # IMPORTANT: Quota is based on number of prompts (iterations), not experiments
     if not settings.testing_mode and not settings.unlimited_prompts:
         prompts_needed = iterations_requested
-        if current_user.prompts_used_this_month + prompts_needed > current_user.monthly_prompt_quota:
+        if (
+            current_user.prompts_used_this_month + prompts_needed
+            > current_user.monthly_prompt_quota
+        ):
             remaining = current_user.monthly_prompt_quota - current_user.prompts_used_this_month
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -119,7 +126,9 @@ async def create_experiment(
         current_user.prompts_used_this_month += prompts_needed
         await session.commit()
         await session.refresh(current_user)
-        logger.info(f"User {current_user.email} quota: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota} (used {prompts_needed} prompts)")
+        logger.info(
+            f"User {current_user.email} quota: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota} (used {prompts_needed} prompts)"
+        )
     else:
         logger.info(f"Testing mode enabled - skipping quota check for user {current_user.email}")
 
@@ -161,13 +170,15 @@ async def create_experiment(
         if not settings.testing_mode and not settings.unlimited_prompts:
             current_user.prompts_used_this_month -= iterations_requested
             await session.commit()
-            logger.info(f"Refunded {iterations_requested} prompts to user {current_user.email} due to queue failure")
-        
+            logger.info(
+                f"Refunded {iterations_requested} prompts to user {current_user.email} due to queue failure"
+            )
+
         # Mark as failed
         await exp_repo.update_experiment_status(
-             experiment.id,
-             ExperimentStatus.FAILED,
-             error_message="System overloaded, please try again later."
+            experiment.id,
+            ExperimentStatus.FAILED,
+            error_message="System overloaded, please try again later.",
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -227,17 +238,17 @@ async def get_experiment(
             detail="Experiment not found or access denied",
         )
 
-    # Now load full results (which might already be loaded by get_experiment_by_user if the repo method supported it, 
+    # Now load full results (which might already be loaded by get_experiment_by_user if the repo method supported it,
     # but based on line 264 we need to verify first then load full if separate).
-    # actually wait, get_experiment_with_results loads relationships. 
-    # Let's check if we can just stick to get_experiment_by_user check then re-fetch or if we should modify the repo. 
+    # actually wait, get_experiment_with_results loads relationships.
+    # Let's check if we can just stick to get_experiment_by_user check then re-fetch or if we should modify the repo.
     # For minimally invasive fix that is secure:
     # 1. Check ownership.
     # 2. If valid, fetch with results.
-    
+
     experiment_with_results = await exp_repo.get_experiment_with_results(experiment_id)
     if not experiment_with_results:
-         # Should not happen if first check passed, but safe guard
+        # Should not happen if first check passed, but safe guard
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Experiment found but could not load results",
@@ -514,7 +525,7 @@ async def list_experiments(
         offset=offset,
         status=status_enum,
     )
-    
+
     # Get total count for pagination
     total_count = await exp_repo.count_experiments(
         user_id=current_user.id,
@@ -543,3 +554,302 @@ async def list_experiments(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get(
+    "/{experiment_id}/export",
+    summary="Export experiment data",
+    description="""
+    Export full experiment data including all iteration results.
+
+    Supports CSV and JSON formats. CSV is suitable for spreadsheet analysis,
+    JSON provides the complete nested structure for programmatic use.
+    """,
+)
+async def export_experiment(
+    experiment_id: UUID,
+    session: DbSession,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    format: str = Query(
+        default="csv", pattern="^(csv|json)$", description="Export format: csv or json"
+    ),
+) -> StreamingResponse:
+    """
+    Export experiment iteration data as CSV or JSON.
+
+    Args:
+        experiment_id: The experiment UUID.
+        session: Database session.
+        current_user: Authenticated user requesting the export.
+        format: Export format ("csv" or "json").
+
+    Returns:
+        StreamingResponse with file download headers.
+
+    Raises:
+        HTTPException: If experiment not found or access denied.
+    """
+    exp_repo = ExperimentRepository(session)
+
+    # Verify ownership
+    experiment = await exp_repo.get_experiment_by_user(experiment_id, current_user.id)
+    if not experiment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Experiment not found or access denied",
+        )
+
+    # Load full results with iterations
+    experiment = await exp_repo.get_experiment_with_results(experiment_id)
+
+    filename_base = f"experiment_{experiment_id}"
+
+    if format == "json":
+        # Build full JSON export
+        export_data = {
+            "experiment_id": str(experiment.id),
+            "prompt": experiment.prompt,
+            "target_brand": experiment.target_brand,
+            "competitor_brands": experiment.competitor_brands,
+            "status": experiment.status,
+            "created_at": experiment.created_at.isoformat(),
+            "batch_runs": [],
+        }
+
+        for br in experiment.batch_runs:
+            batch_data: dict[str, Any] = {
+                "batch_run_id": str(br.id),
+                "provider": br.provider,
+                "model": br.model,
+                "status": br.status,
+                "total_iterations": br.total_iterations,
+                "successful_iterations": br.successful_iterations,
+                "total_tokens": br.total_tokens,
+                "estimated_cost_usd": br.estimated_cost_usd,
+                "metrics": br.metrics,
+                "iterations": [
+                    {
+                        "iteration_index": it.iteration_index,
+                        "is_success": it.is_success,
+                        "status": it.status,
+                        "latency_ms": it.latency_ms,
+                        "extracted_brands": it.extracted_brands,
+                        "raw_response": it.raw_response,
+                        "error_message": it.error_message,
+                    }
+                    for it in br.iterations
+                ],
+            }
+            export_data["batch_runs"].append(batch_data)
+
+        json_bytes = json.dumps(export_data, indent=2).encode("utf-8")
+
+        return StreamingResponse(
+            io.BytesIO(json_bytes),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename_base}.json"',
+            },
+        )
+
+    else:  # CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header row
+        writer.writerow(
+            [
+                "experiment_id",
+                "prompt",
+                "target_brand",
+                "batch_run_id",
+                "provider",
+                "model",
+                "iteration_index",
+                "is_success",
+                "status",
+                "latency_ms",
+                "extracted_brands",
+                "raw_response",
+                "error_message",
+            ]
+        )
+
+        for br in experiment.batch_runs:
+            for it in br.iterations:
+                writer.writerow(
+                    [
+                        str(experiment.id),
+                        experiment.prompt,
+                        experiment.target_brand,
+                        str(br.id),
+                        br.provider,
+                        br.model,
+                        it.iteration_index,
+                        it.is_success,
+                        it.status,
+                        it.latency_ms,
+                        ",".join(it.extracted_brands) if it.extracted_brands else "",
+                        (it.raw_response or "").replace("\n", " "),
+                        it.error_message or "",
+                    ]
+                )
+
+        csv_bytes = output.getvalue().encode("utf-8")
+
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename_base}.csv"',
+            },
+        )
+
+
+@router.post(
+    "/batch",
+    response_model=list[ExperimentResponse],
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Create multiple experiments at once",
+    description="""
+    Create up to 10 experiments in a single request.
+
+    Performs a single quota check for the total iterations needed,
+    then queues all experiments simultaneously.
+    """,
+)
+@limiter.limit("3/minute")
+async def create_experiments_batch(
+    experiment_requests: list[ExperimentRequest],
+    request: Request,  # noqa: ARG001
+    session: DbSession,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> list[ExperimentResponse]:
+    """
+    Create multiple experiments in a single request.
+
+    Args:
+        experiment_requests: List of experiment configurations (max 10).
+        request: FastAPI request object (for rate limiting).
+        session: Database session.
+        current_user: Authenticated user creating the experiments.
+
+    Returns:
+        List of ExperimentResponse objects.
+
+    Raises:
+        HTTPException: If quota insufficient or too many experiments requested.
+    """
+    if not experiment_requests:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one experiment is required",
+        )
+
+    if len(experiment_requests) > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum 10 experiments per batch request",
+        )
+
+    settings = get_settings()
+
+    # Validate all iterations upfront
+    total_iterations = sum(req.iterations for req in experiment_requests)
+    for req in experiment_requests:
+        if req.iterations > settings.max_iterations:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Iterations ({req.iterations}) exceeds maximum allowed ({settings.max_iterations})",
+            )
+
+    # Require brand profile for non-admin users
+    if not current_user.brand_name and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please complete your brand profile before creating experiments.",
+        )
+
+    # Single quota check for entire batch
+    if not settings.testing_mode and not settings.unlimited_prompts:
+        if (
+            current_user.prompts_used_this_month + total_iterations
+            > current_user.monthly_prompt_quota
+        ):
+            remaining = current_user.monthly_prompt_quota - current_user.prompts_used_this_month
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"Insufficient quota for batch. Need {total_iterations} prompts, "
+                    f"have {remaining} remaining."
+                ),
+            )
+        current_user.prompts_used_this_month += total_iterations
+        await session.commit()
+        await session.refresh(current_user)
+
+    exp_repo = ExperimentRepository(session)
+    responses: list[ExperimentResponse] = []
+    queued_iterations = 0
+
+    for exp_request in experiment_requests:
+        config: dict[str, Any] = {
+            "iterations": exp_request.iterations,
+            "temperature": exp_request.temperature,
+            "max_concurrency": exp_request.max_concurrency,
+        }
+        if exp_request.model:
+            config["model"] = exp_request.model
+
+        effective_target_brand = current_user.brand_name or exp_request.target_brand
+
+        experiment = await exp_repo.create_experiment(
+            user_id=current_user.id,
+            prompt=exp_request.prompt,
+            target_brand=effective_target_brand,
+            config=config,
+            competitor_brands=exp_request.competitor_brands,
+            domain_whitelist=exp_request.domain_whitelist,
+        )
+
+        try:
+            task = execute_experiment_task.delay(
+                experiment_id=str(experiment.id),
+                provider=exp_request.provider.value,
+                model=exp_request.model,
+            )
+            responses.append(
+                ExperimentResponse(
+                    experiment_id=experiment.id,
+                    job_id=task.id,
+                    status="pending",
+                    message=f"Experiment queued with {exp_request.iterations} iterations",
+                )
+            )
+            queued_iterations += exp_request.iterations
+        except Exception as e:
+            logger.error(f"Failed to queue batch experiment {experiment.id}: {e}")
+            await exp_repo.update_experiment_status(
+                experiment.id,
+                ExperimentStatus.FAILED,
+                error_message="Failed to queue experiment in batch",
+            )
+            responses.append(
+                ExperimentResponse(
+                    experiment_id=experiment.id,
+                    job_id="",
+                    status="failed",
+                    message="Failed to queue experiment",
+                )
+            )
+
+    # Refund iterations for any that failed to queue
+    failed_iterations = total_iterations - queued_iterations
+    if failed_iterations > 0 and not settings.testing_mode and not settings.unlimited_prompts:
+        current_user.prompts_used_this_month -= failed_iterations
+        await session.commit()
+        logger.info(
+            f"Refunded {failed_iterations} iterations to {current_user.email} after batch failures"
+        )
+
+    return responses

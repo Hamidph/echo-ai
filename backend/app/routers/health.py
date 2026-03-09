@@ -1,15 +1,15 @@
-
 import logging
-from typing import Annotated
-from sqlalchemy import text
-from fastapi import APIRouter, Depends, HTTPException, status
-from redis.asyncio import Redis
 
-from backend.app.core.database import DbSession
+from fastapi import APIRouter, HTTPException, status
+from redis.asyncio import Redis
+from sqlalchemy import text
+
 from backend.app.core.config import get_settings
+from backend.app.core.database import DbSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health", tags=["Health"])
+
 
 @router.get("/detailed", summary="Detailed system health status")
 async def detailed_health_check(session: DbSession):
@@ -24,9 +24,9 @@ async def detailed_health_check(session: DbSession):
         "components": {
             "database": "unknown",
             "redis": "unknown",
-        }
+        },
     }
-    
+
     # 1. Check Database
     try:
         await session.execute(text("SELECT 1"))
@@ -46,11 +46,8 @@ async def detailed_health_check(session: DbSession):
         logger.error(f"Health check failed for Redis: {e}")
         status_report["components"]["redis"] = "unhealthy"
         status_report["status"] = "degraded"
-    
+
     if status_report["status"] != "healthy":
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=status_report
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=status_report)
 
     return status_report

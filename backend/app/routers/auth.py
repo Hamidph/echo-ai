@@ -4,11 +4,13 @@ Authentication and user management endpoints.
 This module provides routes for user registration, login, and API key management.
 """
 
-from datetime import datetime, timedelta, timezone
+import logging
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, EmailStr
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -36,6 +38,22 @@ from backend.app.schemas.auth import (
     UserResponse,
 )
 
+logger = logging.getLogger(__name__)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
 
@@ -44,7 +62,7 @@ limiter = Limiter(key_func=get_remote_address)
 @limiter.limit("3/hour")  # Prevent spam registrations
 async def register(
     user_data: UserRegister,
-    request: Request,
+    request: Request,  # noqa: ARG001
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """
@@ -71,7 +89,7 @@ async def register(
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
         monthly_prompt_quota=3,  # Free tier quota (3 prompts/month, each runs 10 iterations)
-        quota_reset_date=datetime.now(timezone.utc) + timedelta(days=30),
+        quota_reset_date=datetime.now(UTC) + timedelta(days=30),
     )
 
     db.add(new_user)
@@ -80,6 +98,7 @@ async def register(
 
     # Send verification email
     from backend.app.services.email import send_verification_email
+
     try:
         await send_verification_email(
             user_email=new_user.email,
@@ -97,7 +116,7 @@ async def register(
 @limiter.limit("5/minute")  # Prevent brute force attacks
 async def login(
     login_data: UserLogin,
-    request: Request,
+    request: Request,  # noqa: ARG001
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
@@ -124,7 +143,7 @@ async def login(
         )
 
     # Update last login timestamp
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     await db.commit()
 
     # Create access token (short-lived) and refresh token (long-lived)
@@ -280,18 +299,26 @@ async def revoke_api_key(
     await db.commit()
 
 
-@router.post("/verify-email/{token}", status_code=status.HTTP_200_OK)
+@router.post("/verify-email", status_code=status.HTTP_200_OK)
 async def verify_email(
-    token: str,
+    body: VerifyEmailRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Verify user email address using token from email.
     """
-    from backend.app.core.security import decode_access_token
+    from jose import JWTError, jwt
 
-    # Decode token
-    payload = decode_access_token(token)
+    from backend.app.core.security import get_secret_key
+
+    token = body.token
+    # Decode token manually to support custom type claims
+    try:
+        secret_key = get_secret_key()
+        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+    except JWTError:
+        payload = None
+
     if not payload or payload.get("type") != "email_verification":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -323,6 +350,7 @@ async def verify_email(
 
     # Send welcome email
     from backend.app.services.email import send_welcome_email
+
     try:
         await send_welcome_email(
             user_email=user.email,
@@ -348,6 +376,7 @@ async def resend_verification(
         )
 
     from backend.app.services.email import send_verification_email
+
     try:
         await send_verification_email(
             user_email=current_user.email,
@@ -365,14 +394,14 @@ async def resend_verification(
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
-    email: str,
+    body: ForgotPasswordRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Request password reset email.
     """
     # Find user by email
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 
     # Always return success to prevent email enumeration
@@ -380,6 +409,7 @@ async def forgot_password(
         return {"message": "If the email exists, a password reset link has been sent"}
 
     from backend.app.services.email import send_password_reset_email
+
     try:
         await send_password_reset_email(
             user_email=user.email,
@@ -392,19 +422,25 @@ async def forgot_password(
     return {"message": "If the email exists, a password reset link has been sent"}
 
 
-@router.post("/reset-password/{token}", status_code=status.HTTP_200_OK)
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
-    token: str,
-    new_password: str,
+    body: ResetPasswordRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Reset password using token from email.
     """
-    from backend.app.core.security import decode_access_token
+    from jose import JWTError, jwt
 
-    # Decode token
-    payload = decode_access_token(token)
+    from backend.app.core.security import get_secret_key
+
+    # Decode token manually to support custom type claims
+    try:
+        secret_key = get_secret_key()
+        payload = jwt.decode(body.token, secret_key, algorithms=["HS256"])
+    except JWTError:
+        payload = None
+
     if not payload or payload.get("type") != "password_reset":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -429,7 +465,32 @@ async def reset_password(
         )
 
     # Update password
-    user.hashed_password = get_password_hash(new_password)
+    user.hashed_password = get_password_hash(body.new_password)
     await db.commit()
 
     return {"message": "Password reset successfully"}
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """
+    Delete the current user's account (GDPR right to erasure).
+
+    Anonymizes the user's email and deactivates the account. All associated
+    experiments and iterations are permanently deleted via cascade.
+    """
+    # Anonymize PII — soft delete to preserve FK integrity during cascade
+    current_user.email = f"deleted_{current_user.id}@deleted.invalid"
+    current_user.full_name = None
+    current_user.hashed_password = ""
+    current_user.is_active = False
+    current_user.stripe_customer_id = None
+    current_user.stripe_subscription_id = None
+
+    # Cascade delete is configured on experiments relationship so all
+    # experiments, batch_runs, and iterations will be removed automatically.
+    await db.delete(current_user)
+    await db.commit()

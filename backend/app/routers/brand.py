@@ -1,4 +1,5 @@
 """Brand management API endpoints."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,7 +22,7 @@ async def get_brand_profile(
 ) -> BrandProfileResponse:
     """Get current user's brand profile."""
     has_profile = bool(current_user.brand_name)
-    
+
     return BrandProfileResponse(
         brand_name=current_user.brand_name or "",
         brand_description=current_user.brand_description,
@@ -47,11 +48,11 @@ async def update_brand_profile(
     current_user.brand_industry = profile.brand_industry
     current_user.brand_competitors = profile.brand_competitors
     current_user.brand_target_keywords = profile.brand_target_keywords
-    
+
     session.add(current_user)
     await session.commit()
     await session.refresh(current_user)
-    
+
     return BrandProfileResponse(
         brand_name=current_user.brand_name,
         brand_description=current_user.brand_description,
@@ -71,30 +72,30 @@ async def add_competitor(
 ) -> BrandProfileResponse:
     """Add a competitor to user's brand profile."""
     competitors = current_user.brand_competitors or []
-    
+
     # Check if already exists
     if competitor.competitor_name in competitors:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Competitor already exists",
         )
-    
+
     # Check max limit
     if len(competitors) >= 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Maximum 10 competitors allowed",
         )
-    
+
     # Create a new list to ensure SQLAlchemy detects the change
     competitors = list(current_user.brand_competitors or [])
     competitors.append(competitor.competitor_name)
     current_user.brand_competitors = competitors
-    
+
     session.add(current_user)
     await session.commit()
     await session.refresh(current_user)
-    
+
     return BrandProfileResponse(
         brand_name=current_user.brand_name or "",
         brand_description=current_user.brand_description,
@@ -114,20 +115,20 @@ async def remove_competitor(
 ) -> BrandProfileResponse:
     """Remove a competitor from user's brand profile."""
     competitors = current_user.brand_competitors or []
-    
+
     if competitor.competitor_name not in competitors:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Competitor not found",
         )
-    
+
     competitors.remove(competitor.competitor_name)
     current_user.brand_competitors = competitors
-    
+
     session.add(current_user)
     await session.commit()
     await session.refresh(current_user)
-    
+
     return BrandProfileResponse(
         brand_name=current_user.brand_name or "",
         brand_description=current_user.brand_description,

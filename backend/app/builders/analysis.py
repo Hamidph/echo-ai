@@ -300,10 +300,10 @@ class AnalysisBuilder:
         # Create case-insensitive pattern with smart boundaries
         # Regex \b only works between \w and \W. If brand starts/ends with \W, \b fails.
         escaped_brand = re.escape(brand)
-        
+
         prefix = r"\b" if re.match(r"^\w", brand) else ""
         suffix = r"\b" if re.match(r".*\w$", brand) else ""
-        
+
         pattern = re.compile(
             f"{prefix}{escaped_brand}{suffix}",
             re.IGNORECASE,
@@ -361,12 +361,12 @@ class AnalysisBuilder:
         brand_to_metrics = {vm.brand: vm for vm in visibility_metrics}
 
         # Initialize first mention counters
-        first_mention_counts = {brand: 0 for brand in target_brands}
+        first_mention_counts = dict.fromkeys(target_brands, 0)
 
         # For each response, find which brand appears first
         for response in responses:
             first_brand = None
-            first_pos = float('inf')
+            first_pos = float("inf")
 
             # Check all brands to find which appears first
             for brand in target_brands:
@@ -498,7 +498,9 @@ class AnalysisBuilder:
         # Compute standard deviation (sample std, not population)
         # Use Bessel's correction (N-1) for unbiased estimator
         if len(similarities) > 1:
-            variance = sum((s - avg_similarity) ** 2 for s in similarities) / (len(similarities) - 1)
+            variance = sum((s - avg_similarity) ** 2 for s in similarities) / (
+                len(similarities) - 1
+            )
             std_deviation = variance**0.5
         else:
             std_deviation = 0.0
@@ -573,7 +575,7 @@ class AnalysisBuilder:
                 is_valid = False
                 for whitelisted_domain in whitelist_normalized:
                     # Check if domain exactly matches or is a subdomain
-                    if domain == whitelisted_domain or domain.endswith('.' + whitelisted_domain):
+                    if domain == whitelisted_domain or domain.endswith("." + whitelisted_domain):
                         is_valid = True
                         break
 

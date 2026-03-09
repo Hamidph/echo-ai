@@ -33,9 +33,9 @@ def create_redis_client(settings: Settings) -> Redis:  # type: ignore[type-arg]
         encoding="utf-8",
         decode_responses=True,
         max_connections=20,
-        socket_connect_timeout=5,    # Add 5 second connection timeout
-        socket_timeout=5,             # Add 5 second operation timeout
-        retry_on_timeout=True,        # Retry on timeout
+        socket_connect_timeout=5,  # Add 5 second connection timeout
+        socket_timeout=5,  # Add 5 second operation timeout
+        retry_on_timeout=True,  # Retry on timeout
     )
 
 
@@ -95,15 +95,17 @@ async def check_redis_health() -> bool:
         bool: True if Redis is reachable and responding.
     """
     import logging
+
     logger = logging.getLogger(__name__)
-    
+
     try:
         client = get_redis_client()
         # Use asyncio.wait_for to add timeout
         import asyncio
+
         await asyncio.wait_for(client.ping(), timeout=3.0)
         return True
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning("Redis health check timed out after 3 seconds")
         return False
     except Exception as e:

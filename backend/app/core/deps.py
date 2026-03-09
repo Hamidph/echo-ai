@@ -4,7 +4,7 @@ FastAPI dependencies for authentication and authorization.
 This module provides dependency functions for protecting routes with JWT or API key authentication.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -110,16 +110,16 @@ async def get_current_user_from_api_key(
     # Fetch ONLY active API keys with matching prefix (O(1) with index)
     stmt = select(APIKey).where(
         APIKey.is_active == True,  # noqa: E712
-        APIKey.prefix == prefix
+        APIKey.prefix == prefix,
     )
     result = await db.execute(stmt)
     api_keys = result.scalars().all()
-    
+
     # Check each API key (usually just 1, but prefix collisions theoretically possible)
     for key_record in api_keys:
         if verify_api_key(api_key, key_record.key):
             # Update last used timestamp (commit handled by dependency manager)
-            key_record.last_used_at = datetime.now(timezone.utc)
+            key_record.last_used_at = datetime.now(UTC)
             # DO NOT commit here - let the dependency manager handle it
             # This prevents transaction integrity violations if the request fails
 

@@ -32,7 +32,9 @@ class Token(BaseModel):
     """
 
     access_token: str
-    refresh_token: str | None = Field(None, description="Refresh token for obtaining new access tokens")
+    refresh_token: str | None = Field(
+        None, description="Refresh token for obtaining new access tokens"
+    )
     token_type: str = "bearer"
 
 

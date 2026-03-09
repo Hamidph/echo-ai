@@ -8,6 +8,8 @@
   --background-end-rgb: 255, 255, 255;
   --background: #030712; /* Kept from original */
   --foreground: #f8fafc; /* Kept from original */
+  --font-inter: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-manrope: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Base Styles */

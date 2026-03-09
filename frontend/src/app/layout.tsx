@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google"; // Modern, geometric combo
 import "./globals.css";
 import { Providers } from "./providers";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-});
 
 export const metadata: Metadata = {
   title: "Echo AI | AI Search Analytics for Marketing Teams",
@@ -25,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+    <html lang="en">
       <body className="font-sans antialiased text-slate-900 bg-[#FDFCF8]">
         <Providers>{children}</Providers>
       </body>
