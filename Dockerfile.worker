@@ -18,6 +18,7 @@ WORKDIR /app
 # Copy dependency files and install
 COPY pyproject.toml ./
 COPY uv.lock* ./
+COPY README.md ./
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN uv sync --frozen
