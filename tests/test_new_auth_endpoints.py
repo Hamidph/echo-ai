@@ -43,7 +43,7 @@ async def test_forgot_password_known_email(
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_unknown_email(client: TestClient) -> None:
+async def test_forgot_password_unknown_email(client: TestClient, db_session: AsyncSession) -> None:
     """Test forgot-password with unknown email still returns 200 (anti-enumeration)."""
     response = client.post(
         "/api/v1/auth/forgot-password",

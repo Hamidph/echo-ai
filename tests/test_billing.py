@@ -31,7 +31,7 @@ async def test_get_usage(
 
     assert response.status_code == 200
     data = response.json()
-    assert "used" in data or "prompts_used_this_month" in data or "quota" in data
+    assert "prompts_used" in data or "used" in data or "monthly_quota" in data
 
 
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_create_checkout_session_requires_auth(client: TestClient) -> None
 async def test_stripe_webhook_invalid_signature(client: TestClient) -> None:
     """Test that Stripe webhook rejects invalid signatures."""
     response = client.post(
-        "/api/v1/billing/webhooks/stripe",
+        "/api/v1/billing/webhook",
         content=b'{"type": "customer.subscription.updated"}',
         headers={"stripe-signature": "invalid_signature"},
     )

@@ -89,10 +89,12 @@ async def test_remove_competitor(
     )
 
     # Then remove it
-    response = client.delete(
+    import json as _json
+    response = client.request(
+        "DELETE",
         "/api/v1/brand/competitors",
-        json={"competitor_name": "CompetitorB"},
-        headers=auth_headers,
+        data=_json.dumps({"competitor_name": "CompetitorB"}),
+        headers={**auth_headers, "Content-Type": "application/json"},
     )
 
     assert response.status_code in (200, 204)

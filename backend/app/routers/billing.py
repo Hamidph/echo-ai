@@ -62,6 +62,21 @@ class UsageResponse(BaseModel):
     pricing_tier: str
 
 
+PRICING_TIERS = {
+    "free": {"name": "Free", "price_monthly": 0, "prompt_quota": 3, "features": ["3 prompts/month", "Basic analytics"]},
+    "starter": {"name": "Starter", "price_monthly": 29, "prompt_quota": 10, "features": ["10 prompts/month", "Advanced analytics", "CSV export"]},
+    "pro": {"name": "Pro", "price_monthly": 79, "prompt_quota": 15, "features": ["15 prompts/month", "All Starter features", "API access", "Webhooks"]},
+    "enterprise": {"name": "Enterprise", "price_monthly": 299, "prompt_quota": 50, "features": ["50 prompts/month", "All Pro features", "Priority support"]},
+    "enterprise_plus": {"name": "Enterprise+", "price_monthly": 599, "prompt_quota": 200, "features": ["200 prompts/month", "All Enterprise features", "Dedicated support"]},
+}
+
+
+@router.get("/pricing")
+async def get_pricing_tiers() -> dict:
+    """Return available pricing tiers and their details."""
+    return {"tiers": PRICING_TIERS}
+
+
 @router.post("/checkout", response_model=CheckoutSessionResponse)
 async def create_checkout(
     checkout_data: CheckoutSessionCreate,
@@ -178,7 +193,7 @@ async def stripe_webhook(
     webhook_secret = getattr(settings, 'stripe_webhook_secret', None)
     if not webhook_secret:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Webhook secret not configured",
         )
 
