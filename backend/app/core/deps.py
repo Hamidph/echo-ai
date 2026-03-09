@@ -53,9 +53,25 @@ async def get_current_user_from_jwt(
     if payload is None:
         raise credentials_exception
 
+    # Check if token is blacklisted (JTI check)
+    jti = payload.get("jti")
+    if jti:
+        from backend.app.core.security import is_token_blacklisted
+
+        if await is_token_blacklisted(jti):
+            raise credentials_exception
+
     user_id: UUID | None = payload.get("user_id")
     if user_id is None:
         raise credentials_exception
+
+    # Check if token was revoked by global session revocation
+    token_iat = payload.get("iat")
+    if token_iat:
+        from backend.app.core.security import is_token_revoked_by_global
+
+        if await is_token_revoked_by_global(str(user_id), float(token_iat)):
+            raise credentials_exception
 
     # Fetch the user from the database
     result = await db.execute(select(User).where(User.id == UUID(str(user_id))))

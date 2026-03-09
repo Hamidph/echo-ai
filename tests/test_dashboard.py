@@ -2,7 +2,7 @@
 Tests for dashboard endpoints.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,9 +14,7 @@ from backend.app.models.user import User
 
 
 @pytest.mark.asyncio
-async def test_dashboard_stats_empty(
-    client: TestClient, auth_headers: dict
-) -> None:
+async def test_dashboard_stats_empty(client: TestClient, auth_headers: dict) -> None:
     """Test dashboard stats with no experiments returns zeros."""
     with patch("backend.app.routers.dashboard.RedisClient") as mock_redis:
         mock_redis.get = AsyncMock(return_value=None)
@@ -58,8 +56,8 @@ async def test_dashboard_stats_with_data(
         successful_iterations=8,
         failed_iterations=2,
         total_tokens=1000,
-        started_at=datetime.now(timezone.utc),
-        completed_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
         metrics={
             "target_visibility": {"visibility_rate": 0.75},
             "share_of_voice": [
@@ -92,9 +90,7 @@ async def test_dashboard_stats_requires_auth(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_dashboard_trends_empty(
-    client: TestClient, auth_headers: dict
-) -> None:
+async def test_dashboard_trends_empty(client: TestClient, auth_headers: dict) -> None:
     """Test trends endpoint with no data returns 30 zero-filled points."""
     with patch("backend.app.routers.dashboard.RedisClient") as mock_redis:
         mock_redis.get = AsyncMock(return_value=None)
@@ -113,9 +109,7 @@ async def test_dashboard_trends_empty(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_trends_days_validation(
-    client: TestClient, auth_headers: dict
-) -> None:
+async def test_dashboard_trends_days_validation(client: TestClient, auth_headers: dict) -> None:
     """Test trends endpoint validates days parameter."""
     # Too few days
     response = client.get("/api/v1/dashboard/trends?days=3", headers=auth_headers)

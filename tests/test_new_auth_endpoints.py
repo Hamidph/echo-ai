@@ -7,19 +7,18 @@ Tests for the new authentication endpoints:
 - DELETE /auth/me
 """
 
+from datetime import timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.security import create_access_token, get_password_hash
 from backend.app.models.user import PricingTier, User, UserRole
-from datetime import timedelta
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_known_email(
-    client: TestClient, db_session: AsyncSession
-) -> None:
+async def test_forgot_password_known_email(client: TestClient, db_session: AsyncSession) -> None:
     """Test forgot-password with a registered email returns 200."""
     user = User(
         email="forgot@example.com",
@@ -56,9 +55,7 @@ async def test_forgot_password_unknown_email(client: TestClient, db_session: Asy
 
 
 @pytest.mark.asyncio
-async def test_reset_password_valid_token(
-    client: TestClient, db_session: AsyncSession
-) -> None:
+async def test_reset_password_valid_token(client: TestClient, db_session: AsyncSession) -> None:
     """Test reset-password with a valid token updates the password."""
     user = User(
         email="reset@example.com",
@@ -138,9 +135,7 @@ async def test_reset_password_wrong_token_type(
 
 
 @pytest.mark.asyncio
-async def test_verify_email_valid_token(
-    client: TestClient, db_session: AsyncSession
-) -> None:
+async def test_verify_email_valid_token(client: TestClient, db_session: AsyncSession) -> None:
     """Test verify-email with a valid token marks user as verified."""
     user = User(
         email="verify@example.com",
@@ -185,9 +180,7 @@ async def test_verify_email_invalid_token(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_verify_email_already_verified(
-    client: TestClient, db_session: AsyncSession
-) -> None:
+async def test_verify_email_already_verified(client: TestClient, db_session: AsyncSession) -> None:
     """Test verify-email on already verified user returns 200 with 'already verified'."""
     user = User(
         email="alreadyverified@example.com",

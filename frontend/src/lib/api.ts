@@ -88,7 +88,7 @@ export const authApi = {
     },
 
     /**
-     * Refresh access token
+     * Refresh access token (token rotation — old refresh token is consumed)
      */
     async refresh(refreshToken: string) {
         return apiFetch<{ access_token: string; refresh_token: string; token_type: string }>(
@@ -98,6 +98,25 @@ export const authApi = {
                 body: JSON.stringify({ refresh_token: refreshToken }),
             }
         );
+    },
+
+    /**
+     * Logout — blacklists current access token and optionally the refresh token
+     */
+    async logout(refreshToken?: string) {
+        return apiFetch<{ message: string }>("/auth/logout", {
+            method: "POST",
+            body: JSON.stringify({ refresh_token: refreshToken || null }),
+        });
+    },
+
+    /**
+     * Revoke all active sessions for the current user
+     */
+    async revokeAllSessions() {
+        return apiFetch<{ message: string }>("/auth/revoke-all-sessions", {
+            method: "POST",
+        });
     },
 };
 

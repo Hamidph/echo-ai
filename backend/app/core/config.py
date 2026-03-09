@@ -127,6 +127,24 @@ class Settings(BaseSettings):
         default="http://localhost:3000",
         description="Frontend URL for email links",
     )
+    cors_allowed_origins: list[str] | None = Field(
+        default=None,
+        description="Additional CORS allowed origins (comma-separated or JSON array)",
+    )
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> list[str] | None:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            import json
+
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, ValueError):
+                return [o.strip() for o in v.split(",") if o.strip()]
+        return v
 
     # PostgreSQL Configuration
     postgres_user: str = Field(default="ai_visibility", description="PostgreSQL username")

@@ -11,7 +11,9 @@ Security best practices implemented:
 - Secure API key generation
 """
 
+import logging
 import secrets
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -19,6 +21,8 @@ import bcrypt
 from jose import JWTError, jwt
 
 from backend.app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -102,7 +106,13 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     else:
         expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode.update({"exp": expire})
+    to_encode.update(
+        {
+            "exp": expire,
+            "jti": str(uuid.uuid4()),
+            "iat": datetime.now(UTC).timestamp(),
+        }
+    )
     if "type" not in to_encode:
         to_encode["type"] = "access"
 
@@ -127,7 +137,14 @@ def create_refresh_token(data: dict[str, Any]) -> str:
     to_encode = data.copy()
     expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update(
+        {
+            "exp": expire,
+            "type": "refresh",
+            "jti": str(uuid.uuid4()),
+            "iat": datetime.now(UTC).timestamp(),
+        }
+    )
 
     secret_key = get_secret_key()
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
@@ -222,3 +239,56 @@ def get_api_key_prefix(key: str) -> str:
         str: The first 12 characters of the key for display.
     """
     return key[:12] + "..."
+
+
+# --- Token blacklisting via Redis ---
+
+
+async def blacklist_token(jti: str, expires_in_seconds: int) -> None:
+    """Blacklist a token JTI in Redis with TTL matching token expiry."""
+    try:
+        from backend.app.core.redis import get_redis_client
+
+        redis = get_redis_client()
+        await redis.setex(f"blacklist:jti:{jti}", expires_in_seconds, "1")
+    except Exception as e:
+        logger.warning(f"Failed to blacklist token: {e}")
+
+
+async def is_token_blacklisted(jti: str) -> bool:
+    """Check if a token JTI is blacklisted."""
+    try:
+        from backend.app.core.redis import get_redis_client
+
+        redis = get_redis_client()
+        return await redis.exists(f"blacklist:jti:{jti}") > 0
+    except Exception:
+        return False
+
+
+async def blacklist_all_user_tokens(user_id: str) -> None:
+    """Revoke all sessions for a user by storing a revocation timestamp."""
+    try:
+        from backend.app.core.redis import get_redis_client
+
+        redis = get_redis_client()
+        await redis.set(
+            f"revoke_all:{user_id}",
+            str(datetime.now(UTC).timestamp()),
+        )
+    except Exception as e:
+        logger.warning(f"Failed to revoke all sessions: {e}")
+
+
+async def is_token_revoked_by_global(user_id: str, token_iat: float) -> bool:
+    """Check if a token was issued before the user's global revocation cutoff."""
+    try:
+        from backend.app.core.redis import get_redis_client
+
+        redis = get_redis_client()
+        revoked_before = await redis.get(f"revoke_all:{user_id}")
+        if revoked_before is None:
+            return False
+        return token_iat < float(revoked_before)
+    except Exception:
+        return False

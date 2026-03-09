@@ -2,13 +2,8 @@
 Tests for billing endpoints.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.app.models.user import PricingTier, User
 
 
 @pytest.mark.asyncio
@@ -23,9 +18,7 @@ async def test_get_pricing_tiers(client: TestClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_usage(
-    client: TestClient, auth_headers: dict
-) -> None:
+async def test_get_usage(client: TestClient, auth_headers: dict) -> None:
     """Test that usage endpoint returns current quota info."""
     response = client.get("/api/v1/billing/usage", headers=auth_headers)
 

@@ -2,7 +2,7 @@
 Tests for experiment endpoints.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC
 from uuid import uuid4
 
 import pytest
@@ -113,9 +113,7 @@ async def test_list_experiments_status_filter(
 
 
 @pytest.mark.asyncio
-async def test_get_experiment_not_found(
-    client: TestClient, auth_headers: dict
-) -> None:
+async def test_get_experiment_not_found(client: TestClient, auth_headers: dict) -> None:
     """Test getting a non-existent experiment returns 404."""
     response = client.get(f"/api/v1/experiments/{uuid4()}", headers=auth_headers)
     assert response.status_code == 404
@@ -160,7 +158,7 @@ async def test_export_experiment_csv(
     client: TestClient, db_session: AsyncSession, test_user: User, auth_headers: dict
 ) -> None:
     """Test exporting experiment data as CSV."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     exp = Experiment(
         user_id=test_user.id,
@@ -182,8 +180,8 @@ async def test_export_experiment_csv(
         successful_iterations=2,
         failed_iterations=0,
         total_tokens=100,
-        started_at=datetime.now(timezone.utc),
-        completed_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
     )
     db_session.add(batch)
     await db_session.commit()
@@ -203,7 +201,7 @@ async def test_export_experiment_json(
     client: TestClient, db_session: AsyncSession, test_user: User, auth_headers: dict
 ) -> None:
     """Test exporting experiment data as JSON."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     exp = Experiment(
         user_id=test_user.id,
@@ -225,8 +223,8 @@ async def test_export_experiment_json(
         successful_iterations=2,
         failed_iterations=0,
         total_tokens=100,
-        started_at=datetime.now(timezone.utc),
-        completed_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
     )
     db_session.add(batch)
     await db_session.commit()

@@ -157,19 +157,34 @@ async def login(
     }
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str | None = None
+
+
 @router.post("/refresh", response_model=Token)
 async def refresh_access_token(
-    refresh_token: str,
+    body: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Refresh an access token using a valid refresh token.
 
-    This endpoint allows clients to obtain a new access token without
-    re-authenticating, as long as the refresh token is still valid.
+    Implements token rotation: the old refresh token is blacklisted and a new
+    token pair is issued. Reuse of a consumed refresh token triggers full
+    session revocation (theft detection).
     """
+    from backend.app.core.security import (
+        blacklist_all_user_tokens,
+        blacklist_token,
+        is_token_blacklisted,
+    )
+
     # Decode and validate refresh token
-    payload = decode_refresh_token(refresh_token)
+    payload = decode_refresh_token(body.refresh_token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -177,12 +192,26 @@ async def refresh_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    jti = payload.get("jti")
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token payload",
         )
+
+    # Check for token replay (theft detection)
+    if jti and await is_token_blacklisted(jti):
+        logger.warning(f"Refresh token replay detected for user {user_id}")
+        await blacklist_all_user_tokens(user_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token reuse detected. All sessions revoked.",
+        )
+
+    # Blacklist the consumed refresh token
+    if jti:
+        await blacklist_token(jti, REFRESH_TOKEN_EXPIRE_DAYS * 86400)
 
     # Fetch user from database
     result = await db.execute(select(User).where(User.id == UUID(user_id)))
@@ -194,14 +223,76 @@ async def refresh_access_token(
             detail="User not found or inactive",
         )
 
-    # Create new access token
+    # Issue new token pair (rotation)
     access_token = create_access_token(data={"user_id": str(user.id), "email": user.email})
+    new_refresh_token = create_refresh_token(data={"user_id": str(user.id)})
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,  # Return same refresh token
+        "refresh_token": new_refresh_token,
         "token_type": "bearer",
     }
+
+
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+    request: Request,
+    body: LogoutRequest | None = None,
+    current_user: User = Depends(get_current_active_user),  # noqa: ARG001
+) -> dict[str, str]:
+    """
+    Logout the current user by blacklisting their access token.
+
+    Optionally accepts a refresh_token in the body to also blacklist it.
+    """
+    from backend.app.core.security import blacklist_token
+
+    # Blacklist the access token
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        from jose import jwt as jose_jwt
+
+        from backend.app.core.security import ALGORITHM, get_secret_key
+
+        try:
+            payload = jose_jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
+            jti = payload.get("jti")
+            if jti:
+                # Blacklist for remaining TTL (15 min access tokens)
+                await blacklist_token(jti, 900)
+        except Exception:
+            pass
+
+    # Also blacklist refresh token if provided
+    if body and body.refresh_token:
+        try:
+            payload = decode_refresh_token(body.refresh_token)
+            if payload and payload.get("jti"):
+                await blacklist_token(payload["jti"], REFRESH_TOKEN_EXPIRE_DAYS * 86400)
+        except Exception:
+            pass
+
+    return {"message": "Logged out successfully"}
+
+
+@router.post("/revoke-all-sessions", status_code=status.HTTP_200_OK)
+async def revoke_all_sessions(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict[str, str]:
+    """
+    Revoke all active sessions for the current user.
+
+    All existing tokens (access and refresh) issued before this point
+    will be invalidated.
+    """
+    from backend.app.core.security import blacklist_all_user_tokens
+
+    await blacklist_all_user_tokens(str(current_user.id))
+    return {"message": "All sessions revoked"}
 
 
 @router.get("/me", response_model=UserResponse)

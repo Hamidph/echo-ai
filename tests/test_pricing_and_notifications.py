@@ -20,7 +20,9 @@ class TestPricing:
     def test_estimate_cost_unknown_model_uses_default(self) -> None:
         """Test that unknown models use default pricing."""
         cost_known = estimate_cost_usd("gpt-4o", prompt_tokens=1000, completion_tokens=1000)
-        cost_unknown = estimate_cost_usd("unknown-model-xyz", prompt_tokens=1000, completion_tokens=1000)
+        cost_unknown = estimate_cost_usd(
+            "unknown-model-xyz", prompt_tokens=1000, completion_tokens=1000
+        )
 
         # Unknown model should still return a non-zero cost
         assert cost_unknown > 0

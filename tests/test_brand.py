@@ -6,8 +6,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.models.user import User
-
 
 @pytest.mark.asyncio
 async def test_get_brand_profile(
@@ -90,6 +88,7 @@ async def test_remove_competitor(
 
     # Then remove it
     import json as _json
+
     response = client.request(
         "DELETE",
         "/api/v1/brand/competitors",
