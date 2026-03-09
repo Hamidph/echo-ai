@@ -5,7 +5,7 @@ FastAPI router for dashboard analytics.
 import json
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -155,7 +155,7 @@ async def get_dashboard_stats(
     final_sov.sort(key=lambda x: x.percentage, reverse=True)
 
     trends = []
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     for i in range(29, -1, -1):
         d = today - timedelta(days=i)
         d_str = d.strftime("%Y-%m-%d")
@@ -218,7 +218,7 @@ async def get_visibility_trends(
     except Exception as e:
         logger.warning(f"Redis cache read failed for {cache_key}: {e}")
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
 
     # Fetch completed batch_runs within the date range for this user's experiments
     stmt = (
@@ -256,7 +256,7 @@ async def get_visibility_trends(
 
     # Build ordered list for all days in range
     trend_points: list[TrendPoint] = []
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     for i in range(days - 1, -1, -1):
         d = today - timedelta(days=i)
         d_str = d.strftime("%Y-%m-%d")

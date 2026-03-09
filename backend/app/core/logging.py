@@ -1,8 +1,7 @@
-
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from backend.app.core.config import get_settings
@@ -18,7 +17,7 @@ class JSONFormatter(logging.Formatter):
         Format the log record as a JSON string.
         """
         log_data: dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "logger": record.name,
@@ -56,7 +55,7 @@ def setup_logging() -> None:
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
-    
+
     # Remove existing handlers to avoid duplication (e.g. from uvicorn's default config)
     root_logger.handlers = []
     root_logger.addHandler(handler)
@@ -69,4 +68,3 @@ def setup_logging() -> None:
         logger.handlers = []
         logger.addHandler(handler)
         logger.propagate = False  # Prevent double logging if root logger also catches it
-

@@ -9,12 +9,12 @@ to run identical experiments across different LLMs, measuring variance in
 brand visibility recommendations between providers.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from time import perf_counter
 from typing import Any
 
-import logging
 import httpx
 from tenacity import (
     before_sleep_log,
@@ -37,7 +37,6 @@ from backend.app.schemas.llm import (
     PerplexitySearchResult,
     UsageInfo,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +65,7 @@ class ProviderError(Exception):
 
 class ProviderServerError(ProviderError):
     """Raised when the provider returns a 5xx error (retryable)."""
+
     pass
 
 
@@ -433,14 +433,14 @@ class PerplexityProvider(BaseLLMProvider):
 class OpenAIProvider(BaseLLMProvider):
     """
     OpenAI API provider implementation using the new Responses API.
-    
+
     Innovation: Uses the /v1/responses endpoint for stateful, advanced model interactions,
     mirroring the capabilities of the ChatGPT web interface.
     """
 
     MODEL_GPT5_2 = "gpt-5.2"
     MODEL_GPT4O = "gpt-4o"
-    
+
     def __init__(
         self,
         api_key: str | None = None,
@@ -493,13 +493,15 @@ class OpenAIProvider(BaseLLMProvider):
                 # Responses API handles instructions separately or as developer messages
                 # For simplicity/compatibility, we'll map system to developer role if supported,
                 # or just prepend as a message. Docs say 'instructions' field is for system/developer message.
-                pass 
+                pass
             else:
-                input_items.append({
-                    "role": m.role.value,
-                    "content": m.content,
-                    "type": "message" # Explicitly typed as message
-                })
+                input_items.append(
+                    {
+                        "role": m.role.value,
+                        "content": m.content,
+                        "type": "message",  # Explicitly typed as message
+                    }
+                )
 
         # Extract system prompt if present
         instructions = None
@@ -511,25 +513,27 @@ class OpenAIProvider(BaseLLMProvider):
         payload: dict[str, Any] = {
             "model": request.model or self.default_model,
             "input": input_items,
-            "stream": False, 
+            "stream": False,
         }
 
         if instructions:
             payload["instructions"] = instructions
-        
+
         # Temperature/Top_P handling
-        # Note: gpt-4.5-preview and reasoning models might have restrictions, 
+        # Note: gpt-4.5-preview and reasoning models might have restrictions,
         # but the logic for excluding params is handled in generic ways or by the API ignoring them.
         # We'll include them if set, relying on the API or previous logic to filter if needed.
         # However, for Responses API, 'temperature' is a top-level param.
         if request.temperature is not None:
-             payload["temperature"] = request.temperature
-        
+            payload["temperature"] = request.temperature
+
         if request.top_p is not None:
             payload["top_p"] = request.top_p
 
         if request.max_tokens:
-            payload["max_output_tokens"] = request.max_tokens # Responses API uses max_output_tokens
+            payload["max_output_tokens"] = (
+                request.max_tokens
+            )  # Responses API uses max_output_tokens
 
         try:
             response = await client.post("/responses", json=payload)
@@ -578,7 +582,7 @@ class OpenAIProvider(BaseLLMProvider):
         # Find the assistant message in the output
         content = ""
         finish_reason = None
-        
+
         for item in output_items:
             if item.get("type") == "message" and item.get("role") == "assistant":
                 # Message content is a list of blocks
@@ -586,8 +590,8 @@ class OpenAIProvider(BaseLLMProvider):
                 for block in message_content:
                     if block.get("type") == "output_text":
                         content += block.get("text", "")
-                
-                finish_reason = item.get("status") # 'completed', etc.
+
+                finish_reason = item.get("status")  # 'completed', etc.
                 if item.get("id"):
                     # Use the message ID if available, or fall back to response ID
                     pass
@@ -624,7 +628,7 @@ class AnthropicProvider(BaseLLMProvider):
 
     MODEL_CLAUDE_45_SONNET = "claude-sonnet-4-5-20250929"
     MODEL_CLAUDE_35_SONNET = "claude-3-5-sonnet-20240620"
-    
+
     def __init__(
         self,
         api_key: str | None = None,

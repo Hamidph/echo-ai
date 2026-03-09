@@ -1,16 +1,17 @@
 import re
 import unittest
 
+
 class ScoringDebug(unittest.TestCase):
     def setUp(self):
         # The logic from AnalysisBuilder._compute_visibility
         self._word_boundary_pattern = r"\b{}\b"
-    
+
     def check_visibility(self, brand, response):
         escaped_brand = re.escape(brand)
         prefix = r"\b" if re.match(r"^\w", brand) else ""
         suffix = r"\b" if re.match(r".*\w$", brand) else ""
-        
+
         pattern = re.compile(
             f"{prefix}{escaped_brand}{suffix}",
             re.IGNORECASE,
@@ -23,7 +24,7 @@ class ScoringDebug(unittest.TestCase):
         self.assertTrue(self.check_visibility("Starbucks", "I recommend Starbucks."))
 
     def test_bold_markdown(self):
-        # Markdown bold often trips up boundary checks if not careful, 
+        # Markdown bold often trips up boundary checks if not careful,
         # though \b treats * as non-word char, so matches should occur at end of s and start of *
         # \b matches between \w and \W. 's' is \w, '*' is \W. So yes.
         self.assertTrue(self.check_visibility("Starbucks", "Try **Starbucks** coffee."))
@@ -41,8 +42,8 @@ class ScoringDebug(unittest.TestCase):
         # This is where it gets tricky. "Yahoo!"
         # re.escape("Yahoo!") -> "Yahoo\!"
         # \bYahoo\!\b
-        # Response: "Yahoo! is cool."
-        # \bYahoo match at start. 
+        # Response: "Yahoo! is cool."  # noqa: ERA001
+        # \bYahoo match at start.
         # ! is \W. \b matches between o and !? NO. \b matches between o (\w) and ! (\W).
         # So \bYahoo matches.
         # \! matches !
@@ -59,5 +60,6 @@ class ScoringDebug(unittest.TestCase):
         # s is \w. . is \W. Boundary at end works.
         self.assertTrue(self.check_visibility("McDonald's", "Go to McDonald's."))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

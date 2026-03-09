@@ -6,7 +6,7 @@ Sends email notifications and dispatches webhooks when experiments complete.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 
@@ -102,9 +102,13 @@ async def send_experiment_complete_email(
             subject=f"Experiment complete: {target_brand} visibility results ready",
             html_content=html_content,
         )
-        logger.info(f"Experiment completion email sent to {user_email} for experiment {experiment_id}")
+        logger.info(
+            f"Experiment completion email sent to {user_email} for experiment {experiment_id}"
+        )
     except Exception as e:
-        logger.error(f"Failed to send experiment completion email to {user_email}: {e}", exc_info=True)
+        logger.error(
+            f"Failed to send experiment completion email to {user_email}: {e}", exc_info=True
+        )
 
 
 async def dispatch_webhook(
@@ -137,7 +141,7 @@ async def dispatch_webhook(
         "experiment_id": experiment_id,
         "target_brand": target_brand,
         "status": status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "results": {
             "visibility_rate": round(visibility_rate, 2),
             "share_of_voice": round(share_of_voice, 2),

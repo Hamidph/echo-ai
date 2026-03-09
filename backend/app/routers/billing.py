@@ -63,11 +63,36 @@ class UsageResponse(BaseModel):
 
 
 PRICING_TIERS = {
-    "free": {"name": "Free", "price_monthly": 0, "prompt_quota": 3, "features": ["3 prompts/month", "Basic analytics"]},
-    "starter": {"name": "Starter", "price_monthly": 29, "prompt_quota": 10, "features": ["10 prompts/month", "Advanced analytics", "CSV export"]},
-    "pro": {"name": "Pro", "price_monthly": 79, "prompt_quota": 15, "features": ["15 prompts/month", "All Starter features", "API access", "Webhooks"]},
-    "enterprise": {"name": "Enterprise", "price_monthly": 299, "prompt_quota": 50, "features": ["50 prompts/month", "All Pro features", "Priority support"]},
-    "enterprise_plus": {"name": "Enterprise+", "price_monthly": 599, "prompt_quota": 200, "features": ["200 prompts/month", "All Enterprise features", "Dedicated support"]},
+    "free": {
+        "name": "Free",
+        "price_monthly": 0,
+        "prompt_quota": 3,
+        "features": ["3 prompts/month", "Basic analytics"],
+    },
+    "starter": {
+        "name": "Starter",
+        "price_monthly": 29,
+        "prompt_quota": 10,
+        "features": ["10 prompts/month", "Advanced analytics", "CSV export"],
+    },
+    "pro": {
+        "name": "Pro",
+        "price_monthly": 79,
+        "prompt_quota": 15,
+        "features": ["15 prompts/month", "All Starter features", "API access", "Webhooks"],
+    },
+    "enterprise": {
+        "name": "Enterprise",
+        "price_monthly": 299,
+        "prompt_quota": 50,
+        "features": ["50 prompts/month", "All Pro features", "Priority support"],
+    },
+    "enterprise_plus": {
+        "name": "Enterprise+",
+        "price_monthly": 599,
+        "prompt_quota": 200,
+        "features": ["200 prompts/month", "All Enterprise features", "Dedicated support"],
+    },
 }
 
 
@@ -81,7 +106,7 @@ async def get_pricing_tiers() -> dict:
 async def create_checkout(
     checkout_data: CheckoutSessionCreate,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    _db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CheckoutSessionResponse:
     """
     Create a Stripe Checkout session for subscription upgrade.
@@ -190,7 +215,7 @@ async def stripe_webhook(
         )
 
     # Get webhook secret from settings
-    webhook_secret = getattr(settings, 'stripe_webhook_secret', None)
+    webhook_secret = getattr(settings, "stripe_webhook_secret", None)
     if not webhook_secret:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -202,9 +227,7 @@ async def stripe_webhook(
 
     # Verify webhook signature
     try:
-        event = stripe.Webhook.construct_event(
-            payload, stripe_signature, webhook_secret
-        )
+        event = stripe.Webhook.construct_event(payload, stripe_signature, webhook_secret)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

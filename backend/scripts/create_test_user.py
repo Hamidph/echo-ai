@@ -1,14 +1,16 @@
 import asyncio
 import sys
-import os
+from pathlib import Path
 
 # Ensure backend modules can be imported
-sys.path.append(os.getcwd())
+sys.path.append(str(Path.cwd()))
 
 from sqlalchemy import select
+
 from backend.app.core.database import get_session_factory
-from backend.app.models.user import User, PricingTier
 from backend.app.core.security import get_password_hash
+from backend.app.models.user import PricingTier, User
+
 
 async def create_test_user():
     print("Connecting to database...")
@@ -22,17 +24,17 @@ async def create_test_user():
         email = "test@echoai.com"
         password = "password123"
         hashed_password = get_password_hash(password)
-        
+
         print(f"Checking for user {email}...")
         try:
             result = await session.execute(select(User).where(User.email == email))
             user = result.scalar_one_or_none()
-            
+
             if user:
                 print(f"User {email} exists. Updating quota to Unlimited (1M)...")
                 user.monthly_prompt_quota = 1000000
                 user.pricing_tier = PricingTier.ENTERPRISE
-                user.hashed_password = hashed_password # Update password just in case
+                user.hashed_password = hashed_password  # Update password just in case
                 user.is_active = True
                 user.is_verified = True
                 session.add(user)
@@ -42,7 +44,7 @@ async def create_test_user():
                 # In User model: pricing_tier: Mapped[str] = mapped_column(...) default=PricingTier.FREE.value
                 # The model definition uses `default=PricingTier.FREE.value`, which suggests it stores the string value.
                 # However, the field type is String. I should assign the .value just to be safe if it expects a string.
-                
+
                 user = User(
                     email=email,
                     hashed_password=hashed_password,
@@ -51,15 +53,16 @@ async def create_test_user():
                     is_verified=True,
                     pricing_tier=PricingTier.ENTERPRISE.value,
                     monthly_prompt_quota=1000000,
-                    role="admin"
+                    role="admin",
                 )
                 session.add(user)
-                
+
             await session.commit()
             print(f"Success! User: {email} / {password}")
         except Exception as e:
             print(f"Database error: {e}")
             await session.rollback()
+
 
 if __name__ == "__main__":
     asyncio.run(create_test_user())

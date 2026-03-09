@@ -12,7 +12,7 @@ Security best practices implemented:
 """
 
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import bcrypt
@@ -63,23 +63,25 @@ def get_password_hash(password: str) -> str:
 def get_secret_key() -> str:
     """
     Get the secret key, enforcing security in production.
-    
+
     Returns:
         str: The secret key.
-        
+
     Raises:
         ValueError: If key is insecure in production.
     """
-    key = getattr(settings, 'secret_key', 'your-secret-key-change-in-production')
-    
+    key = getattr(settings, "secret_key", "your-secret-key-change-in-production")
+
     # Check for insecure default
-    if key == 'your-secret-key-change-in-production':
+    if key == "your-secret-key-change-in-production":
         if not settings.testing_mode:
-            raise ValueError("FATAL: Insecure SECRET_KEY used in production mode! Set strictly in .env")
+            raise ValueError(
+                "FATAL: Insecure SECRET_KEY used in production mode! Set strictly in .env"
+            )
         else:
             # In testing, we allow it but warn
             pass
-            
+
     return key
 
 
@@ -96,9 +98,9 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
     if "type" not in to_encode:
@@ -123,7 +125,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
         str: The encoded JWT refresh token.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     to_encode.update({"exp": expire, "type": "refresh"})
 
