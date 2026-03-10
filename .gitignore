@@ -122,3 +122,11 @@ celerybeat.pid
 
 # Investor docs (private)
 docs/investor_deck/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Environment files
+.env.local
+.env.production
+*.env

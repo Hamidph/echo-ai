@@ -1,0 +1,9 @@
+╔══════════════════════════════════════════════╗
+║           ECHO AI — CLAUDE CODE              ║
+╠══════════════════════════════════════════════╣
+║ Load plugin: claude --plugin-dir ./echo-ai-plugin
+║ Branch:      claude/startup-improvement-plan-WOC5X
+║ Deploy:      /echo-ai-tools:deploy ONLY
+║ Commit:      /echo-ai-tools:commit
+║ Context:     Read CLAUDE.md
+╚══════════════════════════════════════════════╝
