@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash echo-ai-plugin/scripts/auto-format.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash echo-ai-plugin/scripts/protect-branches.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat .claude/sprint-reminder.txt 2>/dev/null || echo 'Echo AI session started. Read CLAUDE.md for context. Plugin: claude --plugin-dir ./echo-ai-plugin'"
+          }
+        ]
+      }
+    ]
+  }
+}

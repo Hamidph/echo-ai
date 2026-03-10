@@ -1,0 +1,11 @@
+{
+  "name": "echo-ai-tools",
+  "description": "Complete engineering, marketing, product and ops toolkit for Echo AI — AI Search Analytics Platform",
+  "version": "1.0.0",
+  "author": {
+    "name": "Hamid",
+    "url": "https://github.com/Hamidph"
+  },
+  "repository": "https://github.com/Hamidph/echo-ai",
+  "license": "MIT"
+}
