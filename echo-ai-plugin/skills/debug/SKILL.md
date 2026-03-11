@@ -1,7 +1,10 @@
 ---
 name: debug
-description: Debug errors, exceptions, test failures, and unexpected behavior in Echo AI. Use when user shares a stack trace, error message, says "it's broken", "fix this error", "tests are failing", or "why is X not working".
-allowed-tools: Read, Edit, Bash, Grep, Glob
+description: >
+  This skill provides Echo AI's debugging knowledge and common failure patterns.
+  It should be used when the user shares a stack trace, error message, says
+  "it's broken", "fix this error", "tests are failing", or "why is X not working".
+  Covers FastAPI, Celery, PostgreSQL, Redis, Stripe, and LLM provider issues.
 ---
 
 # Debug Workflow

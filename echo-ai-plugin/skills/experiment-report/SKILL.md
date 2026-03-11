@@ -1,7 +1,10 @@
 ---
 name: experiment-report
-description: Analyze and explain Echo AI brand visibility experiment results. Use when user says "analyze results", "generate report", "what do results show", "explain this experiment", "interpret visibility data", or shares experiment output data.
-allowed-tools: Read, Bash
+description: >
+  This skill provides Echo AI's metrics definitions, benchmarks, and experiment
+  interpretation framework. It should be used when the user discusses "experiment results",
+  "visibility rate", "share of voice", "brand visibility", "Monte Carlo results",
+  or needs to interpret analytics data.
 ---
 
 # Experiment Report Generator

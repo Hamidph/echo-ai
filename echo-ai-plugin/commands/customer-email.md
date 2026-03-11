@@ -1,24 +1,20 @@
 ---
-name: customer-email
-description: >
-  This skill provides Echo AI's email voice, tone guidelines, and customer communication
-  templates. It should be used when the user discusses "emails", "customer communication",
-  "onboarding", "support replies", or "re-engagement".
+description: Draft customer-facing emails
+argument-hint: "<email type and context>"
 ---
 
-# Customer Email Drafter
+# /customer-email
+
+Email type/context: $ARGUMENTS
 
 Echo AI voice: direct, data-driven, helpful. Never corporate.
 Always: one clear CTA. Always: personalize with {first_name}.
 Never: "I hope this email finds you well", "synergy", "exciting", "game-changing".
 
-For "$ARGUMENTS" (describe the email type and context):
-
-### Output format
+### Output
 
 **Subject**: [option A]
 **Subject**: [option B — A/B test these]
-
 **Preview text**: [extends subject, under 90 chars]
 
 ---
