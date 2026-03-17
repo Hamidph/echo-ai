@@ -21,22 +21,35 @@ if hasattr(settings, 'stripe_api_key') and settings.stripe_api_key:
     stripe.api_key = settings.stripe_api_key
 
 # Pricing tier to Stripe price ID mapping
+# Monthly prices (USD). Annual price IDs use the _annual suffix in settings.
 PRICE_IDS = {
     PricingTier.FREE: None,  # Free tier has no Stripe price
-    PricingTier.STARTER: settings.stripe_price_id_starter,
-    PricingTier.PRO: settings.stripe_price_id_pro,
-    PricingTier.ENTERPRISE: settings.stripe_price_id_enterprise,
-    PricingTier.ENTERPRISE_PLUS: getattr(settings, 'stripe_price_id_enterprise_plus', None),
+    PricingTier.STARTER: getattr(settings, 'stripe_price_id_starter', None),
+    PricingTier.GROWTH: getattr(settings, 'stripe_price_id_growth', None),
+    PricingTier.PRO: getattr(settings, 'stripe_price_id_pro', None),
+    PricingTier.ENTERPRISE: None,  # Enterprise is custom / contact sales
 }
 
-# Quota mapping (monitored prompts per month, each runs 10 iterations daily)
-TIER_QUOTAS = {
-    PricingTier.FREE: 3,
-    PricingTier.STARTER: 10,
-    PricingTier.PRO: 15,
-    PricingTier.ENTERPRISE: 50,
-    PricingTier.ENTERPRISE_PLUS: 200,
+PRICE_IDS_ANNUAL = {
+    PricingTier.FREE: None,
+    PricingTier.STARTER: getattr(settings, 'stripe_price_id_starter_annual', None),
+    PricingTier.GROWTH: getattr(settings, 'stripe_price_id_growth_annual', None),
+    PricingTier.PRO: getattr(settings, 'stripe_price_id_pro_annual', None),
+    PricingTier.ENTERPRISE: None,
 }
+
+# Prompt quota per month. Each prompt runs Monte Carlo iterations.
+# Pricing (USD): Free $0, Starter $49/30, Growth $149/100, Pro $349/300, Enterprise custom
+TIER_QUOTAS = {
+    PricingTier.FREE: 5,        # permanent free tier (25 during 14-day trial)
+    PricingTier.STARTER: 30,    # $49/mo
+    PricingTier.GROWTH: 100,    # $149/mo
+    PricingTier.PRO: 300,       # $349/mo
+    PricingTier.ENTERPRISE: 500,  # custom — overridden per contract
+}
+
+TRIAL_PROMPT_QUOTA = 25
+TRIAL_DAYS = 14
 
 
 async def create_stripe_customer(user: User) -> str:
@@ -68,6 +81,7 @@ async def create_checkout_session(
     pricing_tier: PricingTier,
     success_url: str,
     cancel_url: str,
+    annual: bool = False,
 ) -> stripe.checkout.Session:
     """
     Create a Stripe Checkout session for subscription.
@@ -77,6 +91,7 @@ async def create_checkout_session(
         pricing_tier: Target pricing tier.
         success_url: URL to redirect on success.
         cancel_url: URL to redirect on cancellation.
+        annual: If True, use annual pricing (20% discount).
 
     Returns:
         stripe.checkout.Session: Checkout session object.
@@ -85,10 +100,11 @@ async def create_checkout_session(
         ValueError: If pricing tier is invalid.
         stripe.error.StripeError: If session creation fails.
     """
-    if pricing_tier == PricingTier.FREE:
-        raise ValueError("Cannot create checkout session for FREE tier")
+    if pricing_tier in (PricingTier.FREE, PricingTier.ENTERPRISE):
+        raise ValueError(f"Cannot create checkout session for {pricing_tier} tier")
 
-    price_id = PRICE_IDS.get(pricing_tier)
+    price_map = PRICE_IDS_ANNUAL if annual else PRICE_IDS
+    price_id = price_map.get(pricing_tier)
     if not price_id:
         raise ValueError(f"No price ID configured for tier: {pricing_tier}")
 

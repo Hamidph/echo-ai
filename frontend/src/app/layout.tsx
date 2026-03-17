@@ -14,9 +14,38 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Echo AI | AI Search Analytics for Marketing Teams",
+  title: {
+    template: "%s | Echo AI",
+    default: "Echo AI — AI Brand Visibility, Measured with Statistical Confidence",
+  },
   description:
-    "Track, analyze, and improve your brand visibility on ChatGPT, Perplexity, and Claude.",
+    "Echo AI uses Monte Carlo simulation to measure your brand's real visibility across AI responses — not a single snapshot, but statistically reliable confidence intervals. Track ChatGPT, Claude, Perplexity & more.",
+  keywords: [
+    "AI brand visibility",
+    "LLM monitoring",
+    "AI search analytics",
+    "GEO tracking",
+    "Monte Carlo AI visibility",
+    "ChatGPT brand mentions",
+    "generative engine optimization",
+    "AI search ranking",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Echo AI",
+    title: "Echo AI — AI Brand Visibility, Measured with Statistical Confidence",
+    description:
+      "The only AI visibility tool built on Monte Carlo simulation. Get confidence intervals, not guesses.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Echo AI Dashboard" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Echo AI — AI Brand Visibility",
+    description:
+      "Monte Carlo-powered AI brand tracking. Statistically reliable. Not a single snapshot.",
+    images: ["/og-image.png"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

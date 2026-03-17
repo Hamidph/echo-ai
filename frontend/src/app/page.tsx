@@ -21,12 +21,15 @@ export default function Home() {
           </div>
 
           <h1 className="font-heading text-6xl md:text-7xl font-bold text-slate-900 mb-6 tracking-tight leading-[1.05]">
-            How do LLMs <br />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">perceive your brand?</span>
+            Your brand&apos;s AI visibility —{" "}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">statistically proven.</span>
           </h1>
 
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Echo AI gives you the visibility you need to optimize your brand&apos;s presence in the age of Generative Search.
+          <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-4 leading-relaxed font-medium">
+            Single-shot AI checks are statistically worthless. Echo AI runs Monte Carlo simulations across hundreds of prompts to give you <strong className="text-slate-700">confidence intervals</strong>, not guesses.
+          </p>
+          <p className="text-base text-slate-400 max-w-xl mx-auto mb-10 font-medium">
+            Track ChatGPT, Claude, Perplexity & more — with statistical reliability your competitors can&apos;t match.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
@@ -202,66 +205,118 @@ export default function Home() {
       {/* Pricing Section */}
       <section id="pricing" className="py-24 bg-[#FDFCF8] border-t border-stone-100">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <div className="text-blue-600 font-bold tracking-wide uppercase text-sm mb-2">Pricing</div>
             <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Simple, transparent pricing
             </h2>
-            <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-              Start free and scale as you grow. All plans include access to all AI providers.
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-2">
+              Unlimited seats on all plans. Start your 14-day free trial — no credit card required.
             </p>
+            {/* Annual toggle */}
+            <div className="inline-flex items-center gap-3 mt-6 px-4 py-2 bg-white border border-stone-200 rounded-full shadow-sm">
+              <span className="text-sm font-semibold text-slate-600">Monthly</span>
+              <div className="relative">
+                <input type="checkbox" id="annual-toggle" className="sr-only peer" />
+                <label htmlFor="annual-toggle" className="block w-11 h-6 bg-stone-200 peer-checked:bg-blue-600 rounded-full cursor-pointer transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+              </div>
+              <span className="text-sm font-semibold text-slate-600">
+                Annual <span className="text-emerald-600 font-bold">Save 20%</span>
+              </span>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-5 gap-4">
             {/* Free Tier */}
-            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors flex flex-col">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Free</div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£0</span>
-                <span className="text-slate-500">/month</span>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-slate-900">$0</span>
+                <span className="text-slate-500">/mo</span>
               </div>
-              <div className="text-sm text-slate-600 mb-6">Perfect for getting started</div>
-              <ul className="space-y-3 mb-6">
+              <div className="text-xs text-slate-400 mb-4">Then 5 prompts/month forever</div>
+              <div className="text-sm text-slate-600 mb-6">14-day trial: 25 prompts</div>
+              <ul className="space-y-3 mb-6 flex-1">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>3</strong> prompts/month
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-slate-600">10 iterations per prompt</span>
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>25</strong> prompts during trial
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Monte Carlo iterations
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   Basic analytics
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Unlimited seats
                 </li>
               </ul>
               <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-slate-700 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors">
-                Get Started Free
+                Start Free Trial
               </Link>
             </div>
 
             {/* Starter Tier */}
-            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors flex flex-col">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Starter</div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£35</span>
-                <span className="text-slate-500">/month</span>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-slate-900">$49</span>
+                <span className="text-slate-500">/mo</span>
               </div>
+              <div className="text-xs text-slate-400 mb-4">$1.63/prompt</div>
               <div className="text-sm text-slate-600 mb-6">For growing brands</div>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-3 mb-6 flex-1">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>10</strong> prompts/month
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>30</strong> prompts/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  10 iterations per prompt
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Confidence intervals
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   Competitor tracking
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Unlimited seats
+                </li>
+              </ul>
+              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                Start Trial
+              </Link>
+            </div>
+
+            {/* Growth Tier — Most Popular */}
+            <div className="bg-white rounded-2xl border-2 border-blue-500 p-6 relative shadow-lg shadow-blue-500/10 flex flex-col">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full whitespace-nowrap">Most Popular</div>
+              <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Growth</div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-slate-900">$149</span>
+                <span className="text-slate-500">/mo</span>
+              </div>
+              <div className="text-xs text-slate-400 mb-4">$1.49/prompt</div>
+              <div className="text-sm text-slate-600 mb-6">Agency entry point</div>
+              <ul className="space-y-3 mb-6 flex-1">
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>100</strong> prompts/month
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Statistical significance badges
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Advanced reports & exports
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Unlimited seats
                 </li>
               </ul>
               <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
@@ -270,26 +325,30 @@ export default function Home() {
             </div>
 
             {/* Pro Tier */}
-            <div className="bg-white rounded-2xl border-2 border-blue-500 p-6 relative shadow-lg shadow-blue-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">Most Popular</div>
-              <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£55</span>
-                <span className="text-slate-500">/month</span>
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors flex flex-col">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Pro</div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-slate-900">$349</span>
+                <span className="text-slate-500">/mo</span>
               </div>
-              <div className="text-sm text-slate-600 mb-6">For serious marketers</div>
-              <ul className="space-y-3 mb-6">
+              <div className="text-xs text-slate-400 mb-4">$1.16/prompt</div>
+              <div className="text-sm text-slate-600 mb-6">For serious agencies</div>
+              <ul className="space-y-3 mb-6 flex-1">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>15</strong> prompts/month
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <strong>300</strong> prompts/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  10 iterations per prompt
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  White-label reports
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Advanced reports & exports
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Priority support
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Unlimited seats
                 </li>
               </ul>
               <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
@@ -298,59 +357,41 @@ export default function Home() {
             </div>
 
             {/* Enterprise Tier */}
-            <div className="bg-white rounded-2xl border border-stone-200 p-6 hover:border-blue-200 transition-colors">
+            <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col">
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise</div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-slate-900">£169</span>
-                <span className="text-slate-500">/month</span>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold">Custom</span>
               </div>
-              <div className="text-sm text-slate-600 mb-6">Growing agencies</div>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>50</strong> prompts/month
+              <div className="text-xs text-slate-400 mb-4">&lt;$1.00/prompt</div>
+              <div className="text-sm text-slate-400 mb-6">500+ prompts/month</div>
+              <ul className="space-y-3 mb-6 flex-1">
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  White-label workspace
                 </li>
-                <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  10 iterations per prompt
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Custom SLA
                 </li>
-                <li className="flex items-center gap-2 text-sm text-slate-600">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Priority support
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Dedicated support
+                </li>
+                <li className="flex items-center gap-2 text-sm text-slate-300">
+                  <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Unlimited seats
                 </li>
               </ul>
-              <Link href="/register" className="block w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
-                Start Trial
-              </Link>
-            </div>
-
-            {/* Enterprise+ Tier */}
-            <div className="bg-slate-900 rounded-2xl p-6 text-white">
-              <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Enterprise+</div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold">£599</span>
-                <span className="text-slate-300 text-lg">/month</span>
-              </div>
-              <div className="text-sm text-slate-400 mb-6">Large agencies</div>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <strong>200</strong> prompts/month
-                </li>
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  10 iterations per prompt
-                </li>
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Dedicated support & SLA
-                </li>
-              </ul>
-              <Link href="mailto:sales@echoai.com" className="block w-full py-3 text-center text-sm font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-100 transition-colors">
+              <Link href="mailto:sales@echoai.uk" className="block w-full py-3 text-center text-sm font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-100 transition-colors">
                 Contact Sales
               </Link>
             </div>
           </div>
+
+          {/* Annual savings note */}
+          <p className="text-center text-sm text-slate-400 mt-6">
+            Save 2 months with annual billing. All prices in USD.
+          </p>
         </div>
       </section>
 

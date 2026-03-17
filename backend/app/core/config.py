@@ -88,11 +88,17 @@ class Settings(BaseSettings):
         description="Stripe webhook signing secret",
     )
 
-    # Stripe Price IDs (overridable via environment variables)
-    stripe_price_id_starter: str | None = Field(default=None, description="Stripe Price ID for Starter Tier")
-    stripe_price_id_pro: str | None = Field(default=None, description="Stripe Price ID for Pro Tier")
-    stripe_price_id_enterprise: str | None = Field(default=None, description="Stripe Price ID for Enterprise Tier")
-    stripe_price_id_enterprise_plus: str | None = Field(default=None, description="Stripe Price ID for Enterprise+ Tier")
+    # Stripe Price IDs — USD plans (set via environment variables)
+    # Monthly
+    stripe_price_id_starter: str | None = Field(default=None, description="Stripe Price ID — Starter $49/mo")
+    stripe_price_id_growth: str | None = Field(default=None, description="Stripe Price ID — Growth $149/mo")
+    stripe_price_id_pro: str | None = Field(default=None, description="Stripe Price ID — Pro $349/mo")
+    # Annual (20% discount)
+    stripe_price_id_starter_annual: str | None = Field(default=None, description="Stripe Price ID — Starter annual")
+    stripe_price_id_growth_annual: str | None = Field(default=None, description="Stripe Price ID — Growth annual")
+    stripe_price_id_pro_annual: str | None = Field(default=None, description="Stripe Price ID — Pro annual")
+    # Legacy GBP (kept for existing subscribers — do not assign to new signups)
+    stripe_price_id_enterprise: str | None = Field(default=None, description="Legacy Stripe Price ID — Enterprise GBP")
 
     # Email Configuration
     smtp_host: str = Field(
