@@ -61,17 +61,15 @@ Skills: `/echo-ai-tools:deploy` `/echo-ai-tools:commit` `/echo-ai-tools:review-p
 | Hallucination Rate | % of mentions with factual errors |
 | First Mention Rate | % of responses where brand appears first |
 
-## Pricing (USD — updated March 2026)
+## Pricing
 
-| Plan | Price | Prompts/mo | $/prompt |
-|---|---|---|---|
-| FREE | $0 (14-day trial: 25 prompts, then 5/mo) | 5 | — |
-| STARTER | $49/mo | 30 | $1.63 |
-| GROWTH | $149/mo | 100 | $1.49 |
-| PRO | $349/mo | 300 | $1.16 |
-| ENTERPRISE | Custom | 500+ | <$1.00 |
-
-Annual billing: 20% discount (2 months free). Unlimited seats on all plans.
+| Plan | Price | Prompts/mo |
+|---|---|---|
+| FREE | £0 | 3 |
+| STARTER | £35 | 10 |
+| PRO | £55 | 15 |
+| ENTERPRISE | £169 | 50 |
+| ENTERPRISE+ | £599 | 200 |
 
 ## Target Customers
 
