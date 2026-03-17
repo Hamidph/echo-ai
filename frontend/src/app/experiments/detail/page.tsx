@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { experimentsApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { ConfidenceInterval } from "@/components/ui/ConfidenceInterval";
 
 export function ExperimentDetailContent() {
     const searchParams = useSearchParams();
@@ -63,12 +64,18 @@ export function ExperimentDetailContent() {
     const rawMetrics = batchRun?.metrics || {};
 
     // Map backend metrics structure to frontend expected format
+    const visibilityRate = rawMetrics.target_visibility?.visibility_rate || 0;
+    const sovRate = rawMetrics.share_of_voice?.[0]?.share || 0;
+    const iterations = rawMetrics.total_responses || batchRun?.total_iterations || experiment.config?.iterations || 10;
+
     const metrics = {
-        visibility_score: (rawMetrics.target_visibility?.visibility_rate || 0) * 100,
-        share_of_voice: (rawMetrics.share_of_voice?.[0]?.share || 0) * 100,
+        visibility_rate: visibilityRate,               // raw fraction for CI math
+        visibility_score: visibilityRate * 100,
+        sov_rate: sovRate,                             // raw fraction for CI math
+        share_of_voice: sovRate * 100,
         consistency_score: (rawMetrics.consistency?.consistency_score || 0) * 100,
         has_hallucinations: rawMetrics.hallucination_rate > 0,
-        total_responses: rawMetrics.total_responses || 0,
+        total_responses: iterations,
     };
 
     return (
@@ -180,6 +187,11 @@ export function ExperimentDetailContent() {
                                 <p className="text-3xl font-bold text-slate-900">
                                     {metrics.visibility_score?.toFixed(0) || 0}%
                                 </p>
+                                <ConfidenceInterval
+                                    rate={metrics.visibility_rate}
+                                    iterations={metrics.total_responses}
+                                    variant="inline"
+                                />
                             </div>
 
                             {/* Share of Voice */}
@@ -204,6 +216,11 @@ export function ExperimentDetailContent() {
                                 <p className="text-3xl font-bold text-slate-900">
                                     {metrics.share_of_voice?.toFixed(0) || 0}%
                                 </p>
+                                <ConfidenceInterval
+                                    rate={metrics.sov_rate}
+                                    iterations={metrics.total_responses}
+                                    variant="inline"
+                                />
                             </div>
 
                             {/* Consistency */}
@@ -258,6 +275,26 @@ export function ExperimentDetailContent() {
                                     {metrics.has_hallucinations ? "Detected" : "None"}
                                 </p>
                             </div>
+                        </div>
+
+                        {/* Statistical Reliability Panel */}
+                        <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm mb-6">
+                            <div className="flex items-center gap-3 mb-1">
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-900">Statistical Confidence</h3>
+                                    <p className="text-xs text-slate-500">Monte Carlo simulation results with 95% confidence intervals</p>
+                                </div>
+                            </div>
+                            <ConfidenceInterval
+                                rate={metrics.visibility_rate}
+                                iterations={metrics.total_responses}
+                                variant="card"
+                            />
                         </div>
 
                         {/* Detailed Results */}
