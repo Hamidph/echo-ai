@@ -9,7 +9,7 @@ enabling testability and flexibility. Async operations ensure non-blocking
 database access for high-concurrency probabilistic workloads.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -141,7 +141,7 @@ class ExperimentRepository:
             .values(
                 status=status.value,
                 error_message=error_message,
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
         )
         await self.session.execute(stmt)
@@ -177,7 +177,7 @@ class ExperimentRepository:
         stmt = stmt.limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
-    
+
     async def count_experiments(
         self,
         user_id: UUID,
@@ -194,12 +194,8 @@ class ExperimentRepository:
             Total count of experiments.
         """
         from sqlalchemy import func
-        
-        stmt = (
-            select(func.count())
-            .select_from(Experiment)
-            .where(Experiment.user_id == user_id)
-        )
+
+        stmt = select(func.count()).select_from(Experiment).where(Experiment.user_id == user_id)
 
         if status:
             stmt = stmt.where(Experiment.status == status.value)

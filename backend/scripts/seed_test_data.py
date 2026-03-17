@@ -11,26 +11,25 @@ Run this after migrations to populate the database with demo data.
 
 import asyncio
 import sys
-import os
-from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 # Ensure backend modules can be imported
-sys.path.append(os.getcwd())
+sys.path.append(str(Path.cwd()))
 
 from sqlalchemy import select
-from backend.app.core.database import get_session_factory
-from backend.app.models.user import User, PricingTier, UserRole
-from backend.app.models.experiment import (
-    Experiment,
-    BatchRun,
-    Iteration,
-    ExperimentStatus,
-    ExperimentFrequency,
-    BatchRunStatus,
-)
-from backend.app.core.security import get_password_hash
 
+from backend.app.core.database import get_session_factory
+from backend.app.core.security import get_password_hash
+from backend.app.models.experiment import (
+    BatchRun,
+    BatchRunStatus,
+    Experiment,
+    ExperimentFrequency,
+    ExperimentStatus,
+    Iteration,
+)
+from backend.app.models.user import PricingTier, User, UserRole
 
 # Sample experiment data for realistic demos
 SAMPLE_EXPERIMENTS = [
@@ -102,11 +101,11 @@ async def create_or_update_test_user(session):
     email = "test@echoai.com"
     password = "password123"
     hashed_password = get_password_hash(password)
-    
+
     print(f"Checking for user {email}...")
     result = await session.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
-    
+
     if user:
         print(f"✓ User {email} exists (ID: {user.id})")
         # Update to ensure correct configuration
@@ -134,7 +133,7 @@ async def create_or_update_test_user(session):
         await session.flush()
         await session.refresh(user)
         print(f"✓ Created user {email} (ID: {user.id})")
-    
+
     await session.commit()
     await session.refresh(user)
     return user
@@ -142,8 +141,8 @@ async def create_or_update_test_user(session):
 
 async def create_sample_experiment(session, user_id, exp_data):
     """Create a sample experiment with complete data."""
-    created_at = datetime.now(timezone.utc) - timedelta(days=exp_data["days_ago"])
-    
+    created_at = datetime.now(UTC) - timedelta(days=exp_data["days_ago"])
+
     # Create experiment (set as recurring with daily frequency)
     experiment = Experiment(
         user_id=user_id,
@@ -159,7 +158,7 @@ async def create_sample_experiment(session, user_id, exp_data):
         status=exp_data["status"].value,
         is_recurring=True,
         frequency=ExperimentFrequency.DAILY.value,
-        next_run_at=datetime.now(timezone.utc) + timedelta(days=1),
+        next_run_at=datetime.now(UTC) + timedelta(days=1),
         last_run_at=created_at + timedelta(minutes=5),
         created_at=created_at,
         updated_at=created_at + timedelta(minutes=5),
@@ -167,7 +166,7 @@ async def create_sample_experiment(session, user_id, exp_data):
     session.add(experiment)
     await session.flush()
     await session.refresh(experiment)
-    
+
     # Create batch run
     batch_run = BatchRun(
         experiment_id=experiment.id,
@@ -184,12 +183,19 @@ async def create_sample_experiment(session, user_id, exp_data):
         metrics={
             "target_visibility": {
                 "visibility_rate": exp_data["visibility_rate"],
-                "confidence_interval_95": [exp_data["visibility_rate"] - 0.05, exp_data["visibility_rate"] + 0.05],
+                "confidence_interval_95": [
+                    exp_data["visibility_rate"] - 0.05,
+                    exp_data["visibility_rate"] + 0.05,
+                ],
             },
             "share_of_voice": [
                 {"brand": exp_data["target_brand"], "share": exp_data["visibility_rate"]},
-            ] + [
-                {"brand": comp, "share": (1 - exp_data["visibility_rate"]) / len(exp_data["competitor_brands"])}
+            ]
+            + [
+                {
+                    "brand": comp,
+                    "share": (1 - exp_data["visibility_rate"]) / len(exp_data["competitor_brands"]),
+                }
                 for comp in exp_data["competitor_brands"]
             ],
             "avg_position": exp_data["avg_position"],
@@ -199,18 +205,22 @@ async def create_sample_experiment(session, user_id, exp_data):
     session.add(batch_run)
     await session.flush()
     await session.refresh(batch_run)
-    
+
     # Create iterations
     iterations = []
     for i in range(exp_data["iterations"]):
         # Determine if brand is mentioned based on visibility rate
         brand_mentioned = i < int(exp_data["iterations"] * exp_data["visibility_rate"])
-        
+
         iteration = Iteration(
             batch_run_id=batch_run.id,
             iteration_index=i,
-            raw_response=f"Sample response for iteration {i+1}. " + 
-                        (f"{exp_data['target_brand']} is a great option for this use case." if brand_mentioned else "Here are some alternatives to consider."),
+            raw_response=f"Sample response for iteration {i + 1}. "
+            + (
+                f"{exp_data['target_brand']} is a great option for this use case."
+                if brand_mentioned
+                else "Here are some alternatives to consider."
+            ),
             latency_ms=2000 + (i * 100),  # Realistic latency
             is_success=True,
             status="completed",
@@ -220,10 +230,10 @@ async def create_sample_experiment(session, user_id, exp_data):
             total_tokens=500,
         )
         iterations.append(iteration)
-    
+
     session.add_all(iterations)
     await session.flush()
-    
+
     print(f"  ✓ Created experiment: {exp_data['prompt'][:50]}... ({exp_data['status'].value})")
     return experiment
 
@@ -234,34 +244,34 @@ async def seed_test_data():
     print("SEEDING TEST DATA FOR ECHO AI")
     print("=" * 80)
     print()
-    
+
     try:
         session_factory = get_session_factory()
     except Exception as e:
         print(f"❌ Failed to create session factory: {e}")
         return False
-    
+
     async with session_factory() as session:
         try:
             # Step 1: Create/update test user
             print("Step 1: Creating test user...")
             user = await create_or_update_test_user(session)
             print()
-            
+
             # Step 2: Check if experiments already exist
             print("Step 2: Checking existing experiments...")
-            result = await session.execute(
-                select(Experiment).where(Experiment.user_id == user.id)
-            )
+            result = await session.execute(select(Experiment).where(Experiment.user_id == user.id))
             existing_experiments = result.scalars().all()
-            
+
             # Update existing experiments to be recurring
             if len(existing_experiments) > 0:
-                print(f"✓ Found {len(existing_experiments)} existing experiments. Updating to recurring...")
+                print(
+                    f"✓ Found {len(existing_experiments)} existing experiments. Updating to recurring..."
+                )
                 for exp in existing_experiments:
                     exp.is_recurring = True
                     exp.frequency = ExperimentFrequency.DAILY.value
-                    exp.next_run_at = datetime.now(timezone.utc) + timedelta(days=1)
+                    exp.next_run_at = datetime.now(UTC) + timedelta(days=1)
                     if not exp.last_run_at:
                         exp.last_run_at = exp.updated_at
                     session.add(exp)
@@ -272,45 +282,44 @@ async def seed_test_data():
                 print("Test data updated to recurring!")
                 print("=" * 80)
                 return True
-            
+
             print(f"Found {len(existing_experiments)} existing experiments. Creating samples...")
             print()
-            
+
             # Step 3: Create sample experiments
             print("Step 3: Creating sample experiments... (SKIPPED FOR PROD)")
             # PRODUCTION: Do not create dummy experiments
             # for exp_data in SAMPLE_EXPERIMENTS:
-            #     await create_sample_experiment(session, user.id, exp_data)
-            
+            #     await create_sample_experiment(session, user.id, exp_data)  # noqa: ERA001
+
             await session.commit()
             print()
-            
+
             # Step 4: Verify
             print("Step 4: Verifying data...")
-            result = await session.execute(
-                select(Experiment).where(Experiment.user_id == user.id)
-            )
+            result = await session.execute(select(Experiment).where(Experiment.user_id == user.id))
             total_experiments = len(result.scalars().all())
-            
+
             print(f"✓ Total experiments for {user.email}: {total_experiments}")
             print()
-            
+
             print("=" * 80)
             print("SUCCESS! Test data seeded successfully")
             print("=" * 80)
             print()
             print("Test Account Credentials:")
-            print(f"  Email: test@echoai.com")
-            print(f"  Password: password123")
+            print("  Email: test@echoai.com")
+            print("  Password: password123")
             print(f"  Experiments: {total_experiments}")
             print()
-            
+
             return True
-            
+
         except Exception as e:
             print(f"❌ Error seeding data: {e}")
             await session.rollback()
             import traceback
+
             traceback.print_exc()
             return False
 

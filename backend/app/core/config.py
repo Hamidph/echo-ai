@@ -90,15 +90,29 @@ class Settings(BaseSettings):
 
     # Stripe Price IDs — USD plans (set via environment variables)
     # Monthly
-    stripe_price_id_starter: str | None = Field(default=None, description="Stripe Price ID — Starter $49/mo")
-    stripe_price_id_growth: str | None = Field(default=None, description="Stripe Price ID — Growth $149/mo")
-    stripe_price_id_pro: str | None = Field(default=None, description="Stripe Price ID — Pro $349/mo")
-    # Annual (20% discount)
-    stripe_price_id_starter_annual: str | None = Field(default=None, description="Stripe Price ID — Starter annual")
-    stripe_price_id_growth_annual: str | None = Field(default=None, description="Stripe Price ID — Growth annual")
-    stripe_price_id_pro_annual: str | None = Field(default=None, description="Stripe Price ID — Pro annual")
+    stripe_price_id_starter: str | None = Field(
+        default=None, description="Stripe Price ID — Starter $49/mo"
+    )
+    stripe_price_id_growth: str | None = Field(
+        default=None, description="Stripe Price ID — Growth $149/mo"
+    )
+    stripe_price_id_pro: str | None = Field(
+        default=None, description="Stripe Price ID — Pro $349/mo"
+    )
+    # Annual (20% discount)  # noqa: ERA001
+    stripe_price_id_starter_annual: str | None = Field(
+        default=None, description="Stripe Price ID — Starter annual"
+    )
+    stripe_price_id_growth_annual: str | None = Field(
+        default=None, description="Stripe Price ID — Growth annual"
+    )
+    stripe_price_id_pro_annual: str | None = Field(
+        default=None, description="Stripe Price ID — Pro annual"
+    )
     # Legacy GBP (kept for existing subscribers — do not assign to new signups)
-    stripe_price_id_enterprise: str | None = Field(default=None, description="Legacy Stripe Price ID — Enterprise GBP")
+    stripe_price_id_enterprise: str | None = Field(
+        default=None, description="Legacy Stripe Price ID — Enterprise GBP"
+    )
 
     # Email Configuration
     smtp_host: str = Field(
@@ -135,7 +149,7 @@ class Settings(BaseSettings):
     postgres_host: str = Field(default="localhost", description="PostgreSQL host")
     postgres_port: int = Field(default=5432, description="PostgreSQL port")
     postgres_db: str = Field(default="ai_visibility_db", description="PostgreSQL database name")
-    
+
     # Allow raw DATABASE_URL from environment (e.g. Railway)
     # This must be distinct from the computed properties
     raw_database_url: str | None = Field(default=None, alias="DATABASE_URL")
@@ -145,7 +159,7 @@ class Settings(BaseSettings):
     def database_url(self) -> PostgresDsn:
         """
         Construct PostgreSQL connection URL.
-        
+
         Priority:
         1. DATABASE_URL env var (adjusted for asyncpg)
         2. Computed from components
@@ -173,7 +187,7 @@ class Settings(BaseSettings):
     def database_url_sync(self) -> PostgresDsn:
         """
         Construct synchronous PostgreSQL connection URL for Alembic migrations.
-        
+
         Priority:
         1. DATABASE_URL env var (adjusted for psycopg2)
         2. Computed from components
@@ -204,7 +218,7 @@ class Settings(BaseSettings):
     redis_port: int = Field(default=6379, description="Redis port")
     redis_password: str = Field(default="redis_secret", description="Redis password")
     redis_db: int = Field(default=0, description="Redis database number")
-    
+
     # Allow raw REDIS_URL from environment (e.g. Railway)
     raw_redis_url: str | None = Field(default=None, alias="REDIS_URL")
 
@@ -213,14 +227,14 @@ class Settings(BaseSettings):
     def redis_url(self) -> RedisDsn:
         """
         Construct Redis connection URL.
-        
+
         Priority:
         1. REDIS_URL env var (Railway provides this)
         2. Computed from components
         """
         if self.raw_redis_url:
             return RedisDsn(self.raw_redis_url)
-            
+
         return RedisDsn.build(
             scheme="redis",
             password=self.redis_password,

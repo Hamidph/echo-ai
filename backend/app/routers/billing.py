@@ -66,7 +66,7 @@ class UsageResponse(BaseModel):
 async def create_checkout(
     checkout_data: CheckoutSessionCreate,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],  # noqa: ARG001
 ) -> CheckoutSessionResponse:
     """
     Create a Stripe Checkout session for subscription upgrade.
@@ -175,7 +175,7 @@ async def stripe_webhook(
         )
 
     # Get webhook secret from settings
-    webhook_secret = getattr(settings, 'stripe_webhook_secret', None)
+    webhook_secret = getattr(settings, "stripe_webhook_secret", None)
     if not webhook_secret:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -187,9 +187,7 @@ async def stripe_webhook(
 
     # Verify webhook signature
     try:
-        event = stripe.Webhook.construct_event(
-            payload, stripe_signature, webhook_secret
-        )
+        event = stripe.Webhook.construct_event(payload, stripe_signature, webhook_secret)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

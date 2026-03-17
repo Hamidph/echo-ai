@@ -17,34 +17,34 @@ from backend.app.models.user import PricingTier, User
 settings = get_settings()
 
 # Initialize Stripe
-if hasattr(settings, 'stripe_api_key') and settings.stripe_api_key:
+if hasattr(settings, "stripe_api_key") and settings.stripe_api_key:
     stripe.api_key = settings.stripe_api_key
 
 # Pricing tier to Stripe price ID mapping
 # Monthly prices (USD). Annual price IDs use the _annual suffix in settings.
 PRICE_IDS = {
     PricingTier.FREE: None,  # Free tier has no Stripe price
-    PricingTier.STARTER: getattr(settings, 'stripe_price_id_starter', None),
-    PricingTier.GROWTH: getattr(settings, 'stripe_price_id_growth', None),
-    PricingTier.PRO: getattr(settings, 'stripe_price_id_pro', None),
+    PricingTier.STARTER: getattr(settings, "stripe_price_id_starter", None),
+    PricingTier.GROWTH: getattr(settings, "stripe_price_id_growth", None),
+    PricingTier.PRO: getattr(settings, "stripe_price_id_pro", None),
     PricingTier.ENTERPRISE: None,  # Enterprise is custom / contact sales
 }
 
 PRICE_IDS_ANNUAL = {
     PricingTier.FREE: None,
-    PricingTier.STARTER: getattr(settings, 'stripe_price_id_starter_annual', None),
-    PricingTier.GROWTH: getattr(settings, 'stripe_price_id_growth_annual', None),
-    PricingTier.PRO: getattr(settings, 'stripe_price_id_pro_annual', None),
+    PricingTier.STARTER: getattr(settings, "stripe_price_id_starter_annual", None),
+    PricingTier.GROWTH: getattr(settings, "stripe_price_id_growth_annual", None),
+    PricingTier.PRO: getattr(settings, "stripe_price_id_pro_annual", None),
     PricingTier.ENTERPRISE: None,
 }
 
 # Prompt quota per month. Each prompt runs Monte Carlo iterations.
 # Pricing (USD): Free $0, Starter $49/30, Growth $149/100, Pro $349/300, Enterprise custom
 TIER_QUOTAS = {
-    PricingTier.FREE: 5,        # permanent free tier (25 during 14-day trial)
-    PricingTier.STARTER: 30,    # $49/mo
-    PricingTier.GROWTH: 100,    # $149/mo
-    PricingTier.PRO: 300,       # $349/mo
+    PricingTier.FREE: 5,  # permanent free tier (25 during 14-day trial)
+    PricingTier.STARTER: 30,  # $49/mo
+    PricingTier.GROWTH: 100,  # $149/mo
+    PricingTier.PRO: 300,  # $349/mo
     PricingTier.ENTERPRISE: 500,  # custom — overridden per contract
 }
 

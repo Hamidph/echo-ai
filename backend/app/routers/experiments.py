@@ -20,8 +20,8 @@ from slowapi.util import get_remote_address
 from backend.app.core.config import get_settings
 from backend.app.core.database import DbSession
 from backend.app.core.deps import get_current_active_user
-from backend.app.models.user import User
 from backend.app.models.experiment import ExperimentStatus
+from backend.app.models.user import User
 from backend.app.repositories.experiment_repo import (
     ExperimentRepository,
 )
@@ -69,7 +69,7 @@ limiter = Limiter(key_func=get_remote_address)
 @limiter.limit("10/minute")
 async def create_experiment(
     experiment_request: ExperimentRequest,
-    request: Request,
+    request: Request,  # noqa: ARG001
     session: DbSession,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> ExperimentResponse:
@@ -108,7 +108,10 @@ async def create_experiment(
     # IMPORTANT: Quota is based on number of prompts (iterations), not experiments
     if not settings.testing_mode and not settings.unlimited_prompts:
         prompts_needed = iterations_requested
-        if current_user.prompts_used_this_month + prompts_needed > current_user.monthly_prompt_quota:
+        if (
+            current_user.prompts_used_this_month + prompts_needed
+            > current_user.monthly_prompt_quota
+        ):
             remaining = current_user.monthly_prompt_quota - current_user.prompts_used_this_month
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -119,7 +122,9 @@ async def create_experiment(
         current_user.prompts_used_this_month += prompts_needed
         await session.commit()
         await session.refresh(current_user)
-        logger.info(f"User {current_user.email} quota: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota} (used {prompts_needed} prompts)")
+        logger.info(
+            f"User {current_user.email} quota: {current_user.prompts_used_this_month}/{current_user.monthly_prompt_quota} (used {prompts_needed} prompts)"
+        )
     else:
         logger.info(f"Testing mode enabled - skipping quota check for user {current_user.email}")
 
@@ -161,13 +166,15 @@ async def create_experiment(
         if not settings.testing_mode and not settings.unlimited_prompts:
             current_user.prompts_used_this_month -= iterations_requested
             await session.commit()
-            logger.info(f"Refunded {iterations_requested} prompts to user {current_user.email} due to queue failure")
-        
+            logger.info(
+                f"Refunded {iterations_requested} prompts to user {current_user.email} due to queue failure"
+            )
+
         # Mark as failed
         await exp_repo.update_experiment_status(
-             experiment.id,
-             ExperimentStatus.FAILED,
-             error_message="System overloaded, please try again later."
+            experiment.id,
+            ExperimentStatus.FAILED,
+            error_message="System overloaded, please try again later.",
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -227,17 +234,17 @@ async def get_experiment(
             detail="Experiment not found or access denied",
         )
 
-    # Now load full results (which might already be loaded by get_experiment_by_user if the repo method supported it, 
+    # Now load full results (which might already be loaded by get_experiment_by_user if the repo method supported it,
     # but based on line 264 we need to verify first then load full if separate).
-    # actually wait, get_experiment_with_results loads relationships. 
-    # Let's check if we can just stick to get_experiment_by_user check then re-fetch or if we should modify the repo. 
+    # actually wait, get_experiment_with_results loads relationships.
+    # Let's check if we can just stick to get_experiment_by_user check then re-fetch or if we should modify the repo.
     # For minimally invasive fix that is secure:
     # 1. Check ownership.
     # 2. If valid, fetch with results.
-    
+
     experiment_with_results = await exp_repo.get_experiment_with_results(experiment_id)
     if not experiment_with_results:
-         # Should not happen if first check passed, but safe guard
+        # Should not happen if first check passed, but safe guard
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Experiment found but could not load results",
@@ -514,7 +521,7 @@ async def list_experiments(
         offset=offset,
         status=status_enum,
     )
-    
+
     # Get total count for pagination
     total_count = await exp_repo.count_experiments(
         user_id=current_user.id,

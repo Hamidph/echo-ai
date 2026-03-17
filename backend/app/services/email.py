@@ -136,6 +136,7 @@ async def send_verification_email(user_email: str, user_name: str, user_id: str)
     """
     # Generate verification token (valid for 24 hours)
     from datetime import timedelta
+
     token = create_access_token(
         data={"user_id": user_id, "type": "email_verification"},
         expires_delta=timedelta(hours=24),
@@ -170,6 +171,7 @@ async def send_password_reset_email(user_email: str, user_name: str, user_id: st
     """
     # Generate reset token (valid for 1 hour)
     from datetime import timedelta
+
     token = create_access_token(
         data={"user_id": user_id, "type": "password_reset"},
         expires_delta=timedelta(hours=1),

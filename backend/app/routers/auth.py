@@ -4,7 +4,8 @@ Authentication and user management endpoints.
 This module provides routes for user registration, login, and API key management.
 """
 
-from datetime import datetime, timedelta, timezone
+import logging
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -38,13 +39,14 @@ from backend.app.schemas.auth import (
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger(__name__)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("3/hour")  # Prevent spam registrations
 async def register(
     user_data: UserRegister,
-    request: Request,
+    request: Request,  # noqa: ARG001
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """
@@ -71,7 +73,7 @@ async def register(
         role=UserRole.USER.value,
         pricing_tier=PricingTier.FREE.value,
         monthly_prompt_quota=25,  # Trial quota: 25 prompts for 14-day trial, then drops to 5/month
-        quota_reset_date=datetime.now(timezone.utc) + timedelta(days=30),
+        quota_reset_date=datetime.now(UTC) + timedelta(days=30),
     )
 
     db.add(new_user)
@@ -80,6 +82,7 @@ async def register(
 
     # Send verification email
     from backend.app.services.email import send_verification_email
+
     try:
         await send_verification_email(
             user_email=new_user.email,
@@ -97,7 +100,7 @@ async def register(
 @limiter.limit("5/minute")  # Prevent brute force attacks
 async def login(
     login_data: UserLogin,
-    request: Request,
+    request: Request,  # noqa: ARG001
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
@@ -124,7 +127,7 @@ async def login(
         )
 
     # Update last login timestamp
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     await db.commit()
 
     # Create access token (short-lived) and refresh token (long-lived)
@@ -323,6 +326,7 @@ async def verify_email(
 
     # Send welcome email
     from backend.app.services.email import send_welcome_email
+
     try:
         await send_welcome_email(
             user_email=user.email,
@@ -348,6 +352,7 @@ async def resend_verification(
         )
 
     from backend.app.services.email import send_verification_email
+
     try:
         await send_verification_email(
             user_email=current_user.email,
@@ -380,6 +385,7 @@ async def forgot_password(
         return {"message": "If the email exists, a password reset link has been sent"}
 
     from backend.app.services.email import send_password_reset_email
+
     try:
         await send_password_reset_email(
             user_email=user.email,

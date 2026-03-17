@@ -4,7 +4,7 @@ User models for authentication and authorization.
 This module defines the database schema for users, API keys, and usage tracking.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
@@ -124,13 +124,13 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     last_login_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
@@ -151,7 +151,7 @@ class User(Base):
         comment="Company/Brand name",
     )
     brand_description: Mapped[str | None] = mapped_column(
-        String, # Text type in Postgres
+        String,  # Text type in Postgres
         nullable=True,
         comment="Description of what the brand does",
     )
@@ -168,6 +168,7 @@ class User(Base):
     # Storing lists as JSON for simplicity in MVP (Phase 1)
     # Ideally these would be separate tables if we need complex queries later
     from sqlalchemy.dialects.postgresql import JSONB
+
     brand_competitors: Mapped[list[str] | None] = mapped_column(
         JSONB,
         nullable=True,
@@ -180,7 +181,7 @@ class User(Base):
         default=list,
         comment="List of target SEO keywords",
     )
-    experiments: Mapped[list["Experiment"]] = relationship(
+    experiments: Mapped[list["Experiment"]] = relationship(  # noqa: F821
         "Experiment",
         back_populates="user",
         cascade="all, delete-orphan",
@@ -250,7 +251,7 @@ class APIKey(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
