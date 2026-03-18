@@ -10,6 +10,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, EmailStr
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -36,6 +37,22 @@ from backend.app.schemas.auth import (
     UserRegister,
     UserResponse,
 )
+
+logger = logging.getLogger(__name__)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
@@ -141,19 +158,34 @@ async def login(
     }
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str | None = None
+
+
 @router.post("/refresh", response_model=Token)
 async def refresh_access_token(
-    refresh_token: str,
+    body: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Refresh an access token using a valid refresh token.
 
-    This endpoint allows clients to obtain a new access token without
-    re-authenticating, as long as the refresh token is still valid.
+    Implements token rotation: the old refresh token is blacklisted and a new
+    token pair is issued. Reuse of a consumed refresh token triggers full
+    session revocation (theft detection).
     """
+    from backend.app.core.security import (
+        blacklist_all_user_tokens,
+        blacklist_token,
+        is_token_blacklisted,
+    )
+
     # Decode and validate refresh token
-    payload = decode_refresh_token(refresh_token)
+    payload = decode_refresh_token(body.refresh_token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -161,12 +193,26 @@ async def refresh_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    jti = payload.get("jti")
     user_id = payload.get("user_id")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token payload",
         )
+
+    # Check for token replay (theft detection)
+    if jti and await is_token_blacklisted(jti):
+        logger.warning(f"Refresh token replay detected for user {user_id}")
+        await blacklist_all_user_tokens(user_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token reuse detected. All sessions revoked.",
+        )
+
+    # Blacklist the consumed refresh token
+    if jti:
+        await blacklist_token(jti, REFRESH_TOKEN_EXPIRE_DAYS * 86400)
 
     # Fetch user from database
     result = await db.execute(select(User).where(User.id == UUID(user_id)))
@@ -178,14 +224,76 @@ async def refresh_access_token(
             detail="User not found or inactive",
         )
 
-    # Create new access token
+    # Issue new token pair (rotation)
     access_token = create_access_token(data={"user_id": str(user.id), "email": user.email})
+    new_refresh_token = create_refresh_token(data={"user_id": str(user.id)})
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,  # Return same refresh token
+        "refresh_token": new_refresh_token,
         "token_type": "bearer",
     }
+
+
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+    request: Request,
+    body: LogoutRequest | None = None,
+    current_user: User = Depends(get_current_active_user),  # noqa: ARG001
+) -> dict[str, str]:
+    """
+    Logout the current user by blacklisting their access token.
+
+    Optionally accepts a refresh_token in the body to also blacklist it.
+    """
+    from backend.app.core.security import blacklist_token
+
+    # Blacklist the access token
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        from jose import jwt as jose_jwt
+
+        from backend.app.core.security import ALGORITHM, get_secret_key
+
+        try:
+            payload = jose_jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
+            jti = payload.get("jti")
+            if jti:
+                # Blacklist for remaining TTL (15 min access tokens)
+                await blacklist_token(jti, 900)
+        except Exception:
+            pass
+
+    # Also blacklist refresh token if provided
+    if body and body.refresh_token:
+        try:
+            payload = decode_refresh_token(body.refresh_token)
+            if payload and payload.get("jti"):
+                await blacklist_token(payload["jti"], REFRESH_TOKEN_EXPIRE_DAYS * 86400)
+        except Exception:
+            pass
+
+    return {"message": "Logged out successfully"}
+
+
+@router.post("/revoke-all-sessions", status_code=status.HTTP_200_OK)
+async def revoke_all_sessions(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict[str, str]:
+    """
+    Revoke all active sessions for the current user.
+
+    All existing tokens (access and refresh) issued before this point
+    will be invalidated.
+    """
+    from backend.app.core.security import blacklist_all_user_tokens
+
+    await blacklist_all_user_tokens(str(current_user.id))
+    return {"message": "All sessions revoked"}
 
 
 @router.get("/me", response_model=UserResponse)
@@ -283,18 +391,26 @@ async def revoke_api_key(
     await db.commit()
 
 
-@router.post("/verify-email/{token}", status_code=status.HTTP_200_OK)
+@router.post("/verify-email", status_code=status.HTTP_200_OK)
 async def verify_email(
-    token: str,
+    body: VerifyEmailRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Verify user email address using token from email.
     """
-    from backend.app.core.security import decode_access_token
+    from jose import JWTError, jwt
 
-    # Decode token
-    payload = decode_access_token(token)
+    from backend.app.core.security import get_secret_key
+
+    token = body.token
+    # Decode token manually to support custom type claims
+    try:
+        secret_key = get_secret_key()
+        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+    except JWTError:
+        payload = None
+
     if not payload or payload.get("type") != "email_verification":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -370,14 +486,14 @@ async def resend_verification(
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
-    email: str,
+    body: ForgotPasswordRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Request password reset email.
     """
     # Find user by email
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 
     # Always return success to prevent email enumeration
@@ -398,19 +514,25 @@ async def forgot_password(
     return {"message": "If the email exists, a password reset link has been sent"}
 
 
-@router.post("/reset-password/{token}", status_code=status.HTTP_200_OK)
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
-    token: str,
-    new_password: str,
+    body: ResetPasswordRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, str]:
     """
     Reset password using token from email.
     """
-    from backend.app.core.security import decode_access_token
+    from jose import JWTError, jwt
 
-    # Decode token
-    payload = decode_access_token(token)
+    from backend.app.core.security import get_secret_key
+
+    # Decode token manually to support custom type claims
+    try:
+        secret_key = get_secret_key()
+        payload = jwt.decode(body.token, secret_key, algorithms=["HS256"])
+    except JWTError:
+        payload = None
+
     if not payload or payload.get("type") != "password_reset":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -435,7 +557,32 @@ async def reset_password(
         )
 
     # Update password
-    user.hashed_password = get_password_hash(new_password)
+    user.hashed_password = get_password_hash(body.new_password)
     await db.commit()
 
     return {"message": "Password reset successfully"}
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """
+    Delete the current user's account (GDPR right to erasure).
+
+    Anonymizes the user's email and deactivates the account. All associated
+    experiments and iterations are permanently deleted via cascade.
+    """
+    # Anonymize PII — soft delete to preserve FK integrity during cascade
+    current_user.email = f"deleted_{current_user.id}@deleted.invalid"
+    current_user.full_name = None
+    current_user.hashed_password = ""
+    current_user.is_active = False
+    current_user.stripe_customer_id = None
+    current_user.stripe_subscription_id = None
+
+    # Cascade delete is configured on experiments relationship so all
+    # experiments, batch_runs, and iterations will be removed automatically.
+    await db.delete(current_user)
+    await db.commit()

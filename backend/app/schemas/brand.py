@@ -25,9 +25,13 @@ class BrandProfileCreate(BrandProfileBase):
     )
 
 
-class BrandProfileResponse(BrandProfileBase):
+class BrandProfileResponse(BaseModel):
     """Schema for brand profile response."""
 
+    brand_name: str = Field(default="", max_length=100)
+    brand_description: str | None = Field(None, max_length=500)
+    brand_website: str | None = None
+    brand_industry: str | None = Field(None, max_length=100)
     brand_competitors: list[str] = Field(default_factory=list)
     brand_target_keywords: list[str] = Field(default_factory=list)
     has_brand_profile: bool = Field(..., description="Whether user has completed brand setup")

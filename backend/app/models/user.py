@@ -6,6 +6,7 @@ This module defines the database schema for users, API keys, and usage tracking.
 
 from datetime import UTC, datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String
@@ -13,6 +14,9 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.core.database import Base
+
+if TYPE_CHECKING:
+    from backend.app.models.experiment import Experiment
 
 
 class UserRole(str, Enum):
@@ -180,6 +184,11 @@ class User(Base):
         nullable=True,
         default=list,
         comment="List of target SEO keywords",
+    )
+    webhook_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Webhook URL to notify on experiment completion",
     )
     experiments: Mapped[list["Experiment"]] = relationship(  # noqa: F821
         "Experiment",

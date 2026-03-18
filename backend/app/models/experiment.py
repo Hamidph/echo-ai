@@ -12,7 +12,7 @@ This granular storage is essential for the "Generative Risk Analytics" offering.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -30,6 +30,9 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.core.database import Base
+
+if TYPE_CHECKING:
+    from backend.app.models.user import User
 
 
 class ExperimentStatus(str, Enum):
@@ -301,6 +304,13 @@ class BatchRun(Base):
     error_message: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+
+    # Cost tracking
+    estimated_cost_usd: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Estimated API cost in USD based on token usage",
     )
 
     # Timestamps

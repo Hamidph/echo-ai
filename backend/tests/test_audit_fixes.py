@@ -24,7 +24,6 @@ class TestAuditFixes(unittest.IsolatedAsyncioTestCase):
         mock_exp_repo = AsyncMock()
 
         user_a_id = uuid.uuid4()
-        uuid.uuid4()
         current_user = User(id=user_a_id, email="a@example.com", is_active=True)
 
         experiment_id = uuid.uuid4()
@@ -116,6 +115,7 @@ class TestAuditFixes(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(cm.exception.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
                 # Quota logic: 50 + 10 = 60 (commit) -> fail -> 60 - 10 = 50 (commit)
                 self.assertEqual(current_user.prompts_used_this_month, 50)
+
                 mock_exp_repo.update_experiment_status.assert_called_with(
                     mock_exp.id,
                     ExperimentStatus.FAILED,

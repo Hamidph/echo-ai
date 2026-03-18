@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.security import get_password_hash
-from backend.app.models.user import User, UserRole, PricingTier
+from backend.app.models.user import PricingTier, User, UserRole
 
 
 @pytest.mark.asyncio

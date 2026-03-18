@@ -14,10 +14,10 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from backend.app.core.database import Base, get_db_session as get_db
+from backend.app.core.database import Base
 from backend.app.core.security import create_access_token, get_password_hash
 from backend.app.main import app
-from backend.app.models.user import User, UserRole, PricingTier
+from backend.app.models.user import PricingTier, User, UserRole
 
 # Test database URL (use PostgreSQL for testing - matches production)
 # SQLite doesn't support JSONB columns used in our models
@@ -34,8 +34,8 @@ def client() -> TestClient:
         TestClient: A test client instance.
     """
     # Override dependency with mock settings
-    from backend.app.core.config import get_settings, Settings
-    
+    from backend.app.core.config import Settings, get_settings
+
     # Mock settings that point to TEST database
     def get_test_settings() -> Settings:
         return Settings(
@@ -48,35 +48,35 @@ def client() -> TestClient:
             postgres_host="localhost",
             postgres_port=5432,
             # IMPORTANT: Disable raw database url to ensure component build is used
-            raw_database_url=None, 
+            raw_database_url=None,
         )
 
     # Force override of the global engine in database module
     from backend.app.core import database
-    
+
     # 1. Clear existing engine if any
     if database._engine:
         # We can't await dispose here easily in sync fixture without loop access
         # but for tests strictly running, we just swap it.
         # Ideally we should clean up, but this is a pragmatic fix.
         pass
-    
+
     # 2. Create new engine with TEST settings and NullPool to avoid connection leaks in tests
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy.pool import NullPool
-    
+
     database._engine = create_async_engine(
         str(get_test_settings().database_url),
         echo=get_test_settings().debug,
         poolclass=NullPool,
     )
-    
+
     # 3. Also clear session factory so it recreates with new engine
     database._session_factory = None
-    
+
     # 4. Override dependency for good measure (though get_db uses globals we just swapped)
     app.dependency_overrides[get_settings] = get_test_settings
-    
+
     yield TestClient(app)
 
     # Teardown: Reset global engine to prevent event loop issues
@@ -200,3 +200,35 @@ def auth_headers(test_user: User) -> dict[str, str]:
     token = create_access_token(data={"user_id": str(test_user.id), "email": test_user.email})
     return {"Authorization": f"Bearer {token}"}
 
+
+@pytest.fixture
+def mock_redis(monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
+    """
+    Provide an in-memory mock Redis store for token blacklisting tests.
+
+    Returns:
+        dict: The mock Redis store (can be inspected in tests).
+    """
+    store: dict[str, str] = {}
+
+    class FakeRedis:
+        async def setex(self, key: str, ttl: int, value: str) -> None:  # noqa: ARG002
+            store[key] = value
+
+        async def set(self, key: str, value: str) -> None:
+            store[key] = value
+
+        async def get(self, key: str) -> str | None:
+            return store.get(key)
+
+        async def exists(self, key: str) -> int:
+            return 1 if key in store else 0
+
+        async def ping(self) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        "backend.app.core.redis.get_redis_client",
+        lambda: FakeRedis(),
+    )
+    return store

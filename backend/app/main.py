@@ -24,6 +24,7 @@ from backend.app.core.config import Settings, get_settings
 from backend.app.core.database import get_engine
 from backend.app.core.logging import setup_logging
 from backend.app.core.redis import check_redis_health, close_redis_connection
+from backend.app.middleware.security_headers import SecurityHeadersMiddleware
 from backend.app.routers import experiments_router
 from backend.app.routers.admin import router as admin_router
 from backend.app.routers.auth import router as auth_router
@@ -122,22 +123,27 @@ def create_application() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    # Configure CORS
-    # In development, allow all origins. In production, use frontend_url from settings
-    allowed_origins = (
-        ["*"]
-        if settings.environment == "development"
-        else [
-            settings.frontend_url,
-            "https://echo-ai.vercel.app",  # Add your production frontend URL
-        ]
-    )
+    # Security headers middleware
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # Configure CORS with explicit whitelist in production
+    if settings.environment == "development":
+        allowed_origins = ["*"]
+    else:
+        allowed_origins = list(
+            {
+                settings.frontend_url,
+                "https://echoai.uk",
+            }
+            | set(getattr(settings, "cors_allowed_origins", None) or [])
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+        max_age=600,
     )
 
     # Initialize Prometheus metrics
@@ -157,7 +163,11 @@ def create_application() -> FastAPI:
     if static_dir.exists():
         # Mount _next folder for Next.js static assets
         if (static_dir / "_next").exists():
-            app.mount("/_next", StaticFiles(directory=static_dir / "_next"), name="next-static")
+            app.mount(
+                "/_next",
+                StaticFiles(directory=static_dir / "_next"),
+                name="next-static",
+            )
 
         # Serve root files directly
         for root_file in ["favicon.ico", "robots.txt", "manifest.json"]:

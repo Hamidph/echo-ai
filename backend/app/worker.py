@@ -127,7 +127,7 @@ async def _execute_experiment_async(
     experiment_id: str,
     provider: str,
     model: str | None,
-    task_id: str | None,
+    _task_id: str | None,
 ) -> dict[str, Any]:
     """
     Async implementation of experiment execution.
@@ -326,17 +326,6 @@ async def _execute_experiment_async(
                 f"Experiment {experiment_id} completed: "
                 f"{batch_result.successful_iterations}/{batch_result.total_iterations} successful"
             )
-
-            {
-                "status": "completed",
-                "experiment_id": experiment_id,
-                "batch_run_id": str(batch_run_id),
-                "task_id": task_id,
-                "total_iterations": batch_result.total_iterations,
-                "successful_iterations": batch_result.successful_iterations,
-                "duration_ms": batch_result.total_duration_ms,
-                "metrics": analysis_result.raw_metrics,
-            }
 
     except Exception as e:
         logger.exception(f"Error executing experiment {experiment_id}: {e}")

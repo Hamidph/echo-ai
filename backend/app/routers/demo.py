@@ -7,7 +7,6 @@ from slowapi.util import get_remote_address
 
 from backend.app.builders.analysis import AnalysisBuilder
 from backend.app.builders.runner import BatchConfig, RunnerBuilder
-from backend.app.core.config import get_settings
 from backend.app.core.database import DbSession
 from backend.app.models.demo import DemoUsage
 from backend.app.schemas.llm import LLMProvider
@@ -51,8 +50,6 @@ async def run_quick_demo(
     - Rate limited to 5 per minute per IP
     - No auth required
     """
-    get_settings()
-
     # 1. Log Usage
     client_ip = request.client.host if request.client else "unknown"
     usage_entry = DemoUsage(

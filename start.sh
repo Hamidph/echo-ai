@@ -17,11 +17,15 @@ else
     echo "[STARTUP] Skipping test data seed (production environment)"
 fi
 
-echo "[STARTUP] Starting Celery worker with low concurrency..."
-# Optimized concurrency based on environment (default 4)
-celery -A backend.app.worker worker -B --loglevel=info --concurrency=${CELERY_CONCURRENCY:-4} &
+echo "[STARTUP] Starting Celery worker with auto-scaling..."
+CPU_CORES=$(nproc 2>/dev/null || echo 2)
+MIN_CONCURRENCY=${CELERY_CONCURRENCY:-$CPU_CORES}
+MAX_CONCURRENCY=$((MIN_CONCURRENCY * 2))
+celery -A backend.app.worker worker -B --loglevel=info \
+  --autoscale=${MAX_CONCURRENCY},${MIN_CONCURRENCY} \
+  --max-tasks-per-child=100 &
 WORKER_PID=$!
-echo "[STARTUP] Celery worker started with PID $WORKER_PID (concurrency=${CELERY_CONCURRENCY:-4})"
+echo "[STARTUP] Celery worker started with PID $WORKER_PID (autoscale=${MAX_CONCURRENCY},${MIN_CONCURRENCY})"
 
 # Wait a moment
 sleep 2
