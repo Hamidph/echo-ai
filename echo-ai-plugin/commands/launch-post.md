@@ -1,17 +1,13 @@
 ---
-name: launch-post
-description: >
-  This skill provides Echo AI's brand voice, messaging guidelines, and announcement
-  templates. It should be used when the user discusses "announcements", "launch posts",
-  "social media", "Product Hunt", or needs to communicate about features or milestones.
+description: Draft launch posts and announcements
+argument-hint: "<feature or milestone>"
 ---
 
-# Launch Post Generator
+# /launch-post
+
+Feature/milestone: $ARGUMENTS
 
 Echo AI voice: confident, data-driven, direct. Not corporate. Not hype-y.
-We measure brand visibility in AI search. We use Monte Carlo. We're for serious SEO pros.
-
-For "$ARGUMENTS":
 
 ### Twitter/X Thread
 Tweet 1 (hook — bold claim, under 280 chars, no hashtags):

@@ -1,7 +1,10 @@
 ---
 name: review-pr
-description: Review code changes or a pull request for quality, security, and correctness. Use when user says "review PR", "code review", "review my changes", "check this PR", or "is this code good". Checks security, performance, tests, types, and architecture consistency.
-allowed-tools: Read, Grep, Glob, Bash
+description: >
+  This skill provides Echo AI's code review standards and checklist.
+  It should be used when the user asks to "review PR", "code review",
+  "review my changes", "check this PR", or "is this code good".
+  Covers security, performance, tests, types, and architecture consistency.
 ---
 
 # PR Code Review

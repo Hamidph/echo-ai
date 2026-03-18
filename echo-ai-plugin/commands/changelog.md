@@ -1,22 +1,18 @@
 ---
-name: changelog
-description: >
-  This skill provides Echo AI's changelog conventions and format.
-  It should be used when the user discusses "changelog", "release notes",
-  "what changed", or needs to document changes.
+description: Generate changelog from recent git commits
+argument-hint: "[version]"
 ---
 
-# Changelog Generator
+# /changelog
 
 ```bash
-# Get commits since last tag
 git log $(git describe --tags --abbrev=0)..HEAD --oneline --pretty=format:"%s"
 ```
 
 Group commits by type and write in Keep a Changelog format:
 
 ```markdown
-## [VERSION] - YYYY-MM-DD
+## [$ARGUMENTS] - YYYY-MM-DD
 
 ### Added
 - (feat commits)

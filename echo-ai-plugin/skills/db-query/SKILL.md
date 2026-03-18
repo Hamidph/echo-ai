@@ -1,7 +1,9 @@
 ---
 name: db-query
-description: Query Echo AI's PostgreSQL database for analytics, business metrics, and debugging. Use when user asks "how many users", "query the database", "check DB", "revenue this month", "experiment stats", or needs any data from the system.
-allowed-tools: Bash
+description: >
+  This skill provides Echo AI's database schema and common query patterns.
+  It should be used when the user asks about "users", "revenue", "experiments",
+  "database", "metrics", or needs any data from the system.
 ---
 
 # Database Query (Read-Only)

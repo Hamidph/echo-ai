@@ -1,31 +1,24 @@
 ---
 name: test
-description: Run Echo AI test suites. Use when user says "run tests", "are tests passing", "check tests", "run the test suite", or before any deploy.
-disable-model-invocation: true
+description: >
+  This skill provides Echo AI's testing conventions and test infrastructure knowledge.
+  It should be used when the user discusses "testing", "test coverage", "test strategy",
+  or needs context on how tests are organized in the project.
 ---
 
-# Run Tests
+# Echo AI Testing Knowledge
 
-### Full suite
-```bash
-cd backend && python -m pytest tests/ -v --tb=short 2>&1 | tail -60
-cd ../frontend && npm run type-check && npm test -- --watchAll=false
-```
+## Test Infrastructure
+- Backend: pytest (`backend/tests/`)
+- Frontend: Jest + TypeScript type-check (`frontend/`)
 
-### Backend only
-```bash
-cd backend && python -m pytest tests/ -v --tb=short
-```
+## Running Tests
+- Full backend: `cd backend && python -m pytest tests/ -v --tb=short`
+- Full frontend: `cd frontend && npm run type-check && npm test -- --watchAll=false`
+- Specific file: `cd backend && python -m pytest tests/test_file.py -v --tb=long`
 
-### Specific test file (use $ARGUMENTS)
-```bash
-cd backend && python -m pytest $ARGUMENTS -v --tb=long
-```
-
-### Type check only
-```bash
-cd frontend && npm run type-check
-```
-
-Report: total passed / failed / skipped. Show full output for failures.
-Flag any new failures compared to what user expected.
+## Test Standards
+- Add tests alongside every new feature
+- Test coverage is thin — improve as you go
+- Always run tests before deploy
+- Report: total passed / failed / skipped

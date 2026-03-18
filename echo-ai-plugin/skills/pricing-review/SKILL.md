@@ -1,7 +1,9 @@
 ---
 name: pricing-review
-description: Review and optimize Echo AI's pricing strategy. Use when user says "review pricing", "should we change prices", "pricing strategy", "are we priced right", "compare our pricing to competitors", or "pricing analysis".
-allowed-tools: WebSearch, Read
+description: >
+  This skill provides Echo AI's current pricing structure, value metrics, and pricing
+  strategy context. It should be used when the user discusses "pricing", "plans",
+  "tiers", "revenue", or "monetization strategy".
 ---
 
 # Pricing Review

@@ -1,12 +1,11 @@
 ---
-name: content-brief
-description: >
-  This skill provides Echo AI's content marketing strategy, target personas, and
-  content standards. It should be used when the user discusses "content", "blog posts",
-  "AIO content", "SEO articles", or marketing strategy for AI search optimization.
+description: Create a marketing content brief for Echo AI
+argument-hint: "<topic>"
 ---
 
-# Content Brief Generator
+# /content-brief
+
+Topic: $ARGUMENTS
 
 Echo AI target personas:
 - **SEO agency owner**: selling AIO services to clients, needs data and methodology
@@ -14,37 +13,17 @@ Echo AI target personas:
 - **PR professional**: tracking brand narrative in AI responses, needs monitoring
 - **SaaS founder**: wants to know if ChatGPT recommends their product
 
-For the topic "$ARGUMENTS":
-
-### Brief Output
+### Output
 
 **1. Working title** (3 options, SEO-optimized)
-
 **2. Target persona** (which of the 4 above, and why)
-
 **3. Search intent** (informational / commercial / navigational)
-
 **4. Hook** (the contrarian angle — why now, why this matters)
-
-**5. Outline**
-- H1: [title]
-- H2: [section] → angle and key point
-- H2: [section] → angle and key point
-- H2: [section] → angle and key point
-- H2: CTA section → Echo AI trial
-
+**5. Outline** — H1 + 3-4 H2 sections + CTA section → Echo AI trial
 **6. Key stats to include** (search for 3-5 recent data points about AI search adoption)
-
 **7. Internal links** (suggest 2-3 Echo AI pages to link to)
-
-**8. SEO metadata**
-- Title tag: under 60 chars
-- Meta description: under 155 chars
-- Primary keyword
-- Secondary keywords (3-5)
-
+**8. SEO metadata** — title tag (<60 chars), meta description (<155 chars), primary + secondary keywords
 **9. Word count target**
-
 **10. CTA**: free trial link or specific feature page
 
 Tone: data-driven, direct, slightly contrarian. No hype words.

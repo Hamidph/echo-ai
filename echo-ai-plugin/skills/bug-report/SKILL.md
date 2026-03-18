@@ -1,7 +1,9 @@
 ---
 name: bug-report
-description: Create a structured bug report from a user complaint or error description. Use when user says "log this bug", "create a bug report", "user reported an issue", "something is broken", or pastes a user complaint.
-allowed-tools: Bash, Read
+description: >
+  This skill provides Echo AI's bug report template and severity classification
+  system. It should be used when the user discusses "bugs", "user complaints",
+  "issue reports", or needs to document a problem.
 ---
 
 # Bug Report Creator

@@ -190,7 +190,7 @@ class User(Base):
         nullable=True,
         comment="Webhook URL to notify on experiment completion",
     )
-    experiments: Mapped[list["Experiment"]] = relationship(
+    experiments: Mapped[list["Experiment"]] = relationship(  # noqa: F821
         "Experiment",
         back_populates="user",
         cascade="all, delete-orphan",

@@ -175,7 +175,7 @@ class Experiment(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(
+    user: Mapped["User"] = relationship(  # noqa: F821
         "User",
         back_populates="experiments",
         lazy="select",  # Load on demand to prevent unnecessary joins

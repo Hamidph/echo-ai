@@ -1,7 +1,10 @@
 ---
 name: competitor-analysis
-description: Research and analyze Echo AI competitors. Use when user says "analyze competitors", "competitive landscape", "how do we compare to X", "what is Profound doing", "competitor research", or "market analysis".
-allowed-tools: WebSearch, WebFetch, Read
+description: >
+  This skill provides Echo AI's competitive landscape knowledge including direct
+  competitors, feature comparisons, and positioning. It should be used when the user
+  discusses "competitors", "Profound", "Peec", "Otterly", "Goodie", "market analysis",
+  or "competitive positioning".
 ---
 
 # Competitor Analysis

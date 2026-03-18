@@ -1,7 +1,9 @@
 ---
 name: api-docs
-description: Generate or update API documentation for Echo AI endpoints. Use when user says "document this endpoint", "write API docs", "generate OpenAPI spec", "update the docs", or "how does this API work".
-allowed-tools: Read, Glob, Write
+description: >
+  This skill provides Echo AI's API documentation standards and response format
+  conventions. It should be used when the user discusses "API docs", "endpoints",
+  "OpenAPI", or "API design".
 ---
 
 # API Documentation Generator

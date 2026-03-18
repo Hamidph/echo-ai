@@ -1,32 +1,42 @@
 ---
 name: deploy
-description: Deploy Echo AI to Railway production. Use when user says "deploy", "ship to prod", "release to production", "push live", or "go live". Runs tests, builds Docker images, deploys backend and frontend, runs migrations, verifies health.
-disable-model-invocation: true
+description: >
+  This skill provides context for Echo AI's deployment process to Railway production.
+  It should be used when the user mentions "deploy", "ship to prod", "release to production",
+  "push live", "go live", or discusses deployment readiness. Covers pre-flight checks,
+  Railway deployment, DB migrations, health verification, and rollback procedures.
 ---
 
-# Deploy to Production
+# Echo AI Deployment Knowledge
 
-STOP — confirm with user before each phase.
+## Deployment Architecture
+- **Platform**: Railway (backend + frontend + PostgreSQL + Redis)
+- **Backend**: FastAPI Docker container
+- **Frontend**: Next.js Docker container
+- **DB migrations**: Alembic via `railway run`
 
-### Phase 1: Pre-flight
-1. Check for uncommitted changes: `git status`
-2. Confirm on correct branch: `git branch --show-current`
-3. Pull latest: `git pull origin claude/startup-improvement-plan-WOC5X`
-4. Run backend tests: `cd backend && python -m pytest tests/ -q`
-5. Run frontend build: `cd frontend && npm run build`
+## Pre-flight Requirements
+- All tests passing (backend pytest + frontend type-check + build)
+- No uncommitted changes
+- On correct branch: `claude/startup-improvement-plan-WOC5X`
+- Latest code pulled from origin
 
-STOP if tests fail. Do not deploy broken code.
+## Deploy Commands
+- Backend: `railway up --service backend`
+- Frontend: `railway up --service frontend`
+- Migrations: `railway run python -m alembic upgrade head`
 
-### Phase 2: Deploy
-6. Deploy backend: `railway up --service backend`
-7. Deploy frontend: `railway up --service frontend`
-8. Run DB migrations: `railway run python -m alembic upgrade head`
+## Health Verification
+- Endpoint: `https://api.echo-ai.com/health`
+- Check Railway logs: `railway logs --tail 30 --service backend`
+- Confirm ~~billing webhooks active
 
-### Phase 3: Verify
-9. Health check: `curl -s https://api.echo-ai.com/health | python3 -m json.tool`
-10. Check Railway logs: `railway logs --tail 30 --service backend`
-11. Confirm Stripe webhooks active in Stripe dashboard
+## Rollback
+- `railway rollback` if health check fails
+- Check ~~error monitor for new exceptions post-deploy
 
-STOP if health check fails. Roll back: `railway rollback`.
-
-Report status clearly after each phase.
+## Critical Rules
+- NEVER deploy without passing tests
+- ALWAYS confirm with user before deploying
+- ALWAYS run migrations after backend deploy
+- ALWAYS verify health after deploy

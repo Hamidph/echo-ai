@@ -1,0 +1,13 @@
+{
+  "name": "echo-ai",
+  "owner": {
+    "name": "Hamid"
+  },
+  "plugins": [
+    {
+      "name": "echo-ai-tools",
+      "source": "./",
+      "description": "Engineering, marketing, product, and ops toolkit for Echo AI — AI Search Analytics Platform that measures brand visibility across LLM-powered search engines using Monte Carlo simulations."
+    }
+  ]
+}

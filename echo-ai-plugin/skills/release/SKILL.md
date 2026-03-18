@@ -1,24 +1,28 @@
 ---
 name: release
-description: Create a new versioned release of Echo AI. Use when user says "create a release", "tag a release", "bump version", "ship v1.x", or "prepare release". Requires explicit version number.
-disable-model-invocation: true
+description: >
+  This skill provides Echo AI's release process and versioning conventions.
+  It should be used when the user discusses "releases", "versioning", "tagging",
+  or needs context on the release workflow.
 ---
 
-# Release Process
+# Echo AI Release Process
 
-STOP — confirm exact version number with user before proceeding.
+## Versioning
+- Format: MAJOR.MINOR.PATCH (semver)
+- Version tracked in: `backend/pyproject.toml` and `frontend/package.json`
 
-Version format: MAJOR.MINOR.PATCH (e.g. 1.2.0)
+## Release Steps
+1. Confirm tests pass
+2. Update version in both backend and frontend
+3. Update CHANGELOG.md
+4. Commit: `chore(release): vX.Y.Z`
+5. Tag: `git tag vX.Y.Z`
+6. Push with tags
+7. Create GitHub release via `gh release create`
+8. Draft announcement for ~~chat
 
-1. Confirm tests pass: run test skill first
-2. Update `backend/pyproject.toml` → version = "$ARGUMENTS"
-3. Update `frontend/package.json` → "version": "$ARGUMENTS"
-4. Ask user for changelog entries for this version
-5. Update CHANGELOG.md with date and entries
-6. Commit: `git commit -m "chore(release): v$ARGUMENTS"`
-7. Tag: `git tag v$ARGUMENTS`
-8. Push: `git push origin claude/startup-improvement-plan-WOC5X --tags`
-9. Create GitHub release using: `gh release create v$ARGUMENTS --generate-notes`
-10. Draft #deployments Slack announcement (ask user to send it)
-
-Do not publish to npm or PyPI — Railway handles deployment.
+## Rules
+- Never release without passing tests
+- Always confirm version with user
+- Do not publish to npm or PyPI — Railway handles deployment
